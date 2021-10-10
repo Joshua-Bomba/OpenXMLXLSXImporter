@@ -29,12 +29,14 @@ namespace OpenXMLXLXSImporter
         private Stream _stream;
         private SpreadSheetGrid[] _grids;
         private List<ISheetProperties> _sheetProperties;
+        private Task[] _processedWorkSheets;
 
         public ExcelImporter(Stream stream)
         {
             _stream = stream;
             _sheetProperties = new List<ISheetProperties>();
             _grids = null;
+            _processedWorkSheets = null;
         }
 
         public void Add(ISheetProperties prop)
@@ -155,18 +157,23 @@ namespace OpenXMLXLXSImporter
 
             sheets = sheets.Where(x => x != null).ToArray();
             WorksheetPart[] worksheetsParts = new WorksheetPart[sheets.Length];
-            Task[] processedWorkSheets = new Task[sheets.Length];
+            _processedWorkSheets = new Task[sheets.Length];
             _grids = new SpreadSheetGrid[sheets.Length];
             for (int i = 0; i < sheets.Length; i++)
             {
                 WorksheetPart wp = _workbookPart.GetPartById(sheets[i].Id) as WorksheetPart;
                 _grids[i] = new SpreadSheetGrid(_sheetProperties[i]);
-                processedWorkSheets[i] = this.ProcessWorkSheet(wp, _grids[i]);
+                _processedWorkSheets[i] = this.ProcessWorkSheet(wp, _grids[i]);
             }
         }
 
         public void Dispose()
         {
+            if(_processedWorkSheets != null)
+            {
+                foreach(Task t in _processedWorkSheets)
+                    t?.Wait();
+            }
             _spreadsheet.Dispose();
         }
 
