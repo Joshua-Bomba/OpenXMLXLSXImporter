@@ -26,7 +26,7 @@ namespace OpenXMLXLXSImporter.ExcelGrid
         public SpreadSheetGrid(ISheetProperties sheet)
         {
             _sheet = sheet;
-            sheet.SetCellMatrix(this);
+            sheet.SetCellGrid(this);
             _allLoaded = new ManualResetEvent(false);
             _rows = new Dictionary<uint, RowIndexer>();
             _columns = new Dictionary<string, ColumnIndexer>();

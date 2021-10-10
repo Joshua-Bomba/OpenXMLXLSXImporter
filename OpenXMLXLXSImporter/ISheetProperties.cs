@@ -19,7 +19,7 @@ namespace OpenXMLXLXSImporter
         /// this will be called when the SpreadSheetGrid is constructed for this sheet
         /// stored this in a variable and access it to access the spreadsheet
         /// </summary>
-        /// <param name="matrix"></param>
-        void SetCellMatrix(SpreadSheetGrid matrix);
+        /// <param name="grid"></param>
+        void SetCellGrid(SpreadSheetGrid grid);
     }
 }

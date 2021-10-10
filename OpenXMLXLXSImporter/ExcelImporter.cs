@@ -27,14 +27,14 @@ namespace OpenXMLXLXSImporter
         private Stylesheet _styleSheet;
         private CellFormats _cellFormats;
         private Stream _stream;
-        private SpreadSheetGrid[] _matrixes;
+        private SpreadSheetGrid[] _grids;
         private List<ISheetProperties> _sheetProperties;
 
         public ExcelImporter(Stream stream)
         {
             _stream = stream;
             _sheetProperties = new List<ISheetProperties>();
-            _matrixes = null;
+            _grids = null;
         }
 
         public void Add(ISheetProperties prop)
@@ -84,9 +84,9 @@ namespace OpenXMLXLXSImporter
         /// this will be called for each work sheet and will process each cell
         /// </summary>
         /// <param name="worksheetPart"></param>
-        /// <param name="matrix"></param>
+        /// <param name="grid"></param>
         /// <returns></returns>
-        protected async Task ProcessWorkSheet(WorksheetPart worksheetPart, SpreadSheetGrid matrix)
+        protected async Task ProcessWorkSheet(WorksheetPart worksheetPart, SpreadSheetGrid grid)
         {
             await Task.Run(() => {
                 Worksheet ws = worksheetPart.Worksheet;
@@ -110,13 +110,13 @@ namespace OpenXMLXLXSImporter
                             {
                                 cellData.CellColumnIndex = c.CellReference;
                                 cellData.CellRowIndex = r.RowIndex.Value;
-                                matrix.Add(cellData);
+                                grid.Add(cellData);
                             }
                         }
                     }
                 }
 
-                matrix.FinishedLoading();
+                grid.FinishedLoading();
             });
 
         }
@@ -156,12 +156,12 @@ namespace OpenXMLXLXSImporter
             sheets = sheets.Where(x => x != null).ToArray();
             WorksheetPart[] worksheetsParts = new WorksheetPart[sheets.Length];
             Task[] processedWorkSheets = new Task[sheets.Length];
-            _matrixes = new SpreadSheetGrid[sheets.Length];
+            _grids = new SpreadSheetGrid[sheets.Length];
             for (int i = 0; i < sheets.Length; i++)
             {
                 WorksheetPart wp = _workbookPart.GetPartById(sheets[i].Id) as WorksheetPart;
-                _matrixes[i] = new SpreadSheetGrid(_sheetProperties[i]);
-                processedWorkSheets[i] = this.ProcessWorkSheet(wp, _matrixes[i]);
+                _grids[i] = new SpreadSheetGrid(_sheetProperties[i]);
+                processedWorkSheets[i] = this.ProcessWorkSheet(wp, _grids[i]);
             }
         }
 
