@@ -17,7 +17,7 @@ namespace OpenXMLXLXSImporter.ExcelGrid
     /// interate through all the cells for an entire row
     /// interate through all the cells
     /// </summary>
-    public class SpreadSheetGrid : IEnumerable<ICellData>
+    public class SpreadSheetGrid : IAsyncEnumerable<ICellData>
     {
         ISheetProperties _sheet;
         private Dictionary<uint, RowIndexer> _rows;
@@ -146,7 +146,7 @@ namespace OpenXMLXLXSImporter.ExcelGrid
             //TODO: notify the FetchCell to continue 
         }
 
-        public class CellEnumerator : IEnumerator<ICellData>
+        public class CellEnumerator : IAsyncEnumerator<ICellData>
         {
             private SpreadSheetGrid _ssg;
             private ICellData _current;
@@ -155,29 +155,20 @@ namespace OpenXMLXLXSImporter.ExcelGrid
                 _ssg = ssg;
                 _current = null;
             }
+
             public ICellData Current => _current;
 
-            object IEnumerator.Current => _current;
-
-            public void Dispose()
-            {
-                _current = null;
-            }
-
-            public bool MoveNext()
+            public ValueTask DisposeAsync()
             {
                 throw new NotImplementedException();
             }
 
-            public void Reset()
+            public ValueTask<bool> MoveNextAsync()
             {
                 throw new NotImplementedException();
             }
         }
 
-
-        public IEnumerator<ICellData> GetEnumerator() => new CellEnumerator(this);
-
-        IEnumerator IEnumerable.GetEnumerator() => this.GetEnumerator();
+        public IAsyncEnumerator<ICellData> GetAsyncEnumerator(CancellationToken cancellationToken = default) => new CellEnumerator(this);
     }
 }
