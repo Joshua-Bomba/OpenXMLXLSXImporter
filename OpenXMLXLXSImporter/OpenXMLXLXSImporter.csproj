@@ -5,7 +5,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{80004456-ABC6-449C-A309-7A34900ECCDE}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <OutputType>Library</OutputType>
     <RootNamespace>OpenXMLXLXSImporter</RootNamespace>
     <AssemblyName>OpenXMLXLXSImporter</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
@@ -32,6 +32,9 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
+  </PropertyGroup>
   <ItemGroup>
     <None Include="App.config" />
     <None Include="packages.config" />
@@ -44,6 +47,20 @@
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="WindowsBase" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="CellData\BaseCellData.cs" />
+    <Compile Include="CellData\CellDataContent.cs" />
+    <Compile Include="CellData\CellDataDate.cs" />
+    <Compile Include="CellData\CellDataRelation.cs" />
+    <Compile Include="CellData\ICellData.cs" />
+    <Compile Include="ExcelStaticData.cs" />
+    <Compile Include="ExcelGrid\SpreadSheetGrid.cs" />
+    <Compile Include="ExcelGrid\Indexers\ColumnIndexer.cs" />
+    <Compile Include="ExcelGrid\Indexers\BaseSpreadSheetIndexer.cs" />
+    <Compile Include="ExcelGrid\Indexers\RowIndexer.cs" />
+    <Compile Include="ExcelImporter.cs" />
+    <Compile Include="ISheetProperties.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
