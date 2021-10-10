@@ -10,8 +10,16 @@ namespace OpenXMLXLXSImporter
 {
     public interface ISheetProperties
     {
+        /// <summary>
+        /// This is the Sheet name
+        /// </summary>
         string Sheet { get; }
 
+        /// <summary>
+        /// this will be called when the SpreadSheetGrid is constructed for this sheet
+        /// stored this in a variable and access it to access the spreadsheet
+        /// </summary>
+        /// <param name="matrix"></param>
         void SetCellMatrix(SpreadSheetGrid matrix);
     }
 }

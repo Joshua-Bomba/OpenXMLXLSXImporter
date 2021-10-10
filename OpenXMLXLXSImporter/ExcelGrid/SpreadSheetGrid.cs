@@ -9,6 +9,12 @@ using System.Threading.Tasks;
 
 namespace OpenXMLXLXSImporter.ExcelGrid
 {
+    /// <summary>
+    /// this will handle accessing the grid and iterateing over the spreadsheetgrid
+    /// interate through all the cells for an entire column
+    /// interate through all the cells for an entire row
+    /// interate through all the cells
+    /// </summary>
     public class SpreadSheetGrid
     {
         ISheetProperties _sheet;
@@ -26,18 +32,31 @@ namespace OpenXMLXLXSImporter.ExcelGrid
             _columns = new Dictionary<string, ColumnIndexer>();
         }
 
+        /// <summary>
+        /// this will return a paticular cell if it's avaliable
+        /// </summary>
+        /// <param name="row"></param>
+        /// <param name="cell"></param>
+        /// <returns></returns>
         public bool TryFetchCell(uint row, string cell)
         {
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// this will return a paticular row and cell if it's not avaliable it will wait till it's loaded or the timeout is reached
+        /// </summary>
+        /// <param name="rowIndex"></param>
+        /// <param name="cellIndex"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
         public async Task<ICellData> FetchCell(uint rowIndex, string cellIndex, int timeout = -1)
         {
             ICellData cell = null;
             await Task.Run(() =>
             {
                 ManualResetEvent e = null;
-                lock (_lockRow)
+                lock (_lockRow)//honestly this multi threading crap is probably unessary unless you havea massive excel document but whatever this is how I wrote it
                 {
                     if (!_rows.ContainsKey(rowIndex))
                     {
@@ -74,6 +93,11 @@ namespace OpenXMLXLXSImporter.ExcelGrid
             return cell;
         }
 
+
+        /// <summary>
+        /// This is for the ExcelImporter to add cells after they have been parsed
+        /// </summary>
+        /// <param name="cellData"></param>
         public void Add(ICellData cellData)
         {
             Task t1 = Task.Run(() =>
@@ -101,9 +125,14 @@ namespace OpenXMLXLXSImporter.ExcelGrid
             t1.Wait();
         }
 
+        /// <summary>
+        /// Excel Import is finished loading we need to notify anything that is wait that today is not there day 
+        /// and there not getting any data
+        /// </summary>
         public void FinishedLoading()
         {
             _allLoaded.Set();
+            //TODO: notify the FetchCell to continue 
         }
     }
 }

@@ -8,6 +8,9 @@ using System.Threading.Tasks;
 
 namespace OpenXMLXLXSImporter.CellData
 {
+    /// <summary>
+    /// a cell thats data is from a SharedStringTable
+    /// </summary>
     public class CellDataRelation : BaseCellData
     {
         private string _content;

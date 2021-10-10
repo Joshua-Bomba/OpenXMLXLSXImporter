@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 
 namespace OpenXMLXLXSImporter.ExcelGrid.Indexers
 {
+    /// <summary>
+    /// this manages access by cell then row
+    /// </summary>
     public class ColumnIndexer : BaseSpreadSheetIndexer
     {
         private Dictionary<uint, ICellData> _cellsByRow;

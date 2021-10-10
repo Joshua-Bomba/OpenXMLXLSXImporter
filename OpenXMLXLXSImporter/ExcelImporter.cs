@@ -12,6 +12,12 @@ using OpenXMLXLXSImporter.ExcelGrid;
 
 namespace OpenXMLXLXSImporter
 {
+    /// <summary>
+    /// This class is for managing the import pass in a Stream to your excel file
+    /// Implemented the ISheetProperties interface for each sheet you want to import
+    /// add the ISheetProperties through the Add Method
+    /// After your done adding them run the LoadSpreadSheetData method
+    /// </summary>
     public class ExcelImporter : IDisposable
     {
         private SpreadsheetDocument _spreadsheet;
@@ -35,7 +41,12 @@ namespace OpenXMLXLXSImporter
         {
             _sheetProperties.Add(prop);
         }
-
+        /// <summary>
+        /// This is for custom Cell Types like dates Cell with relations like text etc
+        /// </summary>
+        /// <param name="c"></param>
+        /// <param name="cellData"></param>
+        /// <returns></returns>
         protected bool ProcessCustomCell(Cell c, out ICellData cellData)
         {
             if (c.StyleIndex != null)
@@ -69,6 +80,12 @@ namespace OpenXMLXLXSImporter
             return false;
         }
 
+        /// <summary>
+        /// this will be called for each work sheet and will process each cell
+        /// </summary>
+        /// <param name="worksheetPart"></param>
+        /// <param name="matrix"></param>
+        /// <returns></returns>
         protected async Task ProcessWorkSheet(WorksheetPart worksheetPart, SpreadSheetGrid matrix)
         {
             await Task.Run(() => {
@@ -104,6 +121,9 @@ namespace OpenXMLXLXSImporter
 
         }
 
+        /// <summary>
+        /// processes all the sheets passed in
+        /// </summary>
         public void LoadSpreadSheetData()
         {
             string[] sheetNames = _sheetProperties.Select(x => x.Sheet).ToArray();

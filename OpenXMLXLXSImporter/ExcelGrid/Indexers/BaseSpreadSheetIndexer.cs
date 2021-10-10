@@ -7,8 +7,12 @@ using System.Threading.Tasks;
 
 namespace OpenXMLXLXSImporter.ExcelGrid.Indexers
 {
+    /// <summary>
+    /// a common base class for the row & cell accessors
+    /// </summary>
     public abstract class BaseSpreadSheetIndexer
     {
+        //not much here yet idk how this will look like in the future
         public BaseSpreadSheetIndexer()
         {
 

@@ -8,6 +8,9 @@ using System.Threading.Tasks;
 
 namespace OpenXMLXLXSImporter.ExcelGrid.Indexers
 {
+    /// <summary>
+    /// this manages access by row then cell
+    /// </summary>
     public class RowIndexer : BaseSpreadSheetIndexer
     {
         protected Dictionary<string, ICellData> _cellsByColumn;
@@ -17,7 +20,10 @@ namespace OpenXMLXLXSImporter.ExcelGrid.Indexers
             _cellsByColumn = new Dictionary<string, ICellData>();
             _notify = null;
         }
-
+        /// <summary>
+        /// this will add a cell called by the ExcelImporter
+        /// </summary>
+        /// <param name="cellData"></param>
         public override void Add(ICellData cellData)
         {
             _cellsByColumn.Add(cellData.CellColumnIndex, cellData);
@@ -26,7 +32,12 @@ namespace OpenXMLXLXSImporter.ExcelGrid.Indexers
                 _notify[cellData.CellColumnIndex].Set();
             }
         }
-
+        /// <summary>
+        /// this will get a cell if it's avaliable
+        /// </summary>
+        /// <param name="cellIndex"></param>
+        /// <param name="d"></param>
+        /// <returns></returns>
         public bool TryAndGetCell(string cellIndex, out ICellData d)
         {
             bool containsCell = _cellsByColumn.ContainsKey(cellIndex);
@@ -40,7 +51,11 @@ namespace OpenXMLXLXSImporter.ExcelGrid.Indexers
             }
             return containsCell;
         }
-
+        /// <summary>
+        /// Gets the WaitTillAvaliable ManualResetEvent which can be waited on
+        /// </summary>
+        /// <param name="cellIndex"></param>
+        /// <returns></returns>
         public ManualResetEvent WaitTillAvaliable(string cellIndex)
         {
             if (_notify != null)

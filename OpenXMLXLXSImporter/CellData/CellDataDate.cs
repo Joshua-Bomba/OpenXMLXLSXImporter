@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace OpenXMLXLXSImporter.CellData
 {
+    /// <summary>
+    /// A Cell that's data is a date
+    /// </summary>
     public class CellDataDate : BaseCellData
     {
         public CellDataDate()

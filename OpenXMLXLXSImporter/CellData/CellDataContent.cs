@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace OpenXMLXLXSImporter.CellData
 {
+    /// <summary>
+    /// basic content of a cell
+    /// </summary>
     public class CellDataContent : BaseCellData
     {
         public string Text { get; set; }

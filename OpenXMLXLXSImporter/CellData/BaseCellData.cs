@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace OpenXMLXLXSImporter.CellData
 {
+    /// <summary>
+    /// an abstract class for ICellData so we don't have to bother implement common properties again
+    /// </summary>
     public abstract class BaseCellData : ICellData
     {
         public string CellColumnIndex { get; set; }
