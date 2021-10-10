@@ -1,4 +1,5 @@
-﻿using OpenXMLXLXSImporter.CellData;
+﻿using Nito.AsyncEx;
+using OpenXMLXLXSImporter.CellData;
 using OpenXMLXLXSImporter.ExcelGrid.Indexers;
 using System;
 using System.Collections;
@@ -22,7 +23,7 @@ namespace OpenXMLXLXSImporter.ExcelGrid
         ISheetProperties _sheet;
         private Dictionary<uint, RowIndexer> _rows;
         private Dictionary<string, ColumnIndexer> _columns;
-        private BlockingCollection<ICellData> _cellEnumeratorCollection;
+        private AsyncCollection<ICellData> _cellEnumeratorCollection;
         private ManualResetEvent _allLoaded;
         private object _lockRow = new object();
         private object _lockColumn = new object();
@@ -33,7 +34,7 @@ namespace OpenXMLXLXSImporter.ExcelGrid
             _allLoaded = new ManualResetEvent(false);
             _rows = new Dictionary<uint, RowIndexer>();
             _columns = new Dictionary<string, ColumnIndexer>();
-            _cellEnumeratorCollection = new BlockingCollection<ICellData>();
+            _cellEnumeratorCollection = new AsyncCollection<ICellData>();
         }
 
         /// <summary>
@@ -158,17 +159,32 @@ namespace OpenXMLXLXSImporter.ExcelGrid
 
             public ICellData Current => _current;
 
-            public ValueTask DisposeAsync()
+            public async ValueTask DisposeAsync()
             {
-                throw new NotImplementedException();
+
             }
 
-            public ValueTask<bool> MoveNextAsync()
+            public async ValueTask<bool> MoveNextAsync()
             {
-                throw new NotImplementedException();
+                try
+                {
+                    ICellData c = await _ssg._cellEnumeratorCollection.TakeAsync();
+                    if(c != null)
+                    {
+                        _current = c;
+                        return true;
+                    }
+                }
+                catch
+                {
+
+                }
+                return false;                
             }
         }
 
-        public IAsyncEnumerator<ICellData> GetAsyncEnumerator(CancellationToken cancellationToken = default) => new CellEnumerator(this);
+        public CellEnumerator _singleInstanceOnly;
+
+        public IAsyncEnumerator<ICellData> GetAsyncEnumerator(CancellationToken cancellationToken = default) => _singleInstanceOnly ??= new CellEnumerator(this);
     }
 }
