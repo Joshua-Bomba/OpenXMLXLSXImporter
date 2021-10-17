@@ -17,5 +17,6 @@
     <PackageReference Include="DocumentFormat.OpenXml">
       <Version>2.13.1</Version>
     </PackageReference>
+    <PackageReference Include="Nito.AsyncEx" Version="5.1.2" />
   </ItemGroup>
 </Project>

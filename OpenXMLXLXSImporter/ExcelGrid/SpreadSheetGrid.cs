@@ -103,7 +103,7 @@ namespace OpenXMLXLXSImporter.ExcelGrid
         /// This is for the ExcelImporter to add cells after they have been parsed
         /// </summary>
         /// <param name="cellData"></param>
-        public void Add(ICellData cellData)
+        public async Task Add(ICellData cellData)
         {
             Task t1 = Task.Run(() =>
             {
@@ -130,11 +130,9 @@ namespace OpenXMLXLXSImporter.ExcelGrid
                 }
             });
 
-
-
-
-            t1.Wait();
-            t2.Wait();
+            await _cellEnumeratorCollection.AddAsync(cellData);
+            await t1;
+            await t2;
         }
 
         /// <summary>

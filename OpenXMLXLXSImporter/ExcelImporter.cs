@@ -97,7 +97,9 @@ namespace OpenXMLXLXSImporter
                 while (enumerator.MoveNext())
                 {
                     Row r = enumerator.Current;
-                    foreach (Cell c in r.Elements<Cell>())
+                    IEnumerable<Cell> cells = r.Elements<Cell>();
+                    List<Task> cellTask = new List<Task>();
+                    foreach (Cell c in cells)
                     {
                         if (c?.CellValue != null)
                         {
@@ -112,10 +114,11 @@ namespace OpenXMLXLXSImporter
                             {
                                 cellData.CellColumnIndex = c.CellReference;
                                 cellData.CellRowIndex = r.RowIndex.Value;
-                                grid.Add(cellData);
+                                cellTask.Add(grid.Add(cellData));
                             }
                         }
                     }
+                    cellTask.ForEach(x => x.Wait());
                 }
 
                 grid.FinishedLoading();
