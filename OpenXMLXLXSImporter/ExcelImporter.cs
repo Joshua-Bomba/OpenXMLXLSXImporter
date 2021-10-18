@@ -82,6 +82,21 @@ namespace OpenXMLXLXSImporter
             return false;
         }
 
+        private static string GetColumnIndexByColumnReference(StringValue columnReference)
+        {
+            string v = columnReference.Value;
+            for(int i = v.Length - 1;i >= 0;i--)
+            {
+                char c = v[i];
+                if (!Char.IsNumber(c))
+                {
+                    return v.Substring(0, i + 1);
+                }
+
+            }
+            return v;
+        }
+
         /// <summary>
         /// this will be called for each work sheet and will process each cell
         /// </summary>
@@ -112,7 +127,7 @@ namespace OpenXMLXLXSImporter
 
                             if (cellData != null)
                             {
-                                cellData.CellColumnIndex = c.CellReference;
+                                cellData.CellColumnIndex = GetColumnIndexByColumnReference(c.CellReference);
                                 cellData.CellRowIndex = r.RowIndex.Value;
                                 cellTask.Add(grid.Add(cellData));
                             }
