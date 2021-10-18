@@ -106,6 +106,7 @@ namespace OpenXMLXLXSImporter
         protected async Task ProcessWorkSheet(WorksheetPart worksheetPart, SpreadSheetGrid grid)
         {
             await Task.Run(() => {
+                List<Task> cellTask = new List<Task>();
                 Worksheet ws = worksheetPart.Worksheet;
                 SheetData sheetData = ws.Elements<SheetData>().First();
                 IEnumerator<Row> enumerator = sheetData.Elements<Row>().GetEnumerator();
@@ -113,7 +114,7 @@ namespace OpenXMLXLXSImporter
                 {
                     Row r = enumerator.Current;
                     IEnumerable<Cell> cells = r.Elements<Cell>();
-                    List<Task> cellTask = new List<Task>();
+
                     foreach (Cell c in cells)
                     {
                         if (c?.CellValue != null)
@@ -133,9 +134,8 @@ namespace OpenXMLXLXSImporter
                             }
                         }
                     }
-                    cellTask.ForEach(x => x.Wait());
                 }
-
+                cellTask.ForEach(x => x.Wait());
                 grid.FinishedLoading();
             });
 

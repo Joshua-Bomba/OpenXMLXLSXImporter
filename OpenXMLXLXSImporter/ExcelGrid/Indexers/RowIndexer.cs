@@ -32,6 +32,9 @@ namespace OpenXMLXLXSImporter.ExcelGrid.Indexers
                 _notify[cellData.CellColumnIndex].Set();
             }
         }
+
+        public Dictionary<string, ICellData> Contents => _cellsByColumn;
+
         /// <summary>
         /// this will get a cell if it's avaliable
         /// </summary>

@@ -23,10 +23,10 @@ namespace OpenXMLXLXSImporter.ExcelGrid
         ISheetProperties _sheet;
         private Dictionary<uint, RowIndexer> _rows;
         private Dictionary<string, ColumnIndexer> _columns;
-        private AsyncCollection<ICellData> _cellEnumeratorCollection;
         private bool _allLoaded;
-        private object _lockRow = new object();
-        private object _lockColumn = new object();
+        private readonly AsyncLock _lockRow;
+        private readonly AsyncLock _lockColumn;
+        private List<IItemEnquedEvent> _listeners;
         public SpreadSheetGrid(ISheetProperties sheet)
         {
             _sheet = sheet;
@@ -34,9 +34,10 @@ namespace OpenXMLXLXSImporter.ExcelGrid
             _allLoaded = false;
             _rows = new Dictionary<uint, RowIndexer>();
             _columns = new Dictionary<string, ColumnIndexer>();
-            _cellEnumeratorCollection = new AsyncCollection<ICellData>();
+            _lockRow = new AsyncLock();
+            _lockColumn = new AsyncLock();
+            _listeners = null;
         }
-
         /// <summary>
         /// this will return a paticular cell if it's avaliable
         /// </summary>
@@ -63,10 +64,10 @@ namespace OpenXMLXLXSImporter.ExcelGrid
         public async Task<ICellData> FetchCell(uint rowIndex, string cellIndex, int timeout = -1)
         {
             ICellData cell = null;
-            await Task.Run(() =>
+            await Task.Run(async() =>
             {
                 ManualResetEvent e = null;
-                lock (_lockRow)//honestly this multi threading crap is probably unessary unless you havea massive excel document but whatever this is how I wrote it
+                using(await _lockRow.LockAsync())//honestly this multi threading crap is probably unessary unless you havea massive excel document but whatever this is how I wrote it
                 {
                     if (!_rows.ContainsKey(rowIndex))
                     {
@@ -89,7 +90,7 @@ namespace OpenXMLXLXSImporter.ExcelGrid
                 }
                 if (e != null&& e.WaitOne(timeout))
                 {
-                    lock (_lockRow)
+                    using ( await _lockRow.LockAsync())
                     {
                         if (_rows[rowIndex].TryAndGetCell(cellIndex, out ICellData d))
                         {
@@ -110,34 +111,39 @@ namespace OpenXMLXLXSImporter.ExcelGrid
         /// <param name="cellData"></param>
         public async Task Add(ICellData cellData)
         {
-            Task t1 = Task.Run(() =>
+            /*Task t1 = Task.Run(async() =>
+            {*/
+            using(await _lockRow.LockAsync())
             {
-                lock (_lockRow)
+                if (!_rows.ContainsKey(cellData.CellRowIndex))
                 {
-                    if (!_rows.ContainsKey(cellData.CellRowIndex))
-                    {
-                        _rows[cellData.CellRowIndex] = new RowIndexer(this);
-                    }
-
-                    _rows[cellData.CellRowIndex].Add(cellData);
+                    _rows[cellData.CellRowIndex] = new RowIndexer(this);
                 }
-            });
-            Task t2 = Task.Run(() =>
+
+                _rows[cellData.CellRowIndex].Add(cellData);
+                if(_listeners != null)
+                {
+                    //intresting so this will call each method and won't await till it's finished calling all of them
+                    //pretty handy neat pattern
+                    await Task.WhenAll(_listeners.Select(x => x.NotifyAsync(cellData)));
+                }
+            }
+            //});
+            /*Task t2 = Task.Run(async() =>
+            {*/
+            using (await _lockColumn.LockAsync())
             {
-                lock (_lockColumn)
+                if (!_columns.ContainsKey(cellData.CellColumnIndex))
                 {
-                    if (!_columns.ContainsKey(cellData.CellColumnIndex))
-                    {
-                        _columns[cellData.CellColumnIndex] = new ColumnIndexer(this);
-                    }
-
-                    _columns[cellData.CellColumnIndex].Add(cellData);
+                    _columns[cellData.CellColumnIndex] = new ColumnIndexer(this);
                 }
-            });
 
-            await _cellEnumeratorCollection.AddAsync(cellData);
-            await t1;
-            await t2;
+                _columns[cellData.CellColumnIndex].Add(cellData);
+            }
+            //});
+
+            //await t1;
+            //await t2;
         }
 
         /// <summary>
@@ -147,19 +153,25 @@ namespace OpenXMLXLXSImporter.ExcelGrid
         public void FinishedLoading()
         {
             _allLoaded = true;
-            //TODO: notify the FetchCell to continue 
+
+            foreach(KeyValuePair<uint, RowIndexer> terminateWait in _rows)
+            {
+                terminateWait.Value.ClearNotify();
+            }
         }
 
         public bool AllLoaded => _allLoaded;
 
-        public class CellEnumerator : IAsyncEnumerator<ICellData>
+        public class CellEnumerator : IAsyncEnumerator<ICellData>, IItemEnquedEvent
         {
             private SpreadSheetGrid _ssg;
             private ICellData _current;
+            private AsyncCollection<ICellData> _data;
             public CellEnumerator(SpreadSheetGrid ssg)
             {
                 _ssg = ssg;
                 _current = null;
+                _data = null;
             }
 
             public ICellData Current => _current;
@@ -169,12 +181,39 @@ namespace OpenXMLXLXSImporter.ExcelGrid
 
             }
 
+
+            public async Task GetCurrentRows()
+            {
+                
+                using(await _ssg._lockRow.LockAsync())
+                {
+                    List<ICellData> d = new List<ICellData>();
+
+                    //initalize the AsyncCollection using a ConcurrentQueue which is inialized using the Linq statement which I think will produce
+                    //an Iterator which will iterate over each value to populate the ConcurrentQueue
+                    _data = new AsyncCollection<ICellData>(
+                        new ConcurrentQueue<ICellData>(
+                            _ssg._rows
+                            .SelectMany(x => x.Value.Contents)
+                            .Select(x => x.Value)//pass in the IEnumerable of ICellData
+                            )
+                        );
+                    _ssg._listeners.Add(this);//this has the rowlock so it's thread safe
+                }
+            }
+
+
             public async ValueTask<bool> MoveNextAsync()
             {
                 try
                 {
-                    ICellData c = await _ssg._cellEnumeratorCollection.TakeAsync();
-                    if(c != null)
+                    if(_data == null)
+                    {
+                        await GetCurrentRows();
+                    }
+                    
+                    ICellData c = await _data.TakeAsync();
+                    if (c != null)
                     {
                         _current = c;
                         return true;
@@ -185,6 +224,11 @@ namespace OpenXMLXLXSImporter.ExcelGrid
 
                 }
                 return false;                
+            }
+
+            public async Task NotifyAsync(ICellData c)
+            {
+                await _data.AddAsync(c);
             }
         }
 
