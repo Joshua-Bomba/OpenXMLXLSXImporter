@@ -154,10 +154,16 @@ namespace OpenXMLXLXSImporter.ExcelGrid
         public void FinishedLoading()
         {
             _allLoaded = true;
-
             foreach(KeyValuePair<uint, RowIndexer> terminateWait in _rows)
             {
                 terminateWait.Value.ClearNotify();
+            }
+            if(_listeners != null)
+            {
+                foreach (IItemEnquedEvent i in _listeners)
+                {
+                    i.FinishedLoading();
+                }
             }
         }
 

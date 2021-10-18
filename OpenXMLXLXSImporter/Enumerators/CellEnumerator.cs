@@ -26,9 +26,13 @@ namespace OpenXMLXLXSImporter.Enumerators
 
         public async ValueTask DisposeAsync()
         {
-
+            
         }
 
+        public void FinishedLoading()
+        {
+            _data.CompleteAdding();
+        }
 
         public async Task GetCurrentRows()
         {
