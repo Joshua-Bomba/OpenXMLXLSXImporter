@@ -10,5 +10,7 @@ namespace OpenXMLXLXSImporter.ExcelGrid
     public interface IItemEnquedEvent
     {
         Task NotifyAsync(ICellData c);
+
+        void FinishedLoading();
     }
 }
