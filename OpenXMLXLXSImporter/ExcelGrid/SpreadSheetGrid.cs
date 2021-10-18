@@ -24,14 +24,14 @@ namespace OpenXMLXLXSImporter.ExcelGrid
         private Dictionary<uint, RowIndexer> _rows;
         private Dictionary<string, ColumnIndexer> _columns;
         private AsyncCollection<ICellData> _cellEnumeratorCollection;
-        private ManualResetEvent _allLoaded;
+        private bool _allLoaded;
         private object _lockRow = new object();
         private object _lockColumn = new object();
         public SpreadSheetGrid(ISheetProperties sheet)
         {
             _sheet = sheet;
             sheet.SetCellGrid(this);
-            _allLoaded = new ManualResetEvent(false);
+            _allLoaded = false;
             _rows = new Dictionary<uint, RowIndexer>();
             _columns = new Dictionary<string, ColumnIndexer>();
             _cellEnumeratorCollection = new AsyncCollection<ICellData>();
@@ -43,9 +43,14 @@ namespace OpenXMLXLXSImporter.ExcelGrid
         /// <param name="row"></param>
         /// <param name="cell"></param>
         /// <returns></returns>
-        public bool TryFetchCell(uint row, string cell)
+        public bool TryFetchCell(uint row, string cell, out ICellData cellData)
         {
-            throw new NotImplementedException();
+            cellData = null;
+            if (_rows.ContainsKey(row))
+            {
+                return _rows[row].TryAndGetCell(cell, out cellData);
+            }
+            return false;
         }
 
         /// <summary>
@@ -65,7 +70,7 @@ namespace OpenXMLXLXSImporter.ExcelGrid
                 {
                     if (!_rows.ContainsKey(rowIndex))
                     {
-                        _rows[rowIndex] = new RowIndexer();
+                        _rows[rowIndex] = new RowIndexer(this);
                         e = _rows[rowIndex].WaitTillAvaliable(cellIndex);
                     }
                     else
@@ -82,7 +87,7 @@ namespace OpenXMLXLXSImporter.ExcelGrid
                     }
 
                 }
-                if (e.WaitOne(timeout))
+                if (e != null&& e.WaitOne(timeout))
                 {
                     lock (_lockRow)
                     {
@@ -111,7 +116,7 @@ namespace OpenXMLXLXSImporter.ExcelGrid
                 {
                     if (!_rows.ContainsKey(cellData.CellRowIndex))
                     {
-                        _rows[cellData.CellRowIndex] = new RowIndexer();
+                        _rows[cellData.CellRowIndex] = new RowIndexer(this);
                     }
 
                     _rows[cellData.CellRowIndex].Add(cellData);
@@ -123,7 +128,7 @@ namespace OpenXMLXLXSImporter.ExcelGrid
                 {
                     if (!_columns.ContainsKey(cellData.CellColumnIndex))
                     {
-                        _columns[cellData.CellColumnIndex] = new ColumnIndexer();
+                        _columns[cellData.CellColumnIndex] = new ColumnIndexer(this);
                     }
 
                     _columns[cellData.CellColumnIndex].Add(cellData);
@@ -141,9 +146,11 @@ namespace OpenXMLXLXSImporter.ExcelGrid
         /// </summary>
         public void FinishedLoading()
         {
-            _allLoaded.Set();
+            _allLoaded = true;
             //TODO: notify the FetchCell to continue 
         }
+
+        public bool AllLoaded => _allLoaded;
 
         public class CellEnumerator : IAsyncEnumerator<ICellData>
         {

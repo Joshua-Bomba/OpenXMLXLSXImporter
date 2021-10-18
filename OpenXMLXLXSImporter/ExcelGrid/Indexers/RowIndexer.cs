@@ -15,7 +15,7 @@ namespace OpenXMLXLXSImporter.ExcelGrid.Indexers
     {
         protected Dictionary<string, ICellData> _cellsByColumn;
         private Dictionary<string, ManualResetEvent> _notify;
-        public RowIndexer() : base()
+        public RowIndexer(SpreadSheetGrid grid) : base(grid)
         {
             _cellsByColumn = new Dictionary<string, ICellData>();
             _notify = null;
@@ -58,15 +58,31 @@ namespace OpenXMLXLXSImporter.ExcelGrid.Indexers
         /// <returns></returns>
         public ManualResetEvent WaitTillAvaliable(string cellIndex)
         {
+            if(!_grid.AllLoaded)
+            {
+                if (_notify != null)
+                {
+                    _notify = new Dictionary<string, ManualResetEvent>();
+                }
+                if (!_notify.ContainsKey(cellIndex))
+                {
+                    _notify.Add(cellIndex, new ManualResetEvent(false));
+                }
+                return _notify[cellIndex];
+            }
+            return null;
+        }
+
+
+        public void ClearNotify()
+        {
             if (_notify != null)
             {
-                _notify = new Dictionary<string, ManualResetEvent>();
+                foreach(KeyValuePair<string,ManualResetEvent> kv in _notify)
+                {
+                    kv.Value.Set();
+                }
             }
-            if (!_notify.ContainsKey(cellIndex))
-            {
-                _notify.Add(cellIndex, new ManualResetEvent(false));
-            }
-            return _notify[cellIndex];
         }
 
     }

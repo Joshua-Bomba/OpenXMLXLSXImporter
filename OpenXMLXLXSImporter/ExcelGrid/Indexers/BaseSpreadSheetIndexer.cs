@@ -13,9 +13,10 @@ namespace OpenXMLXLXSImporter.ExcelGrid.Indexers
     public abstract class BaseSpreadSheetIndexer
     {
         //not much here yet idk how this will look like in the future
-        public BaseSpreadSheetIndexer()
+        protected SpreadSheetGrid _grid;
+        public BaseSpreadSheetIndexer(SpreadSheetGrid grid)
         {
-
+            _grid = grid;
         }
         public abstract void Add(ICellData celldata);
 
