@@ -13,7 +13,7 @@ namespace OpenXMLXLXSImporter.ExcelGrid.Indexers
     public class ColumnIndexer : BaseSpreadSheetIndexer
     {
         private Dictionary<uint, ICellData> _cellsByRow;
-        public ColumnIndexer() : base()
+        public ColumnIndexer(SpreadSheetGrid grid) : base(grid)
         {
             _cellsByRow = new Dictionary<uint, ICellData>();
         }

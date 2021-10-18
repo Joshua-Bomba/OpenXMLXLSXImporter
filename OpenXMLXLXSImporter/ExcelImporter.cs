@@ -82,6 +82,21 @@ namespace OpenXMLXLXSImporter
             return false;
         }
 
+        private static string GetColumnIndexByColumnReference(StringValue columnReference)
+        {
+            string v = columnReference.Value;
+            for(int i = v.Length - 1;i >= 0;i--)
+            {
+                char c = v[i];
+                if (!Char.IsNumber(c))
+                {
+                    return v.Substring(0, i + 1);
+                }
+
+            }
+            return v;
+        }
+
         /// <summary>
         /// this will be called for each work sheet and will process each cell
         /// </summary>
@@ -91,13 +106,16 @@ namespace OpenXMLXLXSImporter
         protected async Task ProcessWorkSheet(WorksheetPart worksheetPart, SpreadSheetGrid grid)
         {
             await Task.Run(() => {
+                List<Task> cellTask = new List<Task>();
                 Worksheet ws = worksheetPart.Worksheet;
                 SheetData sheetData = ws.Elements<SheetData>().First();
                 IEnumerator<Row> enumerator = sheetData.Elements<Row>().GetEnumerator();
                 while (enumerator.MoveNext())
                 {
                     Row r = enumerator.Current;
-                    foreach (Cell c in r.Elements<Cell>())
+                    IEnumerable<Cell> cells = r.Elements<Cell>();
+
+                    foreach (Cell c in cells)
                     {
                         if (c?.CellValue != null)
                         {
@@ -110,14 +128,14 @@ namespace OpenXMLXLXSImporter
 
                             if (cellData != null)
                             {
-                                cellData.CellColumnIndex = c.CellReference;
+                                cellData.CellColumnIndex = GetColumnIndexByColumnReference(c.CellReference);
                                 cellData.CellRowIndex = r.RowIndex.Value;
-                                grid.Add(cellData);
+                                cellTask.Add(grid.Add(cellData));
                             }
                         }
                     }
                 }
-
+                cellTask.ForEach(x => x.Wait());
                 grid.FinishedLoading();
             });
 
