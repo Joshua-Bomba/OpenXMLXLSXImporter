@@ -177,5 +177,6 @@ namespace OpenXMLXLXSImporter.ExcelGrid
         }
 
         public IAsyncEnumerator<ICellData> GetAsyncEnumerator(CancellationToken cancellationToken = default) => new CellEnumerator(this);
+        public IAsyncEnumerator<ICellData> GetAsyncEnumerator(IConditions conditions,CancellationToken cancellationToken = default) => new CellEnumerator(this,conditions);
     }
 }

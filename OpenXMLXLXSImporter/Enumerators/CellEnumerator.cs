@@ -15,11 +15,16 @@ namespace OpenXMLXLXSImporter.Enumerators
         private ISpreadSheetGridCollectionAccessor _ssg;
         private ICellData _current;
         private AsyncCollection<ICellData> _data;
+        private IConditions _conditions;
         internal CellEnumerator(ISpreadSheetGridCollectionAccessor ssg)
         {
             _ssg = ssg;
             _current = null;
             _data = null;
+        }
+        internal CellEnumerator(ISpreadSheetGridCollectionAccessor ssg, IConditions conditions) : this(ssg)
+        {
+            _conditions = conditions;
         }
 
         public ICellData Current => _current;
