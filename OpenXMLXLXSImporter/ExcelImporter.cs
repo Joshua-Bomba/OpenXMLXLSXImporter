@@ -7,42 +7,123 @@ using System.Threading.Tasks;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
+using Nito.AsyncEx;
 using OpenXMLXLXSImporter.CellData;
 using OpenXMLXLXSImporter.ExcelGrid;
 
 namespace OpenXMLXLXSImporter
 {
+
     /// <summary>
     /// This class is for managing the import pass in a Stream to your excel file
     /// Implemented the ISheetProperties interface for each sheet you want to import
     /// add the ISheetProperties through the Add Method
-    /// After your done adding them run the LoadSpreadSheetData method
+    /// This will make it load the sheet in
     /// </summary>
-    public class ExcelImporter : IDisposable
+    public class ExcelImporter : IExcelImporter
     {
+        private SpreadSheetFile _streamSheetFile;
+        public static IExcelImporter CreateExcelImporter(Stream stream) => new ExcelImporter(stream);
+        public ExcelImporter(Stream stream)
+        {
+            _streamSheetFile = new SpreadSheetFile(stream);
+        }
+
+        protected void LoadSpreadSheet(ISheetProperties sheet)
+        {
+
+        }
+
+        public void Process(ISheetProperties sheet)
+        {
+            LoadSpreadSheet(sheet);
+            //prop.LoadConfig()
+        }
+
+        public void Dispose()
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public interface ISpreadSheetFile
+    {
+        Sheet GetSheet(string sheetName);
+        WorkbookPart WorkbookPart { get; }
+    }
+
+    public interface ISpreadSheetFileLockable
+    {
+        Task ContextLock(Action<ISpreadSheetFile> spreadSheetFile);
+    }
+
+    public class SpreadSheetFile : ISpreadSheetFileLockable, ISpreadSheetFile
+    {
+        private Stream _stream;
+        //The Sheet
         private SpreadsheetDocument _spreadsheet;
+        //WorkBookParts
         private WorkbookPart _workbookPart;
+        private SharedStringTablePart _sharedStringTablePart;
         private SharedStringTable _sharedStringTable;
         private WorkbookStylesPart _workBookStyleParts;
         private Stylesheet _styleSheet;
         private CellFormats _cellFormats;
-        private Stream _stream;
-        private SpreadSheetGrid[] _grids;
-        private List<ISheetProperties> _sheetProperties;
-        private Task[] _processedWorkSheets;
+        //The Task that Loads in the SpreadSheetDocumentData
+        private Task _loadSpreadSheetData;
 
-        public ExcelImporter(Stream stream)
+        private Dictionary<string, SpreadSheetGrid> _loadedSheets;
+        private Dictionary<string, Sheet> _sheetRef;
+
+        private readonly AsyncLock _fileMutex = new AsyncLock();
+
+        public SpreadSheetFile(Stream stream)
         {
             _stream = stream;
-            _sheetProperties = new List<ISheetProperties>();
-            _grids = null;
-            _processedWorkSheets = null;
+            _loadSpreadSheetData = LoadSpreadSheetDocuemntData();
+            _loadedSheets = new Dictionary<string, SpreadSheetGrid>();
         }
 
-        public void Add(ISheetProperties prop)
+        async Task ISpreadSheetFileLockable.ContextLock(Action<ISpreadSheetFile> spreadSheetFile)
         {
-            _sheetProperties.Add(prop);
+            if(spreadSheetFile != null)
+            {
+                await _loadSpreadSheetData;//Ensure this is loaded first
+                using (await _fileMutex.LockAsync())//grab the fileMutex
+                {
+                    spreadSheetFile(this);//We can safely run any commands in here
+                }
+            }
         }
+
+        Sheet ISpreadSheetFile.GetSheet(string sheetName) => _sheetRef[sheetName];
+
+        WorkbookPart ISpreadSheetFile.WorkbookPart => _workbookPart;
+
+        /// <summary>
+        /// Common Reusable Parts of the WorkSheet
+        /// </summary>
+        /// <returns></returns>
+        private Task LoadSpreadSheetDocuemntData()
+        {
+            return Task.Run(() =>
+            {
+                _spreadsheet = SpreadsheetDocument.Open(_stream, false, new OpenSettings { AutoSave = false });
+                _workbookPart = _spreadsheet.WorkbookPart;
+
+                _sharedStringTablePart = _workbookPart.GetPartsOfType<SharedStringTablePart>().First();
+                _sharedStringTable = _sharedStringTablePart.SharedStringTable;
+
+                _workBookStyleParts = _workbookPart.WorkbookStylesPart;
+                _styleSheet = _workBookStyleParts.Stylesheet;
+                _cellFormats = _styleSheet.CellFormats;
+
+                //this will get all the sheetNames
+                _sheetRef = _workbookPart.Workbook.Sheets.Cast<Sheet>().Where(x => x.Name.HasValue).ToDictionary(x => x.Name.Value);
+            });
+        }
+
+
         /// <summary>
         /// This is for custom Cell Types like dates Cell with relations like text etc
         /// </summary>
@@ -141,60 +222,29 @@ namespace OpenXMLXLXSImporter
 
         }
 
-        /// <summary>
-        /// processes all the sheets passed in
-        /// </summary>
-        public void LoadSpreadSheetData()
+        public async Task<SpreadSheetGrid> LoadSpreadSheetData(ISheetProperties sheet)
         {
-            string[] sheetNames = _sheetProperties.Select(x => x.Sheet).ToArray();
-            Sheet[] sheets = new Sheet[sheetNames.Length];
-            //_collection = new BlockingCollection<RowData>();
-            _spreadsheet = SpreadsheetDocument.Open(_stream, false, new OpenSettings { AutoSave = false });
-            _workbookPart = _spreadsheet.WorkbookPart;
-
-            IEnumerator<Sheet> sheetEnumerator = _workbookPart.Workbook.Sheets.Cast<Sheet>().GetEnumerator();
-            while (sheetEnumerator.MoveNext())
+            await _loadSpreadSheetData;
+            if(_sheetRef.ContainsKey(sheet.Sheet))
             {
-                StringValue name = sheetEnumerator.Current.Name;
-                if (name.HasValue)
+                if (!_loadedSheets.ContainsKey(sheet.Sheet))
                 {
-                    int index = Array.IndexOf(sheetNames, name.Value);
-                    if (index >= 0)
-                    {
-                        sheets[index] = sheetEnumerator.Current;
-                    }
+                    //this is the first time we use this sheet
+                    _loadedSheets[sheet.Sheet] = new SpreadSheetGrid(this,sheet);
                 }
+                return _loadedSheets[sheet.Sheet];
             }
-
-            SharedStringTablePart sharedStringTablePart = _workbookPart.GetPartsOfType<SharedStringTablePart>().First();
-            _sharedStringTable = sharedStringTablePart.SharedStringTable;
-
-            _workBookStyleParts = _workbookPart.WorkbookStylesPart;
-            _styleSheet = _workBookStyleParts.Stylesheet;
-            _cellFormats = _styleSheet.CellFormats;
-
-            sheets = sheets.Where(x => x != null).ToArray();
-            WorksheetPart[] worksheetsParts = new WorksheetPart[sheets.Length];
-            _processedWorkSheets = new Task[sheets.Length];
-            _grids = new SpreadSheetGrid[sheets.Length];
-            for (int i = 0; i < sheets.Length; i++)
-            {
-                WorksheetPart wp = _workbookPart.GetPartById(sheets[i].Id) as WorksheetPart;
-                _grids[i] = new SpreadSheetGrid(_sheetProperties[i]);
-                _processedWorkSheets[i] = this.ProcessWorkSheet(wp, _grids[i]);
-            }
+            return null;
         }
 
         public void Dispose()
         {
-            if(_processedWorkSheets != null)
-            {
-                foreach(Task t in _processedWorkSheets)
-                    t?.Wait();
-            }
+            //if(_loadedSheets != null)
+            //{
+            //    foreach(Task t in _loadedSheets)
+            //        t?.Wait();
+            //}
             _spreadsheet.Dispose();
         }
-
-        
     }
 }

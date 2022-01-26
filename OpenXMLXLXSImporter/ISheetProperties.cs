@@ -1,5 +1,6 @@
 ﻿using DocumentFormat.OpenXml.Spreadsheet;
 using OpenXMLXLXSImporter.ExcelGrid;
+using OpenXMLXLXSImporter.ExcelGrid.Builders;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,11 +16,6 @@ namespace OpenXMLXLXSImporter
         /// </summary>
         string Sheet { get; }
 
-        /// <summary>
-        /// this will be called when the SpreadSheetGrid is constructed for this sheet
-        /// stored this in a variable and access it to access the spreadsheet
-        /// </summary>
-        /// <param name="grid"></param>
-        void SetCellGrid(SpreadSheetGrid grid);
+        void LoadConfig(ISpreadSheetInstructionBuilder builder);
     }
 }

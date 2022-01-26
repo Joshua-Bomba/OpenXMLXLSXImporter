@@ -1,4 +1,6 @@
-﻿using Nito.AsyncEx;
+﻿using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Spreadsheet;
+using Nito.AsyncEx;
 using OpenXMLXLXSImporter.CellData;
 using OpenXMLXLXSImporter.Enumerators;
 using OpenXMLXLXSImporter.ExcelGrid.Indexers;
@@ -19,19 +21,34 @@ namespace OpenXMLXLXSImporter.ExcelGrid
     /// interate through all the cells for an entire row
     /// interate through all the cells
     /// </summary>
-    public class SpreadSheetGrid : IAsyncEnumerable<ICellData>, ISpreadSheetGridCollectionAccessor
+    public class SpreadSheetGrid 
     {
-        ISheetProperties _sheet;
+        private ISpreadSheetFileLockable _fileAccess;
+        private ISheetProperties _sheetProperties;
+
+        private Sheet _sheet;
+        private WorksheetPart _workbookPart;
+        private Worksheet _worksheet;
+        private SheetData _sheetData;
+
+        private Task _loadSpreadSheetData;
+
         private Dictionary<uint, RowIndexer> _rows;
         private Dictionary<string, ColumnIndexer> _columns;
         private bool _allLoaded;
         private readonly AsyncLock _lockRow;
         private readonly AsyncLock _lockColumn;
         private List<IItemEnquedEvent> _listeners;
-        public SpreadSheetGrid(ISheetProperties sheet)
+
+
+        public SpreadSheetGrid(ISpreadSheetFileLockable fileAccess, ISheetProperties sheetProperties)
         {
-            _sheet = sheet;
-            sheet.SetCellGrid(this);
+            _fileAccess = fileAccess;
+            _sheetProperties = sheetProperties;
+
+
+            _loadSpreadSheetData = Task.Run(LoadSpreadSheetData);
+
             _allLoaded = false;
             _rows = new Dictionary<uint, RowIndexer>();
             _columns = new Dictionary<string, ColumnIndexer>();
@@ -39,6 +56,20 @@ namespace OpenXMLXLXSImporter.ExcelGrid
             _lockColumn = new AsyncLock();
             _listeners = null;
         }
+
+        protected async Task LoadSpreadSheetData()
+        {
+            await _fileAccess.ContextLock(x =>
+            {
+                _sheet = x.GetSheet(_sheetProperties.Sheet);
+                _workbookPart = x.WorkbookPart.GetPartById(_sheet.Id) as WorksheetPart;
+                _worksheet = _workbookPart.Worksheet;
+                _sheetData = _worksheet.Elements<SheetData>().First();
+            });
+        }
+
+
+
         /// <summary>
         /// this will return a paticular cell if it's avaliable
         /// </summary>
