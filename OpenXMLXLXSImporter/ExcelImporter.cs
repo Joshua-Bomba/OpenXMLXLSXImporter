@@ -54,7 +54,7 @@ namespace OpenXMLXLXSImporter
 
     public interface ISpreadSheetFileLockable
     {
-        Task ContextLock(Action<ISpreadSheetFile> spreadSheetFile);
+        Task ContextLock(Func<ISpreadSheetFile,Task> spreadSheetFile);
     }
 
     public class SpreadSheetFile : ISpreadSheetFileLockable, ISpreadSheetFile
@@ -84,14 +84,14 @@ namespace OpenXMLXLXSImporter
             _loadedSheets = new Dictionary<string, SpreadSheetGrid>();
         }
 
-        async Task ISpreadSheetFileLockable.ContextLock(Action<ISpreadSheetFile> spreadSheetFile)
+        async Task ISpreadSheetFileLockable.ContextLock(Func<ISpreadSheetFile,Task> spreadSheetFile)
         {
             if(spreadSheetFile != null)
             {
                 await _loadSpreadSheetData;//Ensure this is loaded first
                 using (await _fileMutex.LockAsync())//grab the fileMutex
                 {
-                    spreadSheetFile(this);//We can safely run any commands in here
+                    await spreadSheetFile(this);//We can safely run any commands in here
                 }
             }
         }
@@ -189,7 +189,7 @@ namespace OpenXMLXLXSImporter
             await Task.Run(() => {
                 List<Task> cellTask = new List<Task>();
                 Worksheet ws = worksheetPart.Worksheet;
-                SheetData sheetData = ws.Elements<SheetData>().First();
+                SheetData sheetData = ws.Elements<SheetData>().
                 IEnumerator<Row> enumerator = sheetData.Elements<Row>().GetEnumerator();
                 while (enumerator.MoveNext())
                 {

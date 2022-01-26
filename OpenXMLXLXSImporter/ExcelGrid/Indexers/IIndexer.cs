@@ -9,7 +9,7 @@ namespace OpenXMLXLXSImporter.ExcelGrid.Indexers
 {
     public interface IIndexer
     {
-        Task Add(ICellData cellData);
+        Task Add(ICellIndex cellData);
 
         Task<bool>  HasCell(uint rowIndex, string cellIndex);
 

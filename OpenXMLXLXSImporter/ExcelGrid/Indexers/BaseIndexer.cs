@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Nito.AsyncEx;
+using OpenXMLXLXSImporter.CellData;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -14,7 +16,7 @@ namespace OpenXMLXLXSImporter.ExcelGrid.Indexers
 
         }
 
-        public abstract Task Add(ICellData cellData);
+        public abstract Task Add(ICellIndex cellData);
 
         public abstract Task<ICellData> GetCell(uint rowIndex, string cellIndex);
 

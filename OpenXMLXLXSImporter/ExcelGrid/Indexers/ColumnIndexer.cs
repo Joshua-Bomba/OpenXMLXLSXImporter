@@ -12,13 +12,13 @@ namespace OpenXMLXLXSImporter.ExcelGrid.Indexers
     /// </summary>
     public class ColumnIndexer : BaseIndexer
     {
-        private Dictionary<string,Dictionary<uint, ICellData>> _cells;
+        private Dictionary<string,Dictionary<uint, ICellIndex>> _cells;
         public ColumnIndexer() : base()
         {
-            _cells = new Dictionary<string, Dictionary<uint, ICellData>>();
+            _cells = new Dictionary<string, Dictionary<uint, ICellIndex>>();
         }
 
-        public async override Task Add(ICellData cellData)
+        public async override Task Add(ICellIndex cellData)
         {
             //_cellsByRow[cellData.CellRowIndex] = cellData;
         }

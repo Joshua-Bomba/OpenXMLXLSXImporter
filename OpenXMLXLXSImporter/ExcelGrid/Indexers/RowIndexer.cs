@@ -14,18 +14,18 @@ namespace OpenXMLXLXSImporter.ExcelGrid.Indexers
     /// </summary>
     public class RowIndexer : BaseIndexer
     {
-        protected Dictionary<uint,Dictionary<string, ICellData>> _cells;
+        protected Dictionary<uint,Dictionary<string, ICellIndex>> _cells;
 
          
         public RowIndexer() : base()
         {
-            _cells = new Dictionary<uint, Dictionary<string, ICellData>>();
+            _cells = new Dictionary<uint, Dictionary<string, ICellIndex>>();
         }
         /// <summary>
         /// this will add a cell called by the ExcelImporter
         /// </summary>
         /// <param name="cellData"></param>
-        public async override Task Add(ICellData cellData)
+        public async override Task Add(ICellIndex cellData)
         {
 
             //cellData.CellColumnIndex, cellData

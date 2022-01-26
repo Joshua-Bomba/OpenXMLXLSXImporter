@@ -51,7 +51,7 @@ namespace OpenXMLXLXSImporter.ExcelGrid
 
         protected async Task LoadSpreadSheetData()
         {
-            await _fileAccess.ContextLock(x =>
+            await _fileAccess.ContextLock(async x =>
             {
                 _sheet = x.GetSheet(_sheetProperties.Sheet);
                 _workbookPart = x.WorkbookPart.GetPartById(_sheet.Id) as WorksheetPart;
@@ -69,19 +69,22 @@ namespace OpenXMLXLXSImporter.ExcelGrid
         public async Task<ICellData> FetchCell(uint rowIndex, string cellIndex)
         {
             ICellData cell = null;
-            bool rowState = await _rows.HasCell(rowIndex, cellIndex);
-            if(!rowState)
+            if(!await _rows.HasCell(rowIndex, cellIndex))//lock & unlock rows
             {
-                await AddMissingCell(rowIndex, cellIndex);
+                await AddMissingCell(rowIndex, cellIndex);//_rows is unlocked here
             }
-            return await _rows.GetCell(rowIndex, cellIndex);
+            return await _rows.GetCell(rowIndex, cellIndex);//lock & unlock rows
         }
 
         public async Task AddMissingCell(uint rowIndex, string cellIndex)
         {
-            await _fileAccess.ContextLock(x =>
+            await _fileAccess.ContextLock(async x =>//File access is locked
             {
-               
+                //we are going to check if the cell has been added since we got the lock
+                if (!await _rows.HasCell(rowIndex, cellIndex))//rows is locked
+                {
+
+                }
             });
         }
 
