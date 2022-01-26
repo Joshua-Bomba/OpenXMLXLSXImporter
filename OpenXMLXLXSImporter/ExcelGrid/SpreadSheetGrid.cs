@@ -21,7 +21,7 @@ namespace OpenXMLXLXSImporter.ExcelGrid
     /// interate through all the cells for an entire row
     /// interate through all the cells
     /// </summary>
-    public class SpreadSheetGrid 
+    public class SpreadSheetGrid
     {
         private ISpreadSheetFileLockable _fileAccess;
         private ISheetProperties _sheetProperties;
@@ -33,12 +33,8 @@ namespace OpenXMLXLXSImporter.ExcelGrid
 
         private Task _loadSpreadSheetData;
 
-        private Dictionary<uint, RowIndexer> _rows;
-        private Dictionary<string, ColumnIndexer> _columns;
-        private bool _allLoaded;
-        private readonly AsyncLock _lockRow;
-        private readonly AsyncLock _lockColumn;
-        private List<IItemEnquedEvent> _listeners;
+        private RowIndexer _rows;
+        private ColumnIndexer _columns;
 
 
         public SpreadSheetGrid(ISpreadSheetFileLockable fileAccess, ISheetProperties sheetProperties)
@@ -49,12 +45,8 @@ namespace OpenXMLXLXSImporter.ExcelGrid
 
             _loadSpreadSheetData = Task.Run(LoadSpreadSheetData);
 
-            _allLoaded = false;
-            _rows = new Dictionary<uint, RowIndexer>();
-            _columns = new Dictionary<string, ColumnIndexer>();
-            _lockRow = new AsyncLock();
-            _lockColumn = new AsyncLock();
-            _listeners = null;
+            _rows = new RowIndexer();
+            _columns = new ColumnIndexer();
         }
 
         protected async Task LoadSpreadSheetData()
@@ -67,25 +59,6 @@ namespace OpenXMLXLXSImporter.ExcelGrid
                 _sheetData = _worksheet.Elements<SheetData>().First();
             });
         }
-
-
-
-        /// <summary>
-        /// this will return a paticular cell if it's avaliable
-        /// </summary>
-        /// <param name="row"></param>
-        /// <param name="cell"></param>
-        /// <returns></returns>
-        public bool TryFetchCell(uint row, string cell, out ICellData cellData)
-        {
-            cellData = null;
-            if (_rows.ContainsKey(row))
-            {
-                return _rows[row].TryAndGetCell(cell, out cellData);
-            }
-            return false;
-        }
-
         /// <summary>
         /// this will return a paticular row and cell if it's not avaliable it will wait till it's loaded or the timeout is reached
         /// </summary>
@@ -93,127 +66,51 @@ namespace OpenXMLXLXSImporter.ExcelGrid
         /// <param name="cellIndex"></param>
         /// <param name="timeout"></param>
         /// <returns></returns>
-        public async Task<ICellData> FetchCell(uint rowIndex, string cellIndex, int timeout = -1)
+        public async Task<ICellData> FetchCell(uint rowIndex, string cellIndex)
         {
             ICellData cell = null;
-            await Task.Run(async() =>
+            bool rowState = await _rows.HasCell(rowIndex, cellIndex);
+            if(!rowState)
             {
-                ManualResetEvent e = null;
-                using(await _lockRow.LockAsync())//honestly this multi threading crap is probably unessary unless you havea massive excel document but whatever this is how I wrote it
-                {
-                    if (!_rows.ContainsKey(rowIndex))
-                    {
-                        _rows[rowIndex] = new RowIndexer(this);
-                        e = _rows[rowIndex].WaitTillAvaliable(cellIndex);
-                    }
-                    else
-                    {
-                        if (_rows[rowIndex].TryAndGetCell(cellIndex, out ICellData d))
-                        {
-                            cell = d;
-                            return;
-                        }
-                        else
-                        {
-                            e = _rows[rowIndex].WaitTillAvaliable(cellIndex);
-                        }
-                    }
+                await AddMissingCell(rowIndex, cellIndex);
+            }
+            return await _rows.GetCell(rowIndex, cellIndex);
+        }
 
-                }
-                if (e != null&& e.WaitOne(timeout))
-                {
-                    using ( await _lockRow.LockAsync())
-                    {
-                        if (_rows[rowIndex].TryAndGetCell(cellIndex, out ICellData d))
-                        {
-                            cell = d;
-                            return;
-                        }
-                    }
-                }
-
+        public async Task AddMissingCell(uint rowIndex, string cellIndex)
+        {
+            await _fileAccess.ContextLock(x =>
+            {
+               
             });
-            return cell;
         }
 
+        //public async Task Add(ICellData cellData)
+        //{
+        //    using(await _lockRow.LockAsync())
+        //    {
+        //        if (!_rows.ContainsKey(cellData.CellRowIndex))
+        //        {
+        //            _rows[cellData.CellRowIndex] = new RowIndexer();
+        //        }
 
-        /// <summary>
-        /// This is for the ExcelImporter to add cells after they have been parsed
-        /// </summary>
-        /// <param name="cellData"></param>
-        public async Task Add(ICellData cellData)
-        {
-            /*Task t1 = Task.Run(async() =>
-            {*/
-            using(await _lockRow.LockAsync())
-            {
-                if (!_rows.ContainsKey(cellData.CellRowIndex))
-                {
-                    _rows[cellData.CellRowIndex] = new RowIndexer(this);
-                }
+        //        _rows[cellData.CellRowIndex].Add(cellData);
+        //        if(_listeners != null)
+        //        {
+        //            //intresting so this will call each method and won't await till it's finished calling all of them
+        //            //pretty handy neat pattern
+        //            await Task.WhenAll(_listeners.Select(x => x.NotifyAsync(cellData)));
+        //        }
+        //    }
+        //    using (await _lockColumn.LockAsync())
+        //    {
+        //        if (!_columns.ContainsKey(cellData.CellColumnIndex))
+        //        {
+        //            _columns[cellData.CellColumnIndex] = new ColumnIndexer(this);
+        //        }
 
-                _rows[cellData.CellRowIndex].Add(cellData);
-                if(_listeners != null)
-                {
-                    //intresting so this will call each method and won't await till it's finished calling all of them
-                    //pretty handy neat pattern
-                    await Task.WhenAll(_listeners.Select(x => x.NotifyAsync(cellData)));
-                }
-            }
-            //});
-            /*Task t2 = Task.Run(async() =>
-            {*/
-            using (await _lockColumn.LockAsync())
-            {
-                if (!_columns.ContainsKey(cellData.CellColumnIndex))
-                {
-                    _columns[cellData.CellColumnIndex] = new ColumnIndexer(this);
-                }
-
-                _columns[cellData.CellColumnIndex].Add(cellData);
-            }
-            //});
-
-            //await t1;
-            //await t2;
-        }
-
-        /// <summary>
-        /// Excel Import is finished loading we need to notify anything that is wait that today is not there day 
-        /// and there not getting any data
-        /// </summary>
-        public void FinishedLoading()
-        {
-            _allLoaded = true;
-            foreach(KeyValuePair<uint, RowIndexer> terminateWait in _rows)
-            {
-                terminateWait.Value.ClearNotify();
-            }
-            if(_listeners != null)
-            {
-                foreach (IItemEnquedEvent i in _listeners)
-                {
-                    i.FinishedLoading();
-                }
-            }
-        }
-
-        public bool AllLoaded => _allLoaded;
-
-        AsyncLock ISpreadSheetGridCollectionAccessor.RowLock => _lockRow;
-
-        Dictionary<uint, RowIndexer> ISpreadSheetGridCollectionAccessor.Rows => _rows;
-
-        void ICollectionAccessor.EnqueListener(IItemEnquedEvent listener)
-        {
-            if (_listeners == null)
-            {
-                _listeners = new List<IItemEnquedEvent>();
-            }
-            _listeners.Add(listener);//this has the rowlock so it's thread safe
-        }
-
-        public IAsyncEnumerator<ICellData> GetAsyncEnumerator(CancellationToken cancellationToken = default) => new CellEnumerator(this);
-        public IAsyncEnumerator<ICellData> GetAsyncEnumerator(IConditions conditions,CancellationToken cancellationToken = default) => new CellEnumerator(this,conditions);
+        //        _columns[cellData.CellColumnIndex].Add(cellData);
+        //    }
+        //}
     }
 }
