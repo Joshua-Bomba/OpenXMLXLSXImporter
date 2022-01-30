@@ -14,5 +14,7 @@ namespace OpenXMLXLXSImporter.ExcelGrid.Indexers
         Task<bool>  HasCell(uint rowIndex, string cellIndex);
 
         Task<ICellData> GetCell(uint rowIndex, string cellIndex);
+
+        void Spread(ICellIndex cell);
     }
 }

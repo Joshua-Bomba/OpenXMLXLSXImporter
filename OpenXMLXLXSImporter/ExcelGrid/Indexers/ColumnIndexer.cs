@@ -13,24 +13,24 @@ namespace OpenXMLXLXSImporter.ExcelGrid.Indexers
     public class ColumnIndexer : BaseIndexer
     {
         private Dictionary<string,Dictionary<uint, ICellIndex>> _cells;
-        public ColumnIndexer() : base()
+        public ColumnIndexer(ISpreadSheetIndexersLock indexerLock) : base(indexerLock)
         {
             _cells = new Dictionary<string, Dictionary<uint, ICellIndex>>();
         }
 
-        public async override Task Add(ICellIndex cellData)
+        protected override void InternalAdd(ICellIndex cell)
         {
-            //_cellsByRow[cellData.CellRowIndex] = cellData;
+            if(!_cells.ContainsKey(cell.CellColumnIndex))
+            {
+                _cells.Add(cell.CellColumnIndex, new Dictionary<uint, ICellIndex>());
+            }
+            _cells[cell.CellColumnIndex].Add(cell.CellRowIndex, cell);
         }
 
-        public async override Task<ICellData> GetCell(uint rowIndex, string cellIndex)
-        {
-            throw new NotImplementedException();
-        }
+        protected override bool InternalContains(uint rowIndex, string cellIndex)
+            => _cells.ContainsKey(cellIndex)&&_cells[cellIndex].ContainsKey(rowIndex);
 
-        public async override Task<bool> HasCell(uint rowIndex, string cellIndex)
-        {
-            throw new NotImplementedException();
-        }
+        protected override ICellIndex InternalGet(uint rowIndex, string cellIndex)
+            => _cells[cellIndex][rowIndex];
     }
 }

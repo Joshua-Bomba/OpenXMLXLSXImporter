@@ -21,7 +21,7 @@ namespace OpenXMLXLXSImporter.ExcelGrid
     /// interate through all the cells for an entire row
     /// interate through all the cells
     /// </summary>
-    public class SpreadSheetGrid
+    public class SpreadSheetGrid : ISpreadSheetIndexersLock, IDisposable
     {
         private ISpreadSheetFileLockable _fileAccess;
         private ISheetProperties _sheetProperties;
@@ -35,18 +35,38 @@ namespace OpenXMLXLXSImporter.ExcelGrid
 
         private RowIndexer _rows;
         private ColumnIndexer _columns;
+        private AsyncLock _accessorLock = new AsyncLock();
+        private List<IIndexer> _indexers;
 
+        private BlockingCollection<ICellProcessingTask> _cellTasks;
+
+        AsyncLock ISpreadSheetIndexersLock.IndexerLock => _accessorLock;
+
+        void ISpreadSheetIndexersLock.AddIndexer(IIndexer a)
+        {
+            _indexers.Add(a);
+        }
+
+        void ISpreadSheetIndexersLock.Spread(IIndexer a, ICellIndex b)
+        {
+            foreach(IIndexer i in _indexers)
+            {
+                if (i != a)
+                    i.Spread(b);
+            }
+        }
 
         public SpreadSheetGrid(ISpreadSheetFileLockable fileAccess, ISheetProperties sheetProperties)
         {
             _fileAccess = fileAccess;
             _sheetProperties = sheetProperties;
-
+            _indexers = new List<IIndexer>();
+            _cellTasks = new BlockingCollection<ICellProcessingTask>();
 
             _loadSpreadSheetData = Task.Run(LoadSpreadSheetData);
 
-            _rows = new RowIndexer();
-            _columns = new ColumnIndexer();
+            _rows = new RowIndexer(this);
+            _columns = new ColumnIndexer(this);
         }
 
         protected async Task LoadSpreadSheetData()
@@ -58,34 +78,24 @@ namespace OpenXMLXLXSImporter.ExcelGrid
                 _worksheet = _workbookPart.Worksheet;
                 _sheetData = _worksheet.Elements<SheetData>().First();
             });
-        }
-        /// <summary>
-        /// this will return a paticular row and cell if it's not avaliable it will wait till it's loaded or the timeout is reached
-        /// </summary>
-        /// <param name="rowIndex"></param>
-        /// <param name="cellIndex"></param>
-        /// <param name="timeout"></param>
-        /// <returns></returns>
-        public async Task<ICellData> FetchCell(uint rowIndex, string cellIndex)
-        {
-            ICellData cell = null;
-            if(!await _rows.HasCell(rowIndex, cellIndex))//lock & unlock rows
-            {
-                await AddMissingCell(rowIndex, cellIndex);//_rows is unlocked here
-            }
-            return await _rows.GetCell(rowIndex, cellIndex);//lock & unlock rows
-        }
 
-        public async Task AddMissingCell(uint rowIndex, string cellIndex)
-        {
-            await _fileAccess.ContextLock(async x =>//File access is locked
+            try
             {
-                //we are going to check if the cell has been added since we got the lock
-                if (!await _rows.HasCell(rowIndex, cellIndex))//rows is locked
+                while (true)
                 {
-
+                    ICellProcessingTask t = _cellTasks.Take();
                 }
-            });
+            }
+            catch (InvalidOperationException ex)
+            {
+                //queue is finished
+            }
+
+        }
+
+        public void Dispose()
+        {
+            _loadSpreadSheetData.Wait();
         }
 
         //public async Task Add(ICellData cellData)

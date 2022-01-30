@@ -10,16 +10,55 @@ namespace OpenXMLXLXSImporter.ExcelGrid.Indexers
 {
     public abstract class BaseIndexer : IIndexer
     {
-        protected readonly AsyncLock _lock = new AsyncLock();
-        public BaseIndexer()
+        protected ISpreadSheetIndexersLock _lock;
+        public BaseIndexer(ISpreadSheetIndexersLock indexerLock)
         {
-
+            _lock = indexerLock;
+            _lock.AddIndexer(this);
         }
 
-        public abstract Task Add(ICellIndex cellData);
+        protected abstract void InternalAdd(ICellIndex cell);
 
-        public abstract Task<ICellData> GetCell(uint rowIndex, string cellIndex);
+        protected abstract bool InternalContains(uint rowIndex, string cellIndex);
+        protected abstract ICellIndex InternalGet(uint rowIndex, string cellIndex);
 
-        public abstract Task<bool> HasCell(uint rowIndex, string cellIndex);
+        public virtual async Task Add(ICellIndex cellData)
+        {
+            using (await _lock.IndexerLock.LockAsync())
+            {
+                InternalAdd(cellData);
+            }
+        }
+
+        public async Task<ICellData> GetCell(uint rowIndex, string cellIndex)
+        {
+            ICellIndex i;
+            using (await _lock.IndexerLock.LockAsync())
+            {
+              i = InternalGet(rowIndex, cellIndex);
+            }
+            if (i is ICellData cd)
+            {
+                return cd;
+            }
+            if (i is IFutureCell fc)
+            {
+                return await fc.GetCell();
+            }
+            throw new InvalidOperationException();
+        }
+
+        public async Task<bool> HasCell(uint rowIndex, string cellIndex)
+        {
+            using (await _lock.IndexerLock.LockAsync())
+            {
+                return InternalContains(rowIndex, cellIndex);
+            }
+        }
+
+        public void Spread(ICellIndex cell)
+        {
+            InternalAdd(cell);
+        }
     }
 }

@@ -42,7 +42,7 @@ namespace OpenXMLXLXSImporter
 
         public void Dispose()
         {
-            throw new NotImplementedException();
+            
         }
     }
 
@@ -184,43 +184,43 @@ namespace OpenXMLXLXSImporter
         /// <param name="worksheetPart"></param>
         /// <param name="grid"></param>
         /// <returns></returns>
-        protected async Task ProcessWorkSheet(WorksheetPart worksheetPart, SpreadSheetGrid grid)
-        {
-            await Task.Run(() => {
-                List<Task> cellTask = new List<Task>();
-                Worksheet ws = worksheetPart.Worksheet;
-                SheetData sheetData = ws.Elements<SheetData>().
-                IEnumerator<Row> enumerator = sheetData.Elements<Row>().GetEnumerator();
-                while (enumerator.MoveNext())
-                {
-                    Row r = enumerator.Current;
-                    IEnumerable<Cell> cells = r.Elements<Cell>();
+        //protected async Task ProcessWorkSheet(WorksheetPart worksheetPart, SpreadSheetGrid grid)
+        //{
+        //    await Task.Run(() => {
+        //        List<Task> cellTask = new List<Task>();
+        //        Worksheet ws = worksheetPart.Worksheet;
+        //        SheetData sheetData = ws.Elements<SheetData>().
+        //        IEnumerator<Row> enumerator = sheetData.Elements<Row>().GetEnumerator();
+        //        while (enumerator.MoveNext())
+        //        {
+        //            Row r = enumerator.Current;
+        //            IEnumerable<Cell> cells = r.Elements<Cell>();
 
-                    foreach (Cell c in cells)
-                    {
-                        if (c?.CellValue != null)
-                        {
-                            ICellData cellData;
-                            bool hasBeenProcessed = ProcessCustomCell(c, out cellData);
-                            if (!hasBeenProcessed)
-                            {
-                                cellData = new CellDataContent { Text = c.CellValue.Text };
-                            }
+        //            foreach (Cell c in cells)
+        //            {
+        //                if (c?.CellValue != null)
+        //                {
+        //                    ICellData cellData;
+        //                    bool hasBeenProcessed = ProcessCustomCell(c, out cellData);
+        //                    if (!hasBeenProcessed)
+        //                    {
+        //                        cellData = new CellDataContent { Text = c.CellValue.Text };
+        //                    }
 
-                            if (cellData != null)
-                            {
-                                cellData.CellColumnIndex = GetColumnIndexByColumnReference(c.CellReference);
-                                cellData.CellRowIndex = r.RowIndex.Value;
-                                cellTask.Add(grid.Add(cellData));
-                            }
-                        }
-                    }
-                }
-                cellTask.ForEach(x => x.Wait());
-                grid.FinishedLoading();
-            });
+        //                    if (cellData != null)
+        //                    {
+        //                        cellData.CellColumnIndex = GetColumnIndexByColumnReference(c.CellReference);
+        //                        cellData.CellRowIndex = r.RowIndex.Value;
+        //                        cellTask.Add(grid.Add(cellData));
+        //                    }
+        //                }
+        //            }
+        //        }
+        //        cellTask.ForEach(x => x.Wait());
+        //        grid.FinishedLoading();
+        //    });
 
-        }
+        //}
 
         public async Task<SpreadSheetGrid> LoadSpreadSheetData(ISheetProperties sheet)
         {

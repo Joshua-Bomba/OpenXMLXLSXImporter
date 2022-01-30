@@ -15,32 +15,26 @@ namespace OpenXMLXLXSImporter.ExcelGrid.Indexers
     public class RowIndexer : BaseIndexer
     {
         protected Dictionary<uint,Dictionary<string, ICellIndex>> _cells;
-
-         
-        public RowIndexer() : base()
+        public RowIndexer(ISpreadSheetIndexersLock indexerLock) : base(indexerLock)
         {
             _cells = new Dictionary<uint, Dictionary<string, ICellIndex>>();
         }
-        /// <summary>
-        /// this will add a cell called by the ExcelImporter
-        /// </summary>
-        /// <param name="cellData"></param>
-        public async override Task Add(ICellIndex cellData)
-        {
 
-            //cellData.CellColumnIndex, cellData
-            //_cells.Add();
+        protected override void InternalAdd(ICellIndex cellData)
+        {
+            if (!_cells.ContainsKey(cellData.CellRowIndex))
+            {
+                _cells.Add(cellData.CellRowIndex, new Dictionary<string, ICellIndex>());
+            }
+            _cells[cellData.CellRowIndex].Add(cellData.CellColumnIndex,cellData);
+            _lock.Spread(this, cellData);
         }
 
-        public  async override Task<bool> HasCell(uint rowIndex, string cellIndex)
-        {
-            throw new NotImplementedException();
-        }
+        protected override bool InternalContains(uint rowIndex, string cellIndex)
+            => _cells.ContainsKey(rowIndex)&&_cells[rowIndex].ContainsKey(cellIndex);
 
-        public async override Task<ICellData> GetCell(uint rowIndex, string cellIndex)
-        {
-            throw new NotImplementedException();
-        }
 
+        protected override ICellIndex InternalGet(uint rowIndex, string cellIndex)
+            => _cells[rowIndex][cellIndex];
     }
 }
