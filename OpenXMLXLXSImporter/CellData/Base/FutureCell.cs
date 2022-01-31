@@ -26,5 +26,11 @@ namespace OpenXMLXLXSImporter.CellData
             await _mre.WaitAsync();
             return _result;
         }
+
+        public void Resolve(ICellData data)
+        {
+            _result = data;
+            _mre.Set();
+        }
     }
 }

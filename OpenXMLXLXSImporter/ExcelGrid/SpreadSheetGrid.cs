@@ -2,7 +2,6 @@
 using DocumentFormat.OpenXml.Spreadsheet;
 using Nito.AsyncEx;
 using OpenXMLXLXSImporter.CellData;
-using OpenXMLXLXSImporter.Enumerators;
 using OpenXMLXLXSImporter.ExcelGrid.Builders;
 using OpenXMLXLXSImporter.ExcelGrid.Indexers;
 using System;
@@ -39,7 +38,7 @@ namespace OpenXMLXLXSImporter.ExcelGrid
         private AsyncLock _accessorLock = new AsyncLock();
         private List<IIndexer> _indexers;
 
-        private BlockingCollection<ICellProcessingTask> _cellTasks;
+        private SpreadSheetLoadQueueManager _loadQueueManager;
 
         AsyncLock ISpreadSheetIndexersLock.IndexerLock => _accessorLock;
 
@@ -57,9 +56,9 @@ namespace OpenXMLXLXSImporter.ExcelGrid
             }
         }
 
-        void ISpreadSheetIndexersLock.EnqueCell(ICellProcessingTask t)
+        void ISpreadSheetIndexersLock.EnqueCell(ICellProcessingTask cell)
         {
-            _cellTasks.Add(t);
+            _loadQueueManager.Enque(cell);
         }
 
         public SpreadSheetGrid(ISpreadSheetFileLockable fileAccess, ISheetProperties sheetProperties)
@@ -67,7 +66,7 @@ namespace OpenXMLXLXSImporter.ExcelGrid
             _fileAccess = fileAccess;
             _sheetProperties = sheetProperties;
             _indexers = new List<IIndexer>();
-            _cellTasks = new BlockingCollection<ICellProcessingTask>();
+            _loadQueueManager = new SpreadSheetLoadQueueManager();
 
             _loadSpreadSheetData = Task.Run(LoadSpreadSheetData);
 
@@ -87,9 +86,9 @@ namespace OpenXMLXLXSImporter.ExcelGrid
 
             try
             {
-                while (true)
+                while (_loadQueueManager.ProcessingResults)
                 {
-                    ICellProcessingTask t = _cellTasks.Take();
+                    ICellProcessingTask t = _loadQueueManager.Take();
                 }
             }
             catch (InvalidOperationException ex)
