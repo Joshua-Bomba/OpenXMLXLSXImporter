@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Threading.Tasks;
 using DocumentFormat.OpenXml;
@@ -30,18 +31,26 @@ namespace OpenXMLXLXSImporter
             _streamSheetFile = new SpreadSheetFile(stream);
         }
 
-        public void Process(ISheetProperties sheet)
+        public Task Process(ISheetProperties sheet)
         {
-            Task.Run(async() =>
+            return Task.Run(async() =>
             {
-                SpreadSheetInstructionBuilder ssib = new SpreadSheetInstructionBuilder();
-                Task<SpreadSheetGrid> gt = _streamSheetFile.LoadSpreadSheetData(sheet);
-                sheet.LoadConfig(ssib);
-                SpreadSheetGrid g = await gt;
-                await ssib.ProcessInstructions(g);
-                Task r = ssib.ProcessResults();
-                await sheet.ResultsProcessed(ssib);
-                await r;
+                try
+                {
+                    SpreadSheetInstructionBuilder ssib = new SpreadSheetInstructionBuilder();
+                    Task<SpreadSheetGrid> gt = _streamSheetFile.LoadSpreadSheetData(sheet);
+                    sheet.LoadConfig(ssib);
+                    SpreadSheetGrid g = await gt;
+                    await ssib.ProcessInstructions(g);
+                    Task r = ssib.ProcessResults();
+                    await sheet.ResultsProcessed(ssib);
+                    await r;
+                }
+                catch(Exception ex)
+                {
+                    ExceptionDispatchInfo.Capture(ex).Throw();
+                }
+
             });
 
         }

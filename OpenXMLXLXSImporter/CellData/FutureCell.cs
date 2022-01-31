@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Nito.AsyncEx;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,19 +9,22 @@ namespace OpenXMLXLXSImporter.CellData
 {
     public class FutureCell : IFutureCell, ICellProcessingTask
     {
-        private ICellData finalcellResult;
+        private  ICellData _result;
+        private AsyncManualResetEvent _mre;
         public FutureCell(uint cellRowIndex, string cellColumnIndex)
         {
             CellRowIndex = cellRowIndex;
             CellColumnIndex = cellColumnIndex;
+            _mre = new AsyncManualResetEvent(false);
         }
         public string CellColumnIndex { get; set; }
 
         public uint CellRowIndex { get; set; }
 
-        public Task<ICellData> GetData()
+        public async Task<ICellData> GetData()
         {
-            throw new NotImplementedException();
+            await _mre.WaitAsync();
+            return _result;
         }
     }
 }

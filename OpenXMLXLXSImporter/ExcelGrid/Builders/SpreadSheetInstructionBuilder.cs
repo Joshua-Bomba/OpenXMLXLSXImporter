@@ -32,9 +32,17 @@ namespace OpenXMLXLXSImporter.ExcelGrid.Builders
                 await grid.ProcessInstruction(instruction.Value);
         }
 
+        protected static async Task ProcessResult(KeyValuePair<ISpreadSheetInstructionKey, ISpreadSheetInstruction> x)
+        {
+            if(x.Key is SpreadSheetActionManager ssam)
+            {
+                await ssam.TriggerEvent(x.Value);
+            }
+        }
+
         public async Task ProcessResults()
         {
-            foreach (Task t in _instructions.Select(x => (x.Key as SpreadSheetActionManager)?.TriggerEvent(x.Value)).ToArray())
+            foreach (Task t in _instructions.Select(ProcessResult).ToArray())
                 await t;
         }
 

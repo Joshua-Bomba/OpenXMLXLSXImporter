@@ -12,7 +12,9 @@ namespace OpenXMLXLXSImporter.ExcelGrid.Builders
     public abstract class BaseSpreadSheetInstruction : ISpreadSheetInstruction
     {
         protected AsyncManualResetEvent _mre;
-        public BaseSpreadSheetInstruction() {}
+        public BaseSpreadSheetInstruction() {
+            _mre = new AsyncManualResetEvent(false);
+        }
 
         public virtual bool ByColumn => false;
 

@@ -8,6 +8,6 @@ namespace OpenXMLXLXSImporter
 {
     public interface IExcelImporter : IDisposable
     {
-        void Process(ISheetProperties prop);
+        Task Process(ISheetProperties prop);
     }
 }

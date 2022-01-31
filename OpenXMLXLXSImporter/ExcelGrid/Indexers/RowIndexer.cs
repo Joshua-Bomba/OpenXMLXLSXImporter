@@ -27,7 +27,6 @@ namespace OpenXMLXLXSImporter.ExcelGrid.Indexers
                 _cells.Add(cellData.CellRowIndex, new Dictionary<string, ICellIndex>());
             }
             _cells[cellData.CellRowIndex].Add(cellData.CellColumnIndex,cellData);
-            _lock.Spread(this, cellData);
         }
 
         public override bool HasCell(uint rowIndex, string cellIndex)
