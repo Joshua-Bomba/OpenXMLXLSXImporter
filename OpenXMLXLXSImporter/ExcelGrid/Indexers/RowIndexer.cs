@@ -30,11 +30,11 @@ namespace OpenXMLXLXSImporter.ExcelGrid.Indexers
             _lock.Spread(this, cellData);
         }
 
-        protected override bool InternalContains(uint rowIndex, string cellIndex)
+        public override bool HasCell(uint rowIndex, string cellIndex)
             => _cells.ContainsKey(rowIndex)&&_cells[rowIndex].ContainsKey(cellIndex);
 
 
-        protected override ICellIndex InternalGet(uint rowIndex, string cellIndex)
+        public override ICellIndex GetCell(uint rowIndex, string cellIndex)
             => _cells[rowIndex][cellIndex];
     }
 }

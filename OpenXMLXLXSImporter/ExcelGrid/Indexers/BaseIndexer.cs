@@ -1,5 +1,6 @@
 ﻿using Nito.AsyncEx;
 using OpenXMLXLXSImporter.CellData;
+using OpenXMLXLXSImporter.ExcelGrid.Builders;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,46 +20,27 @@ namespace OpenXMLXLXSImporter.ExcelGrid.Indexers
 
         protected abstract void InternalAdd(ICellIndex cell);
 
-        protected abstract bool InternalContains(uint rowIndex, string cellIndex);
-        protected abstract ICellIndex InternalGet(uint rowIndex, string cellIndex);
+        public abstract bool HasCell(uint rowIndex, string cellIndex);
+        public abstract ICellIndex GetCell(uint rowIndex, string cellIndex);
 
-        public virtual async Task Add(ICellIndex cellData)
+        public virtual async Task ProcessInstruction(ISpreadSheetInstruction instruction)
         {
             using (await _lock.IndexerLock.LockAsync())
             {
-                InternalAdd(cellData);
-            }
-        }
-
-        public async Task<ICellData> GetCell(uint rowIndex, string cellIndex)
-        {
-            ICellIndex i;
-            using (await _lock.IndexerLock.LockAsync())
-            {
-              i = InternalGet(rowIndex, cellIndex);
-            }
-            if (i is ICellData cd)
-            {
-                return cd;
-            }
-            if (i is IFutureCell fc)
-            {
-                return await fc.GetCell();
-            }
-            throw new InvalidOperationException();
-        }
-
-        public async Task<bool> HasCell(uint rowIndex, string cellIndex)
-        {
-            using (await _lock.IndexerLock.LockAsync())
-            {
-                return InternalContains(rowIndex, cellIndex);
+                instruction.EnqueCell(this);
             }
         }
 
         public void Spread(ICellIndex cell)
         {
             InternalAdd(cell);
+        }
+
+        public void Add(ICellProcessingTask index)
+        {
+            InternalAdd(index);
+            _lock.Spread(this, index);
+            _lock.EnqueCell(index);
         }
     }
 }

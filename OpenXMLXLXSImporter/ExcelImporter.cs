@@ -10,6 +10,7 @@ using DocumentFormat.OpenXml.Spreadsheet;
 using Nito.AsyncEx;
 using OpenXMLXLXSImporter.CellData;
 using OpenXMLXLXSImporter.ExcelGrid;
+using OpenXMLXLXSImporter.ExcelGrid.Builders;
 
 namespace OpenXMLXLXSImporter
 {
@@ -29,15 +30,17 @@ namespace OpenXMLXLXSImporter
             _streamSheetFile = new SpreadSheetFile(stream);
         }
 
-        protected void LoadSpreadSheet(ISheetProperties sheet)
-        {
-
-        }
-
         public void Process(ISheetProperties sheet)
         {
-            LoadSpreadSheet(sheet);
-            //prop.LoadConfig()
+            Task.Run(async() =>
+            {
+                SpreadSheetInstructionBuilder ssib = new SpreadSheetInstructionBuilder();
+                Task<SpreadSheetGrid> gt = _streamSheetFile.LoadSpreadSheetData(sheet);
+                sheet.LoadConfig(ssib);
+                SpreadSheetGrid g = await gt;
+                await ssib.ProcessInstructions(g);
+            });
+
         }
 
         public void Dispose()

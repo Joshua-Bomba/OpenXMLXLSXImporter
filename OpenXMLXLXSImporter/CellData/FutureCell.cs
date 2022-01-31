@@ -11,13 +11,14 @@ namespace OpenXMLXLXSImporter.CellData
         private ICellData finalcellResult;
         public FutureCell(uint cellRowIndex, string cellColumnIndex)
         {
-
+            CellRowIndex = cellRowIndex;
+            CellColumnIndex = cellColumnIndex;
         }
         public string CellColumnIndex { get; set; }
 
         public uint CellRowIndex { get; set; }
 
-        public Task<ICellData> GetCell()
+        public Task<ICellData> GetData()
         {
             throw new NotImplementedException();
         }

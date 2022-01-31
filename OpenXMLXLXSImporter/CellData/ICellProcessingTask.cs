@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace OpenXMLXLXSImporter.CellData
 {
-    public interface ICellProcessingTask
+    public interface ICellProcessingTask : IFutureCell
     {
 
     }

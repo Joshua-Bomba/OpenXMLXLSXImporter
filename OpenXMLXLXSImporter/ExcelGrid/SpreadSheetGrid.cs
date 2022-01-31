@@ -3,6 +3,7 @@ using DocumentFormat.OpenXml.Spreadsheet;
 using Nito.AsyncEx;
 using OpenXMLXLXSImporter.CellData;
 using OpenXMLXLXSImporter.Enumerators;
+using OpenXMLXLXSImporter.ExcelGrid.Builders;
 using OpenXMLXLXSImporter.ExcelGrid.Indexers;
 using System;
 using System.Collections;
@@ -56,6 +57,11 @@ namespace OpenXMLXLXSImporter.ExcelGrid
             }
         }
 
+        void ISpreadSheetIndexersLock.EnqueCell(ICellProcessingTask t)
+        {
+            _cellTasks.Add(t);
+        }
+
         public SpreadSheetGrid(ISpreadSheetFileLockable fileAccess, ISheetProperties sheetProperties)
         {
             _fileAccess = fileAccess;
@@ -96,6 +102,18 @@ namespace OpenXMLXLXSImporter.ExcelGrid
         public void Dispose()
         {
             _loadSpreadSheetData.Wait();
+        }
+
+        public async Task ProcessInstruction(ISpreadSheetInstruction spreadSheetInstruction)
+        {
+            if (spreadSheetInstruction.ByColumn)
+            {
+                await _columns.ProcessInstruction(spreadSheetInstruction);
+            }
+            else
+            {
+                await _rows.ProcessInstruction(spreadSheetInstruction);
+            }
         }
 
         //public async Task Add(ICellData cellData)

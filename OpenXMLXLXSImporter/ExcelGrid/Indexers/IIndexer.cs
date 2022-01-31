@@ -1,4 +1,5 @@
 ﻿using OpenXMLXLXSImporter.CellData;
+using OpenXMLXLXSImporter.ExcelGrid.Builders;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,11 +10,13 @@ namespace OpenXMLXLXSImporter.ExcelGrid.Indexers
 {
     public interface IIndexer
     {
-        Task Add(ICellIndex cellData);
+        Task ProcessInstruction(ISpreadSheetInstruction instruction);
 
-        Task<bool>  HasCell(uint rowIndex, string cellIndex);
+        void Add(ICellProcessingTask index);
 
-        Task<ICellData> GetCell(uint rowIndex, string cellIndex);
+        bool  HasCell(uint rowIndex, string cellIndex);
+
+        ICellIndex GetCell(uint rowIndex, string cellIndex);
 
         void Spread(ICellIndex cell);
     }

@@ -8,6 +8,6 @@ namespace OpenXMLXLXSImporter.ExcelGrid.Builders
 {
     public  interface ISpreadSheetInstructionBuilder
     {
-        void AddInstruction(ISpreadSheetInstruction instruction);
+        ISpreadSheetInstruction LoadSingleCell(uint row, string cell);
     }
 }

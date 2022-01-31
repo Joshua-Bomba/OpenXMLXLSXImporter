@@ -14,5 +14,6 @@ namespace OpenXMLXLXSImporter.ExcelGrid
         AsyncLock IndexerLock { get; }
         void AddIndexer(IIndexer a);
         void Spread(IIndexer a, ICellIndex b);
+        void EnqueCell(ICellProcessingTask t);   
     }
 }

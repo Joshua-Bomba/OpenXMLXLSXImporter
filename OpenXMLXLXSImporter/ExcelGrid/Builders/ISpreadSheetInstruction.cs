@@ -1,4 +1,6 @@
-﻿using System;
+﻿using OpenXMLXLXSImporter.CellData;
+using OpenXMLXLXSImporter.ExcelGrid.Indexers;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,5 +10,10 @@ namespace OpenXMLXLXSImporter.ExcelGrid.Builders
 {
     public interface ISpreadSheetInstruction
     {
+        bool ByColumn { get; }
+
+        void EnqueCell(IIndexer indexer);
+
+        Task<IEnumerable<Task<ICellData>>> GetResults();
     }
 }

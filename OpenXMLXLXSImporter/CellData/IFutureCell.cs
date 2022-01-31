@@ -8,6 +8,6 @@ namespace OpenXMLXLXSImporter.CellData
 {
     public  interface IFutureCell : ICellIndex
     {
-        Task<ICellData> GetCell();
+        Task<ICellData> GetData();
     }
 }

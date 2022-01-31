@@ -27,10 +27,10 @@ namespace OpenXMLXLXSImporter.ExcelGrid.Indexers
             _cells[cell.CellColumnIndex].Add(cell.CellRowIndex, cell);
         }
 
-        protected override bool InternalContains(uint rowIndex, string cellIndex)
+        public override bool HasCell(uint rowIndex, string cellIndex)
             => _cells.ContainsKey(cellIndex)&&_cells[cellIndex].ContainsKey(rowIndex);
 
-        protected override ICellIndex InternalGet(uint rowIndex, string cellIndex)
+        public override ICellIndex GetCell(uint rowIndex, string cellIndex)
             => _cells[cellIndex][rowIndex];
     }
 }
