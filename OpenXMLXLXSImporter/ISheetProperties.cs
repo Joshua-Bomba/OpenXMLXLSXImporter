@@ -17,5 +17,7 @@ namespace OpenXMLXLXSImporter
         string Sheet { get; }
 
         void LoadConfig(ISpreadSheetInstructionBuilder builder);
+
+        Task ResultsProcessed(ISpreadSheetQueryResults query);
     }
 }

@@ -39,6 +39,9 @@ namespace OpenXMLXLXSImporter
                 sheet.LoadConfig(ssib);
                 SpreadSheetGrid g = await gt;
                 await ssib.ProcessInstructions(g);
+                Task r = ssib.ProcessResults();
+                await sheet.ResultsProcessed(ssib);
+                await r;
             });
 
         }
