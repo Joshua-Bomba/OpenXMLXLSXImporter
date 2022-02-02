@@ -4,6 +4,7 @@ using Nito.AsyncEx;
 using OpenXMLXLXSImporter.CellData;
 using OpenXMLXLXSImporter.ExcelGrid.Builders;
 using OpenXMLXLXSImporter.ExcelGrid.Indexers;
+using OpenXMLXLXSImporter.Utils;
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
@@ -38,7 +39,8 @@ namespace OpenXMLXLXSImporter.ExcelGrid
         private AsyncLock _accessorLock = new AsyncLock();
         private List<IIndexer> _indexers;
 
-        private SpreadSheetLoadQueueManager _loadQueueManager;
+        private ChunkableBlockingCollection<ICellProcessingTask> _loadQueueManager;
+        private SpreadSheetDequeManager _dequeuer;
 
         AsyncLock ISpreadSheetIndexersLock.IndexerLock => _accessorLock;
 
@@ -66,7 +68,8 @@ namespace OpenXMLXLXSImporter.ExcelGrid
             _fileAccess = fileAccess;
             _sheetProperties = sheetProperties;
             _indexers = new List<IIndexer>();
-            _loadQueueManager = new SpreadSheetLoadQueueManager();
+            _dequeuer = new SpreadSheetDequeManager();
+            _loadQueueManager = new ChunkableBlockingCollection<ICellProcessingTask>(_dequeuer);
 
             _loadSpreadSheetData = Task.Run(LoadSpreadSheetData);
 
@@ -86,7 +89,7 @@ namespace OpenXMLXLXSImporter.ExcelGrid
 
             try
             {
-                while (_loadQueueManager.ProcessingResults)
+                while (true)
                 {
                     ICellProcessingTask t = _loadQueueManager.Take();
                 }
