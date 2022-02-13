@@ -145,7 +145,7 @@ namespace OpenXMLXLXSImporter
         /// <param name="c"></param>
         /// <param name="cellData"></param>
         /// <returns></returns>
-        protected bool ProcessCustomCell(Cell c, out ICellData cellData)
+        public bool ProcessCustomCell(Cell c, out ICellData cellData)
         {
             if (c.StyleIndex != null)
             {
@@ -178,7 +178,7 @@ namespace OpenXMLXLXSImporter
             return false;
         }
 
-        private static string GetColumnIndexByColumnReference(StringValue columnReference)
+        public static string GetColumnIndexByColumnReference(StringValue columnReference)
         {
             string v = columnReference.Value;
             for(int i = v.Length - 1;i >= 0;i--)
