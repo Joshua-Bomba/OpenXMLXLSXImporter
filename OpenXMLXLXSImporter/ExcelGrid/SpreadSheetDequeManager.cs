@@ -14,9 +14,17 @@ namespace OpenXMLXLXSImporter.ExcelGrid
 {
     public class SpreadSheetDequeManager : IChunckBlock<ICellProcessingTask>
     {
+        private Queue<DeferredCell> deferedCells = null;
         public SpreadSheetDequeManager()
         {
             
+        }
+
+        public void AddDeferredCell(DeferredCell deferredCell)
+        {
+            if (deferedCells == null)
+                deferedCells = new Queue<DeferredCell>();
+            deferedCells.Enqueue(deferredCell);
         }
 
         public bool ShouldPullAndChunk => false;
