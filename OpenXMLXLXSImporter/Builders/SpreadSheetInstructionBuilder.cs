@@ -1,12 +1,12 @@
-﻿using OpenXMLXLXSImporter.CellData;
-using OpenXMLXLXSImporter.Processing;
+﻿using OpenXMLXLSXImporter.CellData;
+using OpenXMLXLSXImporter.Processing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OpenXMLXLXSImporter.Builders
+namespace OpenXMLXLSXImporter.Builders
 {
     public class SpreadSheetInstructionBuilder : ISpreadSheetInstructionBuilder, ISpreadSheetQueryResults
     {

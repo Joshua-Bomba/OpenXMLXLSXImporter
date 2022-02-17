@@ -2,11 +2,11 @@
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using Nito.AsyncEx;
-using OpenXMLXLXSImporter.Builders;
-using OpenXMLXLXSImporter.CellData;
-using OpenXMLXLXSImporter.FileAccess;
-using OpenXMLXLXSImporter.Indexers;
-using OpenXMLXLXSImporter.Utils;
+using OpenXMLXLSXImporter.Builders;
+using OpenXMLXLSXImporter.CellData;
+using OpenXMLXLSXImporter.FileAccess;
+using OpenXMLXLSXImporter.Indexers;
+using OpenXMLXLSXImporter.Utils;
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
@@ -16,7 +16,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace OpenXMLXLXSImporter.Processing
+namespace OpenXMLXLSXImporter.Processing
 {
     /// <summary>
     /// this will handle accessing the grid and iterateing over the spreadsheetgrid

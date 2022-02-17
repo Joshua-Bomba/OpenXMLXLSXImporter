@@ -9,12 +9,12 @@ using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using Nito.AsyncEx;
-using OpenXMLXLXSImporter.Builders;
-using OpenXMLXLXSImporter.CellData;
-using OpenXMLXLXSImporter.FileAccess;
-using OpenXMLXLXSImporter.Processing;
+using OpenXMLXLSXImporter.Builders;
+using OpenXMLXLSXImporter.CellData;
+using OpenXMLXLSXImporter.FileAccess;
+using OpenXMLXLSXImporter.Processing;
 
-namespace OpenXMLXLXSImporter
+namespace OpenXMLXLSXImporter
 {
 
     /// <summary>

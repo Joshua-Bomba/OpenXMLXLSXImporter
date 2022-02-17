@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace OpenXMLXLXSImporter.Utils
+namespace OpenXMLXLSXImporter.Utils
 {
     public interface IChunckBlock<T>
     {

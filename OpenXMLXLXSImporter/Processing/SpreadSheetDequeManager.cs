@@ -1,6 +1,6 @@
 ﻿using Nito.AsyncEx;
-using OpenXMLXLXSImporter.CellData;
-using OpenXMLXLXSImporter.Utils;
+using OpenXMLXLSXImporter.CellData;
+using OpenXMLXLSXImporter.Utils;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -9,7 +9,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace OpenXMLXLXSImporter.Processing
+namespace OpenXMLXLSXImporter.Processing
 {
     public class SpreadSheetDequeManager : IChunckBlock<ICellProcessingTask>
     {

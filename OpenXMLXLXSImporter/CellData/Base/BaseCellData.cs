@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OpenXMLXLXSImporter.CellData
+namespace OpenXMLXLSXImporter.CellData
 {
     /// <summary>
     /// an abstract class for ICellData so we don't have to bother implement common properties again
