@@ -8,6 +8,6 @@ namespace OpenXMLXLXSImporter.CellData
 {
     public interface ICellProcessingTask : IFutureCell
     {
-
+        void Resolve(ICellData data);
     }
 }

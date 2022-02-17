@@ -1,9 +1,11 @@
-﻿using DocumentFormat.OpenXml.Packaging;
+﻿using DocumentFormat.OpenXml;
+using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using Nito.AsyncEx;
 using OpenXMLXLXSImporter.CellData;
 using OpenXMLXLXSImporter.ExcelGrid.Builders;
 using OpenXMLXLXSImporter.ExcelGrid.Indexers;
+using OpenXMLXLXSImporter.Utils;
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
@@ -38,7 +40,8 @@ namespace OpenXMLXLXSImporter.ExcelGrid
         private AsyncLock _accessorLock = new AsyncLock();
         private List<IIndexer> _indexers;
 
-        private BlockingCollection<ICellProcessingTask> _cellTasks;
+        private ChunkableBlockingCollection<ICellProcessingTask> _loadQueueManager;
+        private SpreadSheetDequeManager _dequeuer;
 
         AsyncLock ISpreadSheetIndexersLock.IndexerLock => _accessorLock;
 
@@ -56,9 +59,9 @@ namespace OpenXMLXLXSImporter.ExcelGrid
             }
         }
 
-        void ISpreadSheetIndexersLock.EnqueCell(ICellProcessingTask t)
+        void ISpreadSheetIndexersLock.EnqueCell(ICellProcessingTask cell)
         {
-            _cellTasks.Add(t);
+            _loadQueueManager.Enque(cell);
         }
 
         public SpreadSheetGrid(ISpreadSheetFileLockable fileAccess, ISheetProperties sheetProperties)
@@ -66,7 +69,8 @@ namespace OpenXMLXLXSImporter.ExcelGrid
             _fileAccess = fileAccess;
             _sheetProperties = sheetProperties;
             _indexers = new List<IIndexer>();
-            _cellTasks = new BlockingCollection<ICellProcessingTask>();
+            _dequeuer = new SpreadSheetDequeManager();
+            _loadQueueManager = new ChunkableBlockingCollection<ICellProcessingTask>(_dequeuer);
 
             _loadSpreadSheetData = Task.Run(LoadSpreadSheetData);
 
@@ -86,10 +90,96 @@ namespace OpenXMLXLXSImporter.ExcelGrid
 
             try
             {
-                throw new NotImplementedException();
+                IEnumerable<Row> rowsEnumerable = _sheetData.Elements<Row>();
+                IEnumerator<Row> rowEnumerator = rowsEnumerable.GetEnumerator();
+                IDictionary<uint,IEnumerator<Cell>> rows;//store the raw rows
+               // if (rowsEnumerable.TryGetNonEnumeratedCount(out int count))//does look like in my testing the count is not determind
+                rows = new Dictionary<uint, IEnumerator<Cell>>();//lets user a dictionary in this case
+                Row row;
+                Cell cell;
+                UInt32Value rowIndexNullable;
+                uint rowIndex;
+                uint desiredRowIndex;
+                bool rowsLoadedIn = false;
+
+                IEnumerable<Cell> cellEnumerable;
+                IEnumerator<Cell> cellEnumerator;
+                
+
                 while (true)
                 {
-                    ICellProcessingTask t = _cellTasks.Take();
+                    ICellProcessingTask t = _loadQueueManager.Take();
+                    desiredRowIndex = t.CellRowIndex;
+
+                    //this will only load in up to the row we need
+                    //if we try loading in a row that does not exist then we will load all of them in
+                    //I'm assuming that data from here might still be in the file and we don't want to read things we don't need
+                    while (!rowsLoadedIn && !rows.ContainsKey(desiredRowIndex))
+                    {
+                        if(rowEnumerator.MoveNext())
+                        {
+                            row = rowEnumerator.Current;
+                            rowIndexNullable = row.RowIndex;
+                            if (rowIndexNullable.HasValue)
+                            {
+                                rowIndex = rowIndexNullable.Value;
+                                cellEnumerable = row.Elements<Cell>();
+                                cellEnumerator = cellEnumerable.GetEnumerator();
+                                rows.Add(rowIndex, cellEnumerator);
+                                if (rowIndex == desiredRowIndex)
+                                    break;
+                            }
+                        }
+                        else
+                        {
+                            rowsLoadedIn = true;
+                            break;
+                        }
+                    }
+
+                    
+                    if(rows.ContainsKey(desiredRowIndex))
+                    {
+                        string columnIndex = t.CellColumnIndex;
+                        cellEnumerator = rows[desiredRowIndex];
+                        bool cellsLoadedIn = false;
+                        string currentIndex;
+                        do
+                        {
+                            if(cellEnumerator.MoveNext())
+                            {
+                                cell = cellEnumerator.Current;
+                                currentIndex = SpreadSheetFile.GetColumnIndexByColumnReference(cell.CellReference);
+                                if(currentIndex != columnIndex)
+                                {
+                                    _dequeuer.AddDeferredCell(new DeferredCell(desiredRowIndex, currentIndex, cell));
+                                }
+                            }
+                            else
+                            {
+                                currentIndex = null;
+                                cellsLoadedIn = true;
+                            }
+                        } while (!cellsLoadedIn&&currentIndex != columnIndex);
+
+                        if(currentIndex == columnIndex)
+                        {
+                            throw new NotImplementedException();//need to handle this step now which is loading in the actual data
+                        }
+                        else
+                        {
+                            //This Cell Does not exist
+                            t.Resolve(null);
+                        }
+
+                    }
+                    else
+                    {
+                        //if we reached the end of the file and the row does not exist then what were trying to get does not exist
+                        t.Resolve(null);
+                    }
+
+
                 }
             }
             catch (InvalidOperationException ex)
