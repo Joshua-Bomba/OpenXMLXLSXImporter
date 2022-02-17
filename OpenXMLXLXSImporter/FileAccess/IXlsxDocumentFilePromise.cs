@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 
 namespace OpenXMLXLXSImporter.FileAccess
 {
-    public interface ISpreadSheetFilePromise
+    public interface IXlsxDocumentFilePromise
     {
-        Task<ISpreadSheetFile> GetLoadedFile();
+        Task<IXlsxDocumentFile> GetLoadedFile();
     }
 }

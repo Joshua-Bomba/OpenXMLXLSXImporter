@@ -2,7 +2,7 @@
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using OpenXMLXLXSImporter.CellData;
-using OpenXMLXLXSImporter.ExcelGrid;
+using OpenXMLXLXSImporter.Processing;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace OpenXMLXLXSImporter.FileAccess
 {
-    public class SpreadSheetFile : ISpreadSheetFilePromise, ISpreadSheetFile
+    public class XlsxDocumentFile : IXlsxDocumentFilePromise, IXlsxDocumentFile
     {
         private Stream _stream;
         //The Sheet
@@ -30,22 +30,22 @@ namespace OpenXMLXLXSImporter.FileAccess
         private Dictionary<string, SpreadSheetInstructionManager> _loadedSheets;
         private Dictionary<string, Sheet> _sheetRef;
 
-        public SpreadSheetFile(Stream stream)
+        public XlsxDocumentFile(Stream stream)
         {
             _stream = stream;
             _loadSpreadSheetData = LoadSpreadSheetDocuemntData();
             _loadedSheets = new Dictionary<string, SpreadSheetInstructionManager>();
         }
 
-        async Task<ISpreadSheetFile> ISpreadSheetFilePromise.GetLoadedFile()
+        async Task<IXlsxDocumentFile> IXlsxDocumentFilePromise.GetLoadedFile()
         {
             await _loadSpreadSheetData;//Ensure this is loaded first
             return this;
         }
 
-        Sheet ISpreadSheetFile.GetSheet(string sheetName) => _sheetRef[sheetName];
+        Sheet IXlsxDocumentFile.GetSheet(string sheetName) => _sheetRef[sheetName];
 
-        WorkbookPart ISpreadSheetFile.WorkbookPart => _workbookPart;
+        WorkbookPart IXlsxDocumentFile.WorkbookPart => _workbookPart;
 
         /// <summary>
         /// Common Reusable Parts of the WorkSheet

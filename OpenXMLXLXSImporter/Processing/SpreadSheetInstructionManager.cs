@@ -2,10 +2,10 @@
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using Nito.AsyncEx;
+using OpenXMLXLXSImporter.Builders;
 using OpenXMLXLXSImporter.CellData;
-using OpenXMLXLXSImporter.ExcelGrid.Builders;
-using OpenXMLXLXSImporter.ExcelGrid.Indexers;
 using OpenXMLXLXSImporter.FileAccess;
+using OpenXMLXLXSImporter.Indexers;
 using OpenXMLXLXSImporter.Utils;
 using System;
 using System.Collections;
@@ -16,7 +16,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace OpenXMLXLXSImporter.ExcelGrid
+namespace OpenXMLXLXSImporter.Processing
 {
     /// <summary>
     /// this will handle accessing the grid and iterateing over the spreadsheetgrid
@@ -26,7 +26,7 @@ namespace OpenXMLXLXSImporter.ExcelGrid
     /// </summary>
     public class SpreadSheetInstructionManager : ISpreadSheetIndexersLock, IDisposable
     {
-        private ISpreadSheetFilePromise _fileAccessPromise;
+        private IXlsxDocumentFilePromise _fileAccessPromise;
         private ISheetProperties _sheetProperties;
 
         private Sheet _sheet;
@@ -65,7 +65,7 @@ namespace OpenXMLXLXSImporter.ExcelGrid
             _loadQueueManager.Enque(cell);
         }
 
-        public SpreadSheetInstructionManager(ISpreadSheetFilePromise fileAccess, ISheetProperties sheetProperties)
+        public SpreadSheetInstructionManager(IXlsxDocumentFilePromise fileAccess, ISheetProperties sheetProperties)
         {
             _fileAccessPromise = fileAccess;
             _sheetProperties = sheetProperties;
@@ -81,7 +81,7 @@ namespace OpenXMLXLXSImporter.ExcelGrid
 
         protected async Task LoadSpreadSheetData()
         {
-            ISpreadSheetFile fileAccess = await _fileAccessPromise.GetLoadedFile();
+            IXlsxDocumentFile fileAccess = await _fileAccessPromise.GetLoadedFile();
             _sheet = fileAccess.GetSheet(_sheetProperties.Sheet);
             _workbookPart = fileAccess.WorkbookPart.GetPartById(_sheet.Id) as WorksheetPart;
             _worksheet = _workbookPart.Worksheet;
@@ -147,7 +147,7 @@ namespace OpenXMLXLXSImporter.ExcelGrid
                             if(cellEnumerator.MoveNext())
                             {
                                 cell = cellEnumerator.Current;
-                                currentIndex = SpreadSheetFile.GetColumnIndexByColumnReference(cell.CellReference);
+                                currentIndex = XlsxDocumentFile.GetColumnIndexByColumnReference(cell.CellReference);
                                 if(currentIndex != columnIndex)
                                 {
                                     _dequeuer.AddDeferredCell(new DeferredCell(desiredRowIndex, currentIndex, cell));

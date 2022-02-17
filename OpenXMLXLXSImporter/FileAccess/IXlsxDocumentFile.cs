@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace OpenXMLXLXSImporter.FileAccess
 {
-    public interface ISpreadSheetFile
+    public interface IXlsxDocumentFile
     {
         Sheet GetSheet(string sheetName);
         WorkbookPart WorkbookPart { get; }

@@ -9,10 +9,10 @@ using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using Nito.AsyncEx;
+using OpenXMLXLXSImporter.Builders;
 using OpenXMLXLXSImporter.CellData;
-using OpenXMLXLXSImporter.ExcelGrid;
-using OpenXMLXLXSImporter.ExcelGrid.Builders;
 using OpenXMLXLXSImporter.FileAccess;
+using OpenXMLXLXSImporter.Processing;
 
 namespace OpenXMLXLXSImporter
 {
@@ -25,11 +25,11 @@ namespace OpenXMLXLXSImporter
     /// </summary>
     public class ExcelImporter : IExcelImporter
     {
-        private SpreadSheetFile _streamSheetFile;
+        private XlsxDocumentFile _streamSheetFile;
         public static IExcelImporter CreateExcelImporter(Stream stream) => new ExcelImporter(stream);
         public ExcelImporter(Stream stream)
         {
-            _streamSheetFile = new SpreadSheetFile(stream);
+            _streamSheetFile = new XlsxDocumentFile(stream);
         }
 
         public Task Process(ISheetProperties sheet)
