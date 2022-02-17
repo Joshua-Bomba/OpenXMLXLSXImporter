@@ -2,7 +2,6 @@
 using DocumentFormat.OpenXml.Spreadsheet;
 using Nito.AsyncEx;
 using OpenXMLXLXSImporter.CellData;
-using OpenXMLXLXSImporter.Enumerators;
 using OpenXMLXLXSImporter.ExcelGrid.Builders;
 using OpenXMLXLXSImporter.ExcelGrid.Indexers;
 using System;
