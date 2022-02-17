@@ -2,9 +2,10 @@
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using Nito.AsyncEx;
+using OpenXMLXLXSImporter.Builders;
 using OpenXMLXLXSImporter.CellData;
-using OpenXMLXLXSImporter.ExcelGrid.Builders;
-using OpenXMLXLXSImporter.ExcelGrid.Indexers;
+using OpenXMLXLXSImporter.FileAccess;
+using OpenXMLXLXSImporter.Indexers;
 using OpenXMLXLXSImporter.Utils;
 using System;
 using System.Collections;
@@ -15,7 +16,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace OpenXMLXLXSImporter.ExcelGrid
+namespace OpenXMLXLXSImporter.Processing
 {
     /// <summary>
     /// this will handle accessing the grid and iterateing over the spreadsheetgrid
@@ -23,9 +24,9 @@ namespace OpenXMLXLXSImporter.ExcelGrid
     /// interate through all the cells for an entire row
     /// interate through all the cells
     /// </summary>
-    public class SpreadSheetGrid : ISpreadSheetIndexersLock, IDisposable
+    public class SpreadSheetInstructionManager : ISpreadSheetIndexersLock, IDisposable
     {
-        private ISpreadSheetFileLockable _fileAccess;
+        private IXlsxDocumentFilePromise _fileAccessPromise;
         private ISheetProperties _sheetProperties;
 
         private Sheet _sheet;
@@ -64,9 +65,9 @@ namespace OpenXMLXLXSImporter.ExcelGrid
             _loadQueueManager.Enque(cell);
         }
 
-        public SpreadSheetGrid(ISpreadSheetFileLockable fileAccess, ISheetProperties sheetProperties)
+        public SpreadSheetInstructionManager(IXlsxDocumentFilePromise fileAccess, ISheetProperties sheetProperties)
         {
-            _fileAccess = fileAccess;
+            _fileAccessPromise = fileAccess;
             _sheetProperties = sheetProperties;
             _indexers = new List<IIndexer>();
             _dequeuer = new SpreadSheetDequeManager();
@@ -80,14 +81,11 @@ namespace OpenXMLXLXSImporter.ExcelGrid
 
         protected async Task LoadSpreadSheetData()
         {
-            await _fileAccess.ContextLock(async x =>
-            {
-                _sheet = x.GetSheet(_sheetProperties.Sheet);
-                _workbookPart = x.WorkbookPart.GetPartById(_sheet.Id) as WorksheetPart;
-                _worksheet = _workbookPart.Worksheet;
-                _sheetData = _worksheet.Elements<SheetData>().First();
-            });
-
+            IXlsxDocumentFile fileAccess = await _fileAccessPromise.GetLoadedFile();
+            _sheet = fileAccess.GetSheet(_sheetProperties.Sheet);
+            _workbookPart = fileAccess.WorkbookPart.GetPartById(_sheet.Id) as WorksheetPart;
+            _worksheet = _workbookPart.Worksheet;
+            _sheetData = _worksheet.Elements<SheetData>().First();
             try
             {
                 IEnumerable<Row> rowsEnumerable = _sheetData.Elements<Row>();
@@ -149,7 +147,7 @@ namespace OpenXMLXLXSImporter.ExcelGrid
                             if(cellEnumerator.MoveNext())
                             {
                                 cell = cellEnumerator.Current;
-                                currentIndex = SpreadSheetFile.GetColumnIndexByColumnReference(cell.CellReference);
+                                currentIndex = XlsxDocumentFile.GetColumnIndexByColumnReference(cell.CellReference);
                                 if(currentIndex != columnIndex)
                                 {
                                     _dequeuer.AddDeferredCell(new DeferredCell(desiredRowIndex, currentIndex, cell));

@@ -1,6 +1,5 @@
 ﻿using DocumentFormat.OpenXml.Spreadsheet;
-using OpenXMLXLXSImporter.ExcelGrid;
-using OpenXMLXLXSImporter.ExcelGrid.Builders;
+using OpenXMLXLXSImporter.Builders;
 using System;
 using System.Collections.Generic;
 using System.Linq;

@@ -1,6 +1,5 @@
 ﻿using Nito.AsyncEx;
 using OpenXMLXLXSImporter.CellData;
-using OpenXMLXLXSImporter.ExcelGrid.Indexers;
 using OpenXMLXLXSImporter.Utils;
 using System;
 using System.Collections.Concurrent;
@@ -10,7 +9,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace OpenXMLXLXSImporter.ExcelGrid
+namespace OpenXMLXLXSImporter.Processing
 {
     public class SpreadSheetDequeManager : IChunckBlock<ICellProcessingTask>
     {

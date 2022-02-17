@@ -1,12 +1,12 @@
 ﻿using OpenXMLXLXSImporter.CellData;
-using OpenXMLXLXSImporter.ExcelGrid.Indexers;
+using OpenXMLXLXSImporter.Indexers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OpenXMLXLXSImporter.ExcelGrid.Builders
+namespace OpenXMLXLXSImporter.Builders
 {
     public interface ISpreadSheetInstruction
     {
