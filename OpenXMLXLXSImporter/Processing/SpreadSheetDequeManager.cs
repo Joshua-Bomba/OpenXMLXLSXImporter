@@ -46,7 +46,7 @@ namespace OpenXMLXLSXImporter.Processing
         {
             try
             {
-                Cell cell;
+                Cell cell = null;
                 uint desiredRowIndex;
                 bool rowsLoadedIn = false;
                 IEnumerator<Cell> cellEnumerator;
@@ -81,7 +81,7 @@ namespace OpenXMLXLSXImporter.Processing
 
                         if (currentIndex == columnIndex)
                         {
-                            throw new NotImplementedException();//need to handle this step now which is loading in the actual data
+                            sheetAccess.ProcessedCell(cell, t);
                         }
                         else
                         {

@@ -13,7 +13,7 @@ namespace OpenXMLXLSXImporter.FileAccess
     public interface IXlsxSheetFile
     {
         bool TryGetRow(uint desiredRowIndex, out IEnumerator<Cell> cellEnumerator);
-        void GetProcessedCell(Cell cellElement, ICellProcessingTask cellPromise);
+        void ProcessedCell(Cell cellElement, ICellProcessingTask cellPromise);
     }
 
     public interface IXlsxSheetFilePromise
@@ -103,7 +103,7 @@ namespace OpenXMLXLSXImporter.FileAccess
             return false;
         }
 
-        void IXlsxSheetFile.GetProcessedCell(Cell cellElement, ICellProcessingTask cellPromise)
+        void IXlsxSheetFile.ProcessedCell(Cell cellElement, ICellProcessingTask cellPromise)
         {
             ICellData cellData;
             bool hasBeenProcessed = ProcessCustomCell(cellElement, out cellData);
@@ -156,7 +156,8 @@ namespace OpenXMLXLSXImporter.FileAccess
             if (c.DataType?.Value != null && c.DataType?.Value == CellValues.SharedString)
             {
                 int index = int.Parse(c.CellValue.InnerText);
-                cellData = new CellDataRelation(index, _fileAccess.GetSharedStringTableElement(index));
+                OpenXmlElement sharedStringElement = _fileAccess.GetSharedStringTableElement(index);
+                cellData = new CellDataRelation(index, sharedStringElement);
                 return true;
             }
             cellData = null;

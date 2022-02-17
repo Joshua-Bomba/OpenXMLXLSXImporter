@@ -19,6 +19,7 @@ namespace OpenXMLXLSXImporter.CellData
         {
             _content = null;
             Index = index;
+            _sharedStringResult = sharedStringResult;
             _content = _sharedStringResult.FirstChild.InnerText;
         }
 
