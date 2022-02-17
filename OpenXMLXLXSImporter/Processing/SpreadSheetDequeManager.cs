@@ -66,7 +66,7 @@ namespace OpenXMLXLSXImporter.Processing
                             if (cellEnumerator.MoveNext())
                             {
                                 cell = cellEnumerator.Current;
-                                currentIndex = XlsxDocumentFile.GetColumnIndexByColumnReference(cell.CellReference);
+                                currentIndex = XlsxSheetFile.GetColumnIndexByColumnReference(cell.CellReference);
                                 if (currentIndex != columnIndex)
                                 {
                                     this.AddDeferredCell(new DeferredCell(desiredRowIndex, currentIndex, cell));

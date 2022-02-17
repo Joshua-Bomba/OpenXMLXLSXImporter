@@ -45,7 +45,10 @@ namespace OpenXMLXLSXImporter.FileAccess
 
         Sheet IXlsxDocumentFile.GetSheet(string sheetName) => _sheetRef[sheetName];
 
+        CellFormat IXlsxDocumentFile.GetCellFormat(int index) => _cellFormats.ChildElements[index] as CellFormat;
+
         WorkbookPart IXlsxDocumentFile.WorkbookPart => _workbookPart;
+        OpenXmlElement IXlsxDocumentFile.GetSharedStringTableElement(int index) => _sharedStringTable.ElementAt(index);
 
         /// <summary>
         /// Common Reusable Parts of the WorkSheet
@@ -71,103 +74,7 @@ namespace OpenXMLXLSXImporter.FileAccess
         }
 
 
-        /// <summary>
-        /// This is for custom Cell Types like dates Cell with relations like text etc
-        /// </summary>
-        /// <param name="c"></param>
-        /// <param name="cellData"></param>
-        /// <returns></returns>
-        public bool ProcessCustomCell(Cell c, out ICellData cellData)
-        {
-            if (c.StyleIndex != null)
-            {
-                int index = int.Parse(c.StyleIndex.InnerText);
-                CellFormat cellFormat = _cellFormats.ChildElements[index] as CellFormat;
-                if (cellFormat != null)
-                {
-                    if (ExcelStaticData.DATE_FROMAT_DICTIONARY.ContainsKey(cellFormat.NumberFormatId))
-                    {
-                        if (!string.IsNullOrEmpty(c.CellValue.Text))
-                        {
-                            if (double.TryParse(c.CellValue.Text, out double cellDouble))
-                            {
-
-                                DateTime theDate = DateTime.FromOADate(cellDouble);
-                                cellData = new CellDataDate { Date = theDate, DateFormat = ExcelStaticData.DATE_FROMAT_DICTIONARY[cellFormat.NumberFormatId] };
-                                return true;
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (c.DataType?.Value != null && c.DataType?.Value == CellValues.SharedString)
-            {
-                cellData = new CellDataRelation(int.Parse(c.CellValue.InnerText), _sharedStringTable);
-                return true;
-            }
-            cellData = null;
-            return false;
-        }
-
-        public static string GetColumnIndexByColumnReference(StringValue columnReference)
-        {
-            string v = columnReference.Value;
-            for (int i = v.Length - 1; i >= 0; i--)
-            {
-                char c = v[i];
-                if (!Char.IsNumber(c))
-                {
-                    return v.Substring(0, i + 1);
-                }
-
-            }
-            return v;
-        }
-
-        /// <summary>
-        /// this will be called for each work sheet and will process each cell
-        /// </summary>
-        /// <param name="worksheetPart"></param>
-        /// <param name="grid"></param>
-        /// <returns></returns>
-        //protected async Task ProcessWorkSheet(WorksheetPart worksheetPart, SpreadSheetGrid grid)
-        //{
-        //    await Task.Run(() => {
-        //        List<Task> cellTask = new List<Task>();
-        //        Worksheet ws = worksheetPart.Worksheet;
-        //        SheetData sheetData = ws.Elements<SheetData>().
-        //        IEnumerator<Row> enumerator = sheetData.Elements<Row>().GetEnumerator();
-        //        while (enumerator.MoveNext())
-        //        {
-        //            Row r = enumerator.Current;
-        //            IEnumerable<Cell> cells = r.Elements<Cell>();
-
-        //            foreach (Cell c in cells)
-        //            {
-        //                if (c?.CellValue != null)
-        //                {
-        //                    ICellData cellData;
-        //                    bool hasBeenProcessed = ProcessCustomCell(c, out cellData);
-        //                    if (!hasBeenProcessed)
-        //                    {
-        //                        cellData = new CellDataContent { Text = c.CellValue.Text };
-        //                    }
-
-        //                    if (cellData != null)
-        //                    {
-        //                        cellData.CellColumnIndex = GetColumnIndexByColumnReference(c.CellReference);
-        //                        cellData.CellRowIndex = r.RowIndex.Value;
-        //                        cellTask.Add(grid.Add(cellData));
-        //                    }
-        //                }
-        //            }
-        //        }
-        //        cellTask.ForEach(x => x.Wait());
-        //        grid.FinishedLoading();
-        //    });
-
-        //}
+       
 
         public async Task<IXlsxSheetFilePromise> LoadSpreadSheetData(ISheetProperties sheet)
         {
@@ -193,5 +100,6 @@ namespace OpenXMLXLSXImporter.FileAccess
             //}
             _spreadsheet.Dispose();
         }
+
     }
 }

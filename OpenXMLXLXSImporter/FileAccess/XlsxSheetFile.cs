@@ -1,6 +1,7 @@
 ﻿using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
+using OpenXMLXLSXImporter.CellData;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +13,7 @@ namespace OpenXMLXLSXImporter.FileAccess
     public interface IXlsxSheetFile
     {
         bool TryGetRow(uint desiredRowIndex, out IEnumerator<Cell> cellEnumerator);
+        void GetProcessedCell(Cell cellElement, ICellProcessingTask cellPromise);
     }
 
     public interface IXlsxSheetFilePromise
@@ -22,6 +24,7 @@ namespace OpenXMLXLSXImporter.FileAccess
     public class XlsxSheetFile : IXlsxSheetFile, IXlsxSheetFilePromise
     {
         private IXlsxDocumentFilePromise _fileAccessPromise;
+        private IXlsxDocumentFile _fileAccess;
 
         private string _sheetName;
 
@@ -54,9 +57,9 @@ namespace OpenXMLXLSXImporter.FileAccess
         protected async Task LoadSpreadSheetData()
         {
             _rows = new Dictionary<uint, IEnumerator<Cell>>();
-            IXlsxDocumentFile fileAccess = await _fileAccessPromise.GetLoadedFile();
-            _sheet = fileAccess.GetSheet(_sheetName);
-            _workbookPart = fileAccess.WorkbookPart.GetPartById(_sheet.Id) as WorksheetPart;
+            _fileAccess = await _fileAccessPromise.GetLoadedFile();
+            _sheet = _fileAccess.GetSheet(_sheetName);
+            _workbookPart = _fileAccess.WorkbookPart.GetPartById(_sheet.Id) as WorksheetPart;
             _worksheet = _workbookPart.Worksheet;
             _sheetData = _worksheet.Elements<SheetData>().First();
            _rowsEnumerable = _sheetData.Elements<Row>();
@@ -98,6 +101,81 @@ namespace OpenXMLXLSXImporter.FileAccess
             }
             cellEnumerator = null;
             return false;
+        }
+
+        void IXlsxSheetFile.GetProcessedCell(Cell cellElement, ICellProcessingTask cellPromise)
+        {
+            ICellData cellData;
+            bool hasBeenProcessed = ProcessCustomCell(cellElement, out cellData);
+            if (!hasBeenProcessed)//if there is no custom cell then we will use add a simple CellDataContent
+            {
+                cellData = new CellDataContent { Text = cellElement.CellValue.Text };
+            }
+
+            if (cellData != null)
+            {
+                //use the same value from the promise
+                cellData.CellColumnIndex = cellPromise.CellColumnIndex;
+                cellData.CellRowIndex = cellPromise.CellRowIndex;
+            }
+            cellPromise.Resolve(cellData);
+        }
+
+
+        /// <summary>
+        /// This is for custom Cell Types like dates Cell with relations like text etc
+        /// </summary>
+        /// <param name="c"></param>
+        /// <param name="cellData"></param>
+        /// <returns></returns>
+        private bool ProcessCustomCell(Cell c, out ICellData cellData)
+        {
+            if (c.StyleIndex != null)
+            {
+                int index = int.Parse(c.StyleIndex.InnerText);
+                
+                CellFormat cellFormat = _fileAccess.GetCellFormat(index);
+                if (cellFormat != null)
+                {
+                    if (ExcelStaticData.DATE_FROMAT_DICTIONARY.ContainsKey(cellFormat.NumberFormatId))
+                    {
+                        if (!string.IsNullOrEmpty(c.CellValue.Text))
+                        {
+                            if (double.TryParse(c.CellValue.Text, out double cellDouble))
+                            {
+
+                                DateTime theDate = DateTime.FromOADate(cellDouble);
+                                cellData = new CellDataDate { Date = theDate, DateFormat = ExcelStaticData.DATE_FROMAT_DICTIONARY[cellFormat.NumberFormatId] };
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (c.DataType?.Value != null && c.DataType?.Value == CellValues.SharedString)
+            {
+                int index = int.Parse(c.CellValue.InnerText);
+                cellData = new CellDataRelation(index, _fileAccess.GetSharedStringTableElement(index));
+                return true;
+            }
+            cellData = null;
+            return false;
+        }
+
+        public static string GetColumnIndexByColumnReference(StringValue columnReference)
+        {
+            string v = columnReference.Value;
+            for (int i = v.Length - 1; i >= 0; i--)
+            {
+                char c = v[i];
+                if (!Char.IsNumber(c))
+                {
+                    return v.Substring(0, i + 1);
+                }
+
+            }
+            return v;
         }
     }
 }
