@@ -27,6 +27,8 @@ namespace OpenXMLXLSXImporter.Processing
             _processRequestTask = null;
         }
 
+        public void Finish() => _queue.Finish();
+
         public void Init(ChunkableBlockingCollection<ICellProcessingTask> collection)
         {
             _queue = collection;

@@ -26,6 +26,7 @@ namespace OpenXMLXLSXImporter
     public class ExcelImporter : IExcelImporter
     {
         private XlsxDocumentFile _streamSheetFile;
+        private SpreadSheetDequeManager dequeManager;
         public static IExcelImporter CreateExcelImporter(Stream stream) => new ExcelImporter(stream);
         public ExcelImporter(Stream stream)
         {
@@ -42,7 +43,7 @@ namespace OpenXMLXLSXImporter
                     Task<IXlsxSheetFilePromise> gt = _streamSheetFile.LoadSpreadSheetData(sheet);
                     sheet.LoadConfig(ssib);
                     IXlsxSheetFilePromise g = await gt;
-                    SpreadSheetDequeManager dequeManager = new SpreadSheetDequeManager();
+                    dequeManager = new SpreadSheetDequeManager();
                     SpreadSheetInstructionManager ssim = new SpreadSheetInstructionManager(dequeManager);
                     dequeManager.StartRequestProcessor(g);
                     await ssib.ProcessInstructions(ssim);
@@ -61,7 +62,7 @@ namespace OpenXMLXLSXImporter
 
         public void Dispose()
         {
-            
+            dequeManager?.Finish();//we have all of our results processed we are finished adding
         }
     }
 }

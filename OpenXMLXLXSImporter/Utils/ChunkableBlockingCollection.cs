@@ -61,6 +61,8 @@ namespace OpenXMLXLSXImporter.Utils
             _chunkedItems = queueOutput.GetEnumerator();
         }
 
+        public void Finish() => _queue.CompleteAdding();
+
         public T Take()
         {
             if (_chunkedItems != null)
