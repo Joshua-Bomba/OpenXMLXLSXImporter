@@ -10,6 +10,8 @@ namespace OpenXMLXLSXImporter.Utils
 {
     public interface IChunckBlock<T>
     {
+        void Init(ChunkableBlockingCollection<T> collection);
+
         bool ShouldPullAndChunk { get; }
 
         bool KeepQueueLockedForDump();
@@ -30,6 +32,7 @@ namespace OpenXMLXLSXImporter.Utils
             _mre = new ManualResetEventSlim(true);//we will make the mre's inital state as true
             _queue = new BlockingCollection<T>();
             _chunkedItems = null;
+            chunkBlock.Init(this);
         }
 
         public void Enque(T item)
@@ -57,6 +60,8 @@ namespace OpenXMLXLSXImporter.Utils
             }
             _chunkedItems = queueOutput.GetEnumerator();
         }
+
+        public void Finish() => _queue.CompleteAdding();
 
         public T Take()
         {

@@ -15,11 +15,11 @@ namespace OpenXMLXLSXImporter.CellData
     {
         private string _content;
         private OpenXmlElement _sharedStringResult;
-        public CellDataRelation(int index, SharedStringTable sst)
+        public CellDataRelation(int index,OpenXmlElement sharedStringResult)
         {
             _content = null;
             Index = index;
-            _sharedStringResult = sst.ElementAt(index);
+            _sharedStringResult = sharedStringResult;
             _content = _sharedStringResult.FirstChild.InnerText;
         }
 

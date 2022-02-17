@@ -1,4 +1,5 @@
-﻿using DocumentFormat.OpenXml.Packaging;
+﻿using DocumentFormat.OpenXml;
+using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using System;
 using System.Collections.Generic;
@@ -12,5 +13,9 @@ namespace OpenXMLXLSXImporter.FileAccess
     {
         Sheet GetSheet(string sheetName);
         WorkbookPart WorkbookPart { get; }
+
+        CellFormat GetCellFormat(int index);
+
+        OpenXmlElement GetSharedStringTableElement(int index);
     }
 }
