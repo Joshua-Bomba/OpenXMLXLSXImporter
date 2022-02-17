@@ -39,10 +39,13 @@ namespace OpenXMLXLSXImporter
                 try
                 {
                     SpreadSheetInstructionBuilder ssib = new SpreadSheetInstructionBuilder();
-                    Task<SpreadSheetInstructionManager> gt = _streamSheetFile.LoadSpreadSheetData(sheet);
+                    Task<IXlsxSheetFilePromise> gt = _streamSheetFile.LoadSpreadSheetData(sheet);
                     sheet.LoadConfig(ssib);
-                    SpreadSheetInstructionManager g = await gt;
-                    await ssib.ProcessInstructions(g);
+                    IXlsxSheetFilePromise g = await gt;
+                    SpreadSheetDequeManager dequeManager = new SpreadSheetDequeManager();
+                    SpreadSheetInstructionManager ssim = new SpreadSheetInstructionManager(dequeManager);
+                    dequeManager.StartRequestProcessor(g);
+                    await ssib.ProcessInstructions(ssim);
                     Task r = ssib.ProcessResults();
                     await sheet.ResultsProcessed(ssib);
                     await r;

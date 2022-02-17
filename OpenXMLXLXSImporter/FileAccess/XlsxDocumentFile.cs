@@ -27,14 +27,14 @@ namespace OpenXMLXLSXImporter.FileAccess
         //The Task that Loads in the SpreadSheetDocumentData
         private Task _loadSpreadSheetData;
 
-        private Dictionary<string, SpreadSheetInstructionManager> _loadedSheets;
+        private Dictionary<string, IXlsxSheetFilePromise> _loadedSheets;
         private Dictionary<string, Sheet> _sheetRef;
 
         public XlsxDocumentFile(Stream stream)
         {
             _stream = stream;
             _loadSpreadSheetData = LoadSpreadSheetDocuemntData();
-            _loadedSheets = new Dictionary<string, SpreadSheetInstructionManager>();
+            _loadedSheets = new Dictionary<string, IXlsxSheetFilePromise>();
         }
 
         async Task<IXlsxDocumentFile> IXlsxDocumentFilePromise.GetLoadedFile()
@@ -169,7 +169,7 @@ namespace OpenXMLXLSXImporter.FileAccess
 
         //}
 
-        public async Task<SpreadSheetInstructionManager> LoadSpreadSheetData(ISheetProperties sheet)
+        public async Task<IXlsxSheetFilePromise> LoadSpreadSheetData(ISheetProperties sheet)
         {
             await _loadSpreadSheetData;
             if (_sheetRef.ContainsKey(sheet.Sheet))
@@ -177,7 +177,7 @@ namespace OpenXMLXLSXImporter.FileAccess
                 if (!_loadedSheets.ContainsKey(sheet.Sheet))
                 {
                     //this is the first time we use this sheet
-                    _loadedSheets[sheet.Sheet] = new SpreadSheetInstructionManager(this, sheet);
+                    _loadedSheets[sheet.Sheet] = new XlsxSheetFile(this, sheet.Sheet);
                 }
                 return _loadedSheets[sheet.Sheet];
             }
