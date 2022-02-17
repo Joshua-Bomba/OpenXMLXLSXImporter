@@ -10,17 +10,6 @@ using System.Threading.Tasks;
 
 namespace OpenXMLXLSXImporter.FileAccess
 {
-    public interface IXlsxSheetFile
-    {
-        bool TryGetRow(uint desiredRowIndex, out IEnumerator<Cell> cellEnumerator);
-        void ProcessedCell(Cell cellElement, ICellProcessingTask cellPromise);
-    }
-
-    public interface IXlsxSheetFilePromise
-    {
-        Task<IXlsxSheetFile> GetLoadedFile();
-    }
-
     public class XlsxSheetFile : IXlsxSheetFile, IXlsxSheetFilePromise
     {
         private IXlsxDocumentFilePromise _fileAccessPromise;
