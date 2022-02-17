@@ -5,6 +5,7 @@ using Nito.AsyncEx;
 using OpenXMLXLXSImporter.CellData;
 using OpenXMLXLXSImporter.ExcelGrid.Builders;
 using OpenXMLXLXSImporter.ExcelGrid.Indexers;
+using OpenXMLXLXSImporter.FileAccess;
 using OpenXMLXLXSImporter.Utils;
 using System;
 using System.Collections;
