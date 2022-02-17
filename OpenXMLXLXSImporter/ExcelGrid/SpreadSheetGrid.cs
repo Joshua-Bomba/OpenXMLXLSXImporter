@@ -25,7 +25,7 @@ namespace OpenXMLXLXSImporter.ExcelGrid
     /// </summary>
     public class SpreadSheetGrid : ISpreadSheetIndexersLock, IDisposable
     {
-        private ISpreadSheetFileLockable _fileAccess;
+        private ISpreadSheetFilePromise _fileAccessPromise;
         private ISheetProperties _sheetProperties;
 
         private Sheet _sheet;
@@ -64,9 +64,9 @@ namespace OpenXMLXLXSImporter.ExcelGrid
             _loadQueueManager.Enque(cell);
         }
 
-        public SpreadSheetGrid(ISpreadSheetFileLockable fileAccess, ISheetProperties sheetProperties)
+        public SpreadSheetGrid(ISpreadSheetFilePromise fileAccess, ISheetProperties sheetProperties)
         {
-            _fileAccess = fileAccess;
+            _fileAccessPromise = fileAccess;
             _sheetProperties = sheetProperties;
             _indexers = new List<IIndexer>();
             _dequeuer = new SpreadSheetDequeManager();
@@ -80,14 +80,11 @@ namespace OpenXMLXLXSImporter.ExcelGrid
 
         protected async Task LoadSpreadSheetData()
         {
-            await _fileAccess.ContextLock(async x =>
-            {
-                _sheet = x.GetSheet(_sheetProperties.Sheet);
-                _workbookPart = x.WorkbookPart.GetPartById(_sheet.Id) as WorksheetPart;
-                _worksheet = _workbookPart.Worksheet;
-                _sheetData = _worksheet.Elements<SheetData>().First();
-            });
-
+            ISpreadSheetFile fileAccess = await _fileAccessPromise.GetLoadedFile();
+            _sheet = fileAccess.GetSheet(_sheetProperties.Sheet);
+            _workbookPart = fileAccess.WorkbookPart.GetPartById(_sheet.Id) as WorksheetPart;
+            _worksheet = _workbookPart.Worksheet;
+            _sheetData = _worksheet.Elements<SheetData>().First();
             try
             {
                 IEnumerable<Row> rowsEnumerable = _sheetData.Elements<Row>();

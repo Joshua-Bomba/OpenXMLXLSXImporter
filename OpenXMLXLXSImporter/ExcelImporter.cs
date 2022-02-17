@@ -67,12 +67,12 @@ namespace OpenXMLXLXSImporter
         WorkbookPart WorkbookPart { get; }
     }
 
-    public interface ISpreadSheetFileLockable
+    public interface ISpreadSheetFilePromise
     {
-        Task ContextLock(Func<ISpreadSheetFile,Task> spreadSheetFile);
+        Task<ISpreadSheetFile> GetLoadedFile();
     }
 
-    public class SpreadSheetFile : ISpreadSheetFileLockable, ISpreadSheetFile
+    public class SpreadSheetFile : ISpreadSheetFilePromise, ISpreadSheetFile
     {
         private Stream _stream;
         //The Sheet
@@ -90,8 +90,6 @@ namespace OpenXMLXLXSImporter
         private Dictionary<string, SpreadSheetGrid> _loadedSheets;
         private Dictionary<string, Sheet> _sheetRef;
 
-        private readonly AsyncLock _fileMutex = new AsyncLock();
-
         public SpreadSheetFile(Stream stream)
         {
             _stream = stream;
@@ -99,16 +97,10 @@ namespace OpenXMLXLXSImporter
             _loadedSheets = new Dictionary<string, SpreadSheetGrid>();
         }
 
-        async Task ISpreadSheetFileLockable.ContextLock(Func<ISpreadSheetFile,Task> spreadSheetFile)
+        async Task<ISpreadSheetFile> ISpreadSheetFilePromise.GetLoadedFile()
         {
-            if(spreadSheetFile != null)
-            {
-                await _loadSpreadSheetData;//Ensure this is loaded first
-                using (await _fileMutex.LockAsync())//grab the fileMutex
-                {
-                    await spreadSheetFile(this);//We can safely run any commands in here
-                }
-            }
+            await _loadSpreadSheetData;//Ensure this is loaded first
+            return this;
         }
 
         Sheet ISpreadSheetFile.GetSheet(string sheetName) => _sheetRef[sheetName];
