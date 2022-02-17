@@ -86,6 +86,7 @@ namespace OpenXMLXLXSImporter.ExcelGrid
 
             try
             {
+                throw new NotImplementedException();
                 while (true)
                 {
                     ICellProcessingTask t = _cellTasks.Take();
