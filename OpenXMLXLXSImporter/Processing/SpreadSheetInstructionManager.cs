@@ -162,7 +162,7 @@ namespace OpenXMLXLXSImporter.Processing
 
                         if(currentIndex == columnIndex)
                         {
-
+                            throw new NotImplementedException();//need to handle this step now which is loading in the actual data
                         }
                         else
                         {
