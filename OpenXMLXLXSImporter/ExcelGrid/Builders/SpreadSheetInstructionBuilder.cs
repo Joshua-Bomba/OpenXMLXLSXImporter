@@ -26,7 +26,7 @@ namespace OpenXMLXLXSImporter.ExcelGrid.Builders
         public ISpreadSheetInstructionKey LoadSingleCell(uint row, string cell)
             => Add(new SingleCell(row, cell));
 
-        public async Task ProcessInstructions(SpreadSheetGrid grid)
+        public async Task ProcessInstructions(SpreadSheetInstructionManager grid)
         {
             foreach(KeyValuePair<ISpreadSheetInstructionKey, ISpreadSheetInstruction> instruction in _instructions)
                 await grid.ProcessInstruction(instruction.Value);

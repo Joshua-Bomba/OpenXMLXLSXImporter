@@ -39,9 +39,9 @@ namespace OpenXMLXLXSImporter
                 try
                 {
                     SpreadSheetInstructionBuilder ssib = new SpreadSheetInstructionBuilder();
-                    Task<SpreadSheetGrid> gt = _streamSheetFile.LoadSpreadSheetData(sheet);
+                    Task<SpreadSheetInstructionManager> gt = _streamSheetFile.LoadSpreadSheetData(sheet);
                     sheet.LoadConfig(ssib);
-                    SpreadSheetGrid g = await gt;
+                    SpreadSheetInstructionManager g = await gt;
                     await ssib.ProcessInstructions(g);
                     Task r = ssib.ProcessResults();
                     await sheet.ResultsProcessed(ssib);

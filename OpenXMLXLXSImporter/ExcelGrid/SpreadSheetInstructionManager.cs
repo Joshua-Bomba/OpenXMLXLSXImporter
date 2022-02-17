@@ -24,7 +24,7 @@ namespace OpenXMLXLXSImporter.ExcelGrid
     /// interate through all the cells for an entire row
     /// interate through all the cells
     /// </summary>
-    public class SpreadSheetGrid : ISpreadSheetIndexersLock, IDisposable
+    public class SpreadSheetInstructionManager : ISpreadSheetIndexersLock, IDisposable
     {
         private ISpreadSheetFilePromise _fileAccessPromise;
         private ISheetProperties _sheetProperties;
@@ -65,7 +65,7 @@ namespace OpenXMLXLXSImporter.ExcelGrid
             _loadQueueManager.Enque(cell);
         }
 
-        public SpreadSheetGrid(ISpreadSheetFilePromise fileAccess, ISheetProperties sheetProperties)
+        public SpreadSheetInstructionManager(ISpreadSheetFilePromise fileAccess, ISheetProperties sheetProperties)
         {
             _fileAccessPromise = fileAccess;
             _sheetProperties = sheetProperties;
