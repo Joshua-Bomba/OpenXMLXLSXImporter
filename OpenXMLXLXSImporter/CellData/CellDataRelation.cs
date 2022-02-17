@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OpenXMLXLXSImporter.CellData
+namespace OpenXMLXLSXImporter.CellData
 {
     /// <summary>
     /// a cell thats data is from a SharedStringTable

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OpenXMLXLXSImporter.Builders
+namespace OpenXMLXLSXImporter.Builders
 {
     public  interface ISpreadSheetInstructionBuilder
     {

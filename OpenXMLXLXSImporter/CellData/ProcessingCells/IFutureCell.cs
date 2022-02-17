@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OpenXMLXLXSImporter.CellData
+namespace OpenXMLXLSXImporter.CellData
 {
     public  interface IFutureCell : ICellIndex
     {

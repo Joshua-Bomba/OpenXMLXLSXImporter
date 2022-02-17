@@ -1,6 +1,6 @@
 ﻿using Nito.AsyncEx;
-using OpenXMLXLXSImporter.CellData;
-using OpenXMLXLXSImporter.Processing;
+using OpenXMLXLSXImporter.CellData;
+using OpenXMLXLSXImporter.Processing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace OpenXMLXLXSImporter.Indexers
+namespace OpenXMLXLSXImporter.Indexers
 {
     /// <summary>
     /// this manages access by row then cell

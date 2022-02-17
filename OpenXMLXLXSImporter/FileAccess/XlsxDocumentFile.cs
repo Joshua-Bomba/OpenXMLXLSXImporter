@@ -1,8 +1,8 @@
 ﻿using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
-using OpenXMLXLXSImporter.CellData;
-using OpenXMLXLXSImporter.Processing;
+using OpenXMLXLSXImporter.CellData;
+using OpenXMLXLSXImporter.Processing;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -10,7 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OpenXMLXLXSImporter.FileAccess
+namespace OpenXMLXLSXImporter.FileAccess
 {
     public class XlsxDocumentFile : IXlsxDocumentFilePromise, IXlsxDocumentFile
     {

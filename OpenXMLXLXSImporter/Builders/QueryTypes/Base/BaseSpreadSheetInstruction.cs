@@ -1,13 +1,13 @@
 ﻿using Nito.AsyncEx;
-using OpenXMLXLXSImporter.CellData;
-using OpenXMLXLXSImporter.Indexers;
+using OpenXMLXLSXImporter.CellData;
+using OpenXMLXLSXImporter.Indexers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OpenXMLXLXSImporter.Builders
+namespace OpenXMLXLSXImporter.Builders
 {
     public abstract class BaseSpreadSheetInstruction : ISpreadSheetInstruction
     {
