@@ -75,5 +75,13 @@ namespace SSUT
             Assert.IsTrue(c.Content() == "A Header");
             
         }
+        [Test]
+        public void LoadTitleCellWithoutImplementAInterfaceList()
+        {
+            ICellData c;
+            List<List<ICellData>> ret =  importer.ProcessAndGetListAsync(SHEET1, x => x.LoadSingleCell(1, "A")).GetAwaiter().GetResult();
+            c = ret.First().First();
+            Assert.IsTrue(c.Content() == "A Header");
+        }
     }
 }
