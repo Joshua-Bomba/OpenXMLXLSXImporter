@@ -112,12 +112,9 @@ namespace OpenXMLXLSXImporter.Processing
             deferedCells.Enqueue(deferredCell);
         }
 
-        public bool ShouldPullAndChunk => false;
+        public bool ShouldPullAndChunk => deferedCells?.Any()??false;
 
-        public bool KeepQueueLockedForDump()
-        {
-            return false;
-        }
+        public bool KeepQueueLockedForDump() => true;
 
         public void QueueDumpped(ref List<ICellProcessingTask> items)
         {

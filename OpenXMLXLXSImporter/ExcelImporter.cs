@@ -10,6 +10,7 @@ using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using Nito.AsyncEx;
 using OpenXMLXLSXImporter.Builders;
+using OpenXMLXLSXImporter.Builders.Managers;
 using OpenXMLXLSXImporter.CellData;
 using OpenXMLXLSXImporter.FileAccess;
 using OpenXMLXLSXImporter.Processing;
@@ -33,7 +34,7 @@ namespace OpenXMLXLSXImporter
             _streamSheetFile = new XlsxDocumentFile(stream);
         }
 
-        public Task Process(ISheetProperties sheet)
+        public Task Process(ISpreadSheetInstructionBuilderManager sheet)
         {
             return Task.Run(async() =>
             {
@@ -63,6 +64,41 @@ namespace OpenXMLXLSXImporter
         public void Dispose()
         {
             dequeManager?.Finish();//we have all of our results processed we are finished adding
+        }
+
+        public async IAsyncEnumerable<IEnumerable<Task<ICellData>>> ProcessAndGetAsyncCollection(string sheetName, Action<ISpreadSheetInstructionBuilderManagerInstructionBuilder> builder)
+        {
+            SpreadSheetInstructionBuilderManager dssp = new SpreadSheetInstructionBuilderManager(sheetName,builder);
+            await this.Process(dssp);
+            IAsyncEnumerable<IEnumerable<Task<ICellData>>> ret = dssp.GetResults();
+            IAsyncEnumerator<IEnumerable<Task<ICellData>>> f = ret.GetAsyncEnumerator();
+            while(await f.MoveNextAsync())
+            {
+                yield return f.Current;
+            }
+        }
+
+        public async Task<List<List<ICellData>>> ProcessAndGetListAsync(string sheetName, Action<ISpreadSheetInstructionBuilderManagerInstructionBuilder> builder)
+        {
+            SpreadSheetInstructionBuilderManager dssp = new SpreadSheetInstructionBuilderManager(sheetName, builder);
+            Task pt =  this.Process(dssp);
+            List<List<ICellData>> output = new List<List<ICellData>>();
+            await pt;
+            IAsyncEnumerable<IEnumerable<Task<ICellData>>> ret = dssp.GetResults();
+            IAsyncEnumerator<IEnumerable<Task<ICellData>>> f = ret.GetAsyncEnumerator();
+
+            List<ICellData> currentList;
+
+            while(await f.MoveNextAsync())
+            {
+                currentList = new List<ICellData>();
+                foreach (Task<ICellData> l2 in f.Current)
+                {
+                    currentList.Add(await l2);
+                }
+                output.Add(currentList);
+            }
+            return output;
         }
     }
 }

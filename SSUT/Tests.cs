@@ -1,8 +1,10 @@
 using NUnit.Framework;
 using OpenXMLXLSXImporter;
 using OpenXMLXLSXImporter.Builders;
+using OpenXMLXLSXImporter.Builders.Managers;
 using OpenXMLXLSXImporter.CellData;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -31,7 +33,7 @@ namespace SSUT
             stream?.Dispose();
         }
 
-        private class TitleColumnTest : ISheetProperties
+        private class TitleColumnTest : ISpreadSheetInstructionBuilderManager
         {
             private ISpreadSheetInstructionKey title;
 
@@ -55,6 +57,31 @@ namespace SSUT
         {
             TitleColumnTest titleColumnTest = new TitleColumnTest();
             importer.Process(titleColumnTest).GetAwaiter().GetResult();
+        }
+
+        [Test]
+        public void LoadTitleCellWithoutImplementAInterface()
+        {
+            ICellData c = null;
+            var f = async () =>
+            {
+
+                 IAsyncEnumerable<IEnumerable<Task<ICellData>>> ret = importer.ProcessAndGetAsyncCollection(SHEET1, x => x.LoadSingleCell(1, "A"));
+                c = await (await ret.FirstAsync()).First();
+
+            };
+
+            f().GetAwaiter().GetResult();
+            Assert.IsTrue(c.Content() == "A Header");
+            
+        }
+        [Test]
+        public void LoadTitleCellWithoutImplementAInterfaceList()
+        {
+            ICellData c;
+            List<List<ICellData>> ret =  importer.ProcessAndGetListAsync(SHEET1, x => x.LoadSingleCell(1, "A")).GetAwaiter().GetResult();
+            c = ret.First().First();
+            Assert.IsTrue(c.Content() == "A Header");
         }
     }
 }

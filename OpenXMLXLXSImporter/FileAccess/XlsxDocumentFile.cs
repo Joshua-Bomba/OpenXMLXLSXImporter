@@ -1,6 +1,7 @@
 ﻿using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
+using OpenXMLXLSXImporter.Builders.Managers;
 using OpenXMLXLSXImporter.CellData;
 using OpenXMLXLSXImporter.Processing;
 using System;
@@ -76,7 +77,7 @@ namespace OpenXMLXLSXImporter.FileAccess
 
        
 
-        public async Task<IXlsxSheetFilePromise> LoadSpreadSheetData(ISheetProperties sheet)
+        public async Task<IXlsxSheetFilePromise> LoadSpreadSheetData(ISpreadSheetInstructionBuilderManager sheet)
         {
             await _loadSpreadSheetData;
             if (_sheetRef.ContainsKey(sheet.Sheet))
