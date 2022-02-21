@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OpenXMLXLSXImporter
+namespace OpenXMLXLSXImporter.Builders.Managers
 {
     public interface ISpreadSheetInstructionBuilderManager
     {

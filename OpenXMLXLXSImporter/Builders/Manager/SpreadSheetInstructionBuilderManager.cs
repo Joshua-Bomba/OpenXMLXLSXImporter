@@ -7,22 +7,19 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OpenXMLXLSXImporter
+namespace OpenXMLXLSXImporter.Builders.Managers
 {
-    public interface IDefaultSheetInstructionBuilder
-    {
-        IDefaultSheetInstructionBuilder LoadSingleCell(uint row, string cell);
-    }
-    public class SpreadSheetInstructionBuilderManager : ISpreadSheetInstructionBuilderManager, IDefaultSheetInstructionBuilder
+
+    public class SpreadSheetInstructionBuilderManager : ISpreadSheetInstructionBuilderManager, ISpreadSheetInstructionBuilderManagerInstructionBuilder
     {
         private string _sheet;
         private List<ISpreadSheetInstructionKey> _keys;
         private ISpreadSheetInstructionBuilder _builder;
 
-        private Action<IDefaultSheetInstructionBuilder> _execute;
+        private Action<ISpreadSheetInstructionBuilderManagerInstructionBuilder> _execute;
 
         private IEnumerable<Task<IEnumerable<Task<ICellData>>>> _result;//lol
-        public SpreadSheetInstructionBuilderManager(string sheet,Action<IDefaultSheetInstructionBuilder> ac)
+        public SpreadSheetInstructionBuilderManager(string sheet,Action<ISpreadSheetInstructionBuilderManagerInstructionBuilder> ac)
         {
   
             _sheet = sheet;
@@ -39,7 +36,7 @@ namespace OpenXMLXLSXImporter
                 yield return await k;
         }
 
-        IDefaultSheetInstructionBuilder IDefaultSheetInstructionBuilder.LoadSingleCell(uint row, string cell)
+        ISpreadSheetInstructionBuilderManagerInstructionBuilder ISpreadSheetInstructionBuilderManagerInstructionBuilder.LoadSingleCell(uint row, string cell)
         {
             _keys.Add(_builder.LoadSingleCell(row, cell));
             return this;

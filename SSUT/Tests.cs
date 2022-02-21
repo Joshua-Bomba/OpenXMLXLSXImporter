@@ -1,6 +1,7 @@
 using NUnit.Framework;
 using OpenXMLXLSXImporter;
 using OpenXMLXLSXImporter.Builders;
+using OpenXMLXLSXImporter.Builders.Managers;
 using OpenXMLXLSXImporter.CellData;
 using System;
 using System.Collections.Generic;

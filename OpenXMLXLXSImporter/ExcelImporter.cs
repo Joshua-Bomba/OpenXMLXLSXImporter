@@ -10,6 +10,7 @@ using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using Nito.AsyncEx;
 using OpenXMLXLSXImporter.Builders;
+using OpenXMLXLSXImporter.Builders.Managers;
 using OpenXMLXLSXImporter.CellData;
 using OpenXMLXLSXImporter.FileAccess;
 using OpenXMLXLSXImporter.Processing;
@@ -65,7 +66,7 @@ namespace OpenXMLXLSXImporter
             dequeManager?.Finish();//we have all of our results processed we are finished adding
         }
 
-        public async IAsyncEnumerable<IEnumerable<Task<ICellData>>> ProcessAndGetAsyncCollection(string sheetName, Action<IDefaultSheetInstructionBuilder> builder)
+        public async IAsyncEnumerable<IEnumerable<Task<ICellData>>> ProcessAndGetAsyncCollection(string sheetName, Action<ISpreadSheetInstructionBuilderManagerInstructionBuilder> builder)
         {
             SpreadSheetInstructionBuilderManager dssp = new SpreadSheetInstructionBuilderManager(sheetName,builder);
             await this.Process(dssp);
@@ -77,7 +78,7 @@ namespace OpenXMLXLSXImporter
             }
         }
 
-        public async Task<List<List<ICellData>>> ProcessAndGetListAsync(string sheetName, Action<IDefaultSheetInstructionBuilder> builder)
+        public async Task<List<List<ICellData>>> ProcessAndGetListAsync(string sheetName, Action<ISpreadSheetInstructionBuilderManagerInstructionBuilder> builder)
         {
             SpreadSheetInstructionBuilderManager dssp = new SpreadSheetInstructionBuilderManager(sheetName, builder);
             Task pt =  this.Process(dssp);

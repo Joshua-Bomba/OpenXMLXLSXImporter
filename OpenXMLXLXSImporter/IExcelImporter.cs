@@ -1,4 +1,5 @@
-﻿using OpenXMLXLSXImporter.CellData;
+﻿using OpenXMLXLSXImporter.Builders.Managers;
+using OpenXMLXLSXImporter.CellData;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,9 +12,9 @@ namespace OpenXMLXLSXImporter
     {
         Task Process(ISpreadSheetInstructionBuilderManager prop);
 
-        IAsyncEnumerable<IEnumerable<Task<ICellData>>> ProcessAndGetAsyncCollection(string sheetName, Action<IDefaultSheetInstructionBuilder> builder);
+        IAsyncEnumerable<IEnumerable<Task<ICellData>>> ProcessAndGetAsyncCollection(string sheetName, Action<ISpreadSheetInstructionBuilderManagerInstructionBuilder> builder);
 
-        Task<List<List<ICellData>>> ProcessAndGetListAsync(string sheetName, Action<IDefaultSheetInstructionBuilder> builder);
+        Task<List<List<ICellData>>> ProcessAndGetListAsync(string sheetName, Action<ISpreadSheetInstructionBuilderManagerInstructionBuilder> builder);
 
     }
 }
