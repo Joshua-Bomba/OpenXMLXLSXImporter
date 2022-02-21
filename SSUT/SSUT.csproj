@@ -18,4 +18,10 @@
     <ProjectReference Include="..\OpenXMLXLXSImporter\OpenXMLXLSXImporter.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="tesxtcel.xlsx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
