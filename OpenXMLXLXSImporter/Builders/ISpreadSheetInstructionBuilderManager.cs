@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace OpenXMLXLSXImporter
 {
-    public interface ISheetProperties
+    public interface ISpreadSheetInstructionBuilderManager
     {
         /// <summary>
         /// This is the Sheet name
