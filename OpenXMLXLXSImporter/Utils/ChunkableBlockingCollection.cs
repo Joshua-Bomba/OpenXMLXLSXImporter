@@ -17,6 +17,10 @@ namespace OpenXMLXLSXImporter.Utils
         bool KeepQueueLockedForDump();
 
         void QueueDumpped(ref List<T> items);
+
+        void PostProcessing();
+
+        void PreProcessing();
     }
 
 
@@ -43,6 +47,7 @@ namespace OpenXMLXLSXImporter.Utils
 
         private void SetupChunk()
         {
+            _chunkBlock.PreProcessing();
             _mre.Reset();
             BlockingCollection<T> dumpCollection = _queue;
             _queue = new BlockingCollection<T>();
@@ -58,6 +63,7 @@ namespace OpenXMLXLSXImporter.Utils
             {
                 _mre.Set();
             }
+            _chunkBlock.PostProcessing();
             _chunkedItems = queueOutput.GetEnumerator();
         }
 

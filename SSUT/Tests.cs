@@ -87,7 +87,7 @@ namespace SSUT
         public void SecondCell()
         {
             ICellData c;
-            List<List<ICellData>> ret = importer.ProcessAndGetListAsync(SHEET1, x => x.LoadSingleCell(2, "B")).GetAwaiter().GetResult();
+            List<List<ICellData>> ret = importer.ProcessAndGetListAsync(SHEET1, x => x.LoadSingleCell(2, "B").LoadSingleCell(2,"A")).GetAwaiter().GetResult();
             c = ret.First().First();
             Assert.IsTrue(c.Content() == "Data in another cell");
         }
