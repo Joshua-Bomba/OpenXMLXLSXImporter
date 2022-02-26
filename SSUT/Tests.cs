@@ -83,5 +83,27 @@ namespace SSUT
             c = ret.First().First();
             Assert.IsTrue(c.Content() == "A Header");
         }
+        [Test]
+        public void SecondCell()
+        {
+            ICellData c;
+            List<List<ICellData>> ret = importer.ProcessAndGetListAsync(SHEET1, x => x.LoadSingleCell(2, "B").LoadSingleCell(2,"A")).GetAwaiter().GetResult();
+            c = ret.First().First();
+            Assert.IsTrue(c.Content() == "Data in another cell");
+        }
+
+        [Test]
+        public void OnlySecondCell()
+        {
+            ICellData c;
+            List<List<ICellData>> ret = importer.ProcessAndGetListAsync(SHEET1, x => x.LoadSingleCell(2, "B")).GetAwaiter().GetResult();
+            c = ret.First().First();
+            //we will wait till we select the second cell before we select the first one. it should queue it in the defered area given enought time
+            System.Threading.Thread.Sleep(10000);
+            //...later
+            //it should be in a deferred state and we need to get the value here
+            List<List<ICellData>> ret2 = importer.ProcessAndGetListAsync(SHEET1, x => x.LoadSingleCell(2, "A")).GetAwaiter().GetResult();
+            Assert.IsTrue(c.Content() == "Data in another cell");
+        }
     }
 }

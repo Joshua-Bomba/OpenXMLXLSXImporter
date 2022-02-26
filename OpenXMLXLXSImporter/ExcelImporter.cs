@@ -28,11 +28,19 @@ namespace OpenXMLXLSXImporter
     {
         private XlsxDocumentFile _streamSheetFile;
         private SpreadSheetDequeManager dequeManager;
+        private SpreadSheetInstructionManager ssim;
         public static IExcelImporter CreateExcelImporter(Stream stream) => new ExcelImporter(stream);
         public ExcelImporter(Stream stream)
         {
             _streamSheetFile = new XlsxDocumentFile(stream);
         }
+
+        public void Spread(ICellIndex c)
+        {
+            ISpreadSheetIndexersLock whatever = (ssim as ISpreadSheetIndexersLock);
+            whatever.Spread(null, c);
+        }
+
 
         public Task Process(ISpreadSheetInstructionBuilderManager sheet)
         {
@@ -44,8 +52,8 @@ namespace OpenXMLXLSXImporter
                     Task<IXlsxSheetFilePromise> gt = _streamSheetFile.LoadSpreadSheetData(sheet);
                     sheet.LoadConfig(ssib);
                     IXlsxSheetFilePromise g = await gt;
-                    dequeManager = new SpreadSheetDequeManager();
-                    SpreadSheetInstructionManager ssim = new SpreadSheetInstructionManager(dequeManager);
+                    dequeManager = new SpreadSheetDequeManager(this);
+                    ssim = new SpreadSheetInstructionManager(dequeManager);
                     dequeManager.StartRequestProcessor(g);
                     await ssib.ProcessInstructions(ssim);
                     Task r = ssib.ProcessResults();
