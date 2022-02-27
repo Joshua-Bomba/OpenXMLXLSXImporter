@@ -81,7 +81,8 @@ namespace OpenXMLXLSXImporter.Processing
                                 {
                                     if (deferedCells == null)
                                         deferedCells = new Dictionary<string, Cell>();
-                                    deferedCells.Add(currentIndex,cell);
+                                    deferedCells.Add(currentIndex,cell);//this does not actually do anything since everything we need is loaded in at this point in our current version of the code. that's the first thing we should update
+                                    //also we should make the enque and fetch steps occur at the same time
                                 }
                             }
                             else
