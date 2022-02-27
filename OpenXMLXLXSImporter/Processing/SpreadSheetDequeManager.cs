@@ -1,5 +1,6 @@
 ﻿using DocumentFormat.OpenXml.Spreadsheet;
 using Nito.AsyncEx;
+using OpenXMLXLSXImporter.Builders.Managers;
 using OpenXMLXLSXImporter.CellData;
 using OpenXMLXLSXImporter.FileAccess;
 using OpenXMLXLSXImporter.Utils;
@@ -15,7 +16,7 @@ namespace OpenXMLXLSXImporter.Processing
 {
     public class SpreadSheetDequeManager : IChunckBlock<ICellProcessingTask>
     {
-        private ExcelImporter _importer;
+        private ISpreadSheet _ss;
 
         private ChunkableBlockingCollection<ICellProcessingTask> _queue;
 
@@ -29,9 +30,9 @@ namespace OpenXMLXLSXImporter.Processing
 
 
         private Task _processRequestTask;
-        public SpreadSheetDequeManager(ExcelImporter importer)
+        public SpreadSheetDequeManager(ISpreadSheet ss)
         {
-            _importer = importer;
+            _ss = ss;
             _filePromise = null;
             _processRequestTask = null;
         }

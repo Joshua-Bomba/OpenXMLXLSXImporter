@@ -12,7 +12,6 @@ namespace OpenXMLXLSXImporter.FileAccess
 {
     public class XlsxSheetFile : IXlsxSheetFile, IXlsxSheetFilePromise
     {
-        private IXlsxDocumentFilePromise _fileAccessPromise;
         private IXlsxDocumentFile _fileAccess;
 
         private string _sheetName;
@@ -35,9 +34,9 @@ namespace OpenXMLXLSXImporter.FileAccess
 
         private IDictionary<uint, IEnumerator<Cell>> _rows;
 
-        public XlsxSheetFile(IXlsxDocumentFilePromise fileAccess, string sheetName)
+        public XlsxSheetFile(IXlsxDocumentFile fileAccess, string sheetName)
         {
-            _fileAccessPromise = fileAccess;
+            _fileAccess = fileAccess;
             _sheetName = sheetName;
             _rowsLoadedIn = false;
             _loadSpreadSheetData = Task.Run(LoadSpreadSheetData);
@@ -46,7 +45,6 @@ namespace OpenXMLXLSXImporter.FileAccess
         protected async Task LoadSpreadSheetData()
         {
             _rows = new Dictionary<uint, IEnumerator<Cell>>();
-            _fileAccess = await _fileAccessPromise.GetLoadedFile();
             _sheet = _fileAccess.GetSheet(_sheetName);
             _workbookPart = _fileAccess.WorkbookPart.GetPartById(_sheet.Id) as WorksheetPart;
             _worksheet = _workbookPart.Worksheet;

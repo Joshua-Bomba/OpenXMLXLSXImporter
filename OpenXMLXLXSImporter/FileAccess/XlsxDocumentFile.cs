@@ -28,23 +28,26 @@ namespace OpenXMLXLSXImporter.FileAccess
         //The Task that Loads in the SpreadSheetDocumentData
         private Task _loadSpreadSheetData;
 
-        private Dictionary<string, IXlsxSheetFilePromise> _loadedSheets;
         private Dictionary<string, Sheet> _sheetRef;
 
         public XlsxDocumentFile(Stream stream)
         {
             _stream = stream;
             _loadSpreadSheetData = LoadSpreadSheetDocuemntData();
-            _loadedSheets = new Dictionary<string, IXlsxSheetFilePromise>();
+            
         }
 
-        async Task<IXlsxDocumentFile> IXlsxDocumentFilePromise.GetLoadedFile()
+        public async Task<IXlsxDocumentFile> GetLoadedFile()
         {
             await _loadSpreadSheetData;//Ensure this is loaded first
             return this;
         }
 
+        bool IXlsxDocumentFile.ContainsSheet(string sheet) => _sheetRef.ContainsKey(sheet);
+
         Sheet IXlsxDocumentFile.GetSheet(string sheetName) => _sheetRef[sheetName];
+
+       
 
         CellFormat IXlsxDocumentFile.GetCellFormat(int index) => _cellFormats.ChildElements[index] as CellFormat;
 
@@ -72,24 +75,6 @@ namespace OpenXMLXLSXImporter.FileAccess
                 //this will get all the sheetNames
                 _sheetRef = _workbookPart.Workbook.Sheets.Cast<Sheet>().Where(x => x.Name.HasValue).ToDictionary(x => x.Name.Value);
             });
-        }
-
-
-       
-
-        public async Task<IXlsxSheetFilePromise> LoadSpreadSheetData(ISpreadSheetInstructionBuilderManager sheet)
-        {
-            await _loadSpreadSheetData;
-            if (_sheetRef.ContainsKey(sheet.Sheet))
-            {
-                if (!_loadedSheets.ContainsKey(sheet.Sheet))
-                {
-                    //this is the first time we use this sheet
-                    _loadedSheets[sheet.Sheet] = new XlsxSheetFile(this, sheet.Sheet);
-                }
-                return _loadedSheets[sheet.Sheet];
-            }
-            return null;
         }
 
         public void Dispose()

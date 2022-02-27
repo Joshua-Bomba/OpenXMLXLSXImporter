@@ -10,11 +10,6 @@ namespace OpenXMLXLSXImporter
 {
     public interface IExcelImporter : IDisposable
     {
-        Task Process(ISpreadSheetInstructionBuilderManager prop);
-
-        IAsyncEnumerable<IEnumerable<Task<ICellData>>> ProcessAndGetAsyncCollection(string sheetName, Action<ISpreadSheetInstructionBuilderManagerInstructionBuilder> builder);
-
-        Task<List<List<ICellData>>> ProcessAndGetListAsync(string sheetName, Action<ISpreadSheetInstructionBuilderManagerInstructionBuilder> builder);
-
+        Task<ISpreadSheet> GetSheet(string sheet);
     }
 }

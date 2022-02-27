@@ -11,6 +11,7 @@ namespace OpenXMLXLSXImporter.FileAccess
 {
     public interface IXlsxDocumentFile
     {
+        bool ContainsSheet(string sheet);
         Sheet GetSheet(string sheetName);
         WorkbookPart WorkbookPart { get; }
 
