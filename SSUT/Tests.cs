@@ -91,19 +91,52 @@ namespace SSUT
             c = ret.First().First();
             Assert.IsTrue(c.Content() == "Data in another cell");
         }
+        private class OnlySecondCell : ISpreadSheetInstructionBuilderManager
+        {
+            private ISpreadSheetInstructionKey secondCell;
+            public OnlySecondCell()
+            {
+
+            }
+            public string Sheet => SHEET1;
+
+            public void LoadConfig(ISpreadSheetInstructionBuilder builder)
+            {
+                secondCell = builder.LoadSingleCell(2, "B");
+                //we will wait till we select the second cell before we select the first one. it should queue it in the defered area given enought time
+                
+            }
+
+            public async Task ResultsProcessed(ISpreadSheetQueryResults query)
+            {
+                ICellData d = await (await query.GetResults(secondCell)).FirstOrDefault();
+            }
+        }
+
+        private class PostFirstCell : ISpreadSheetInstructionBuilderManager
+        {
+            private ISpreadSheetInstructionKey firstCell;
+            public string Sheet => SHEET1;
+
+            public void LoadConfig(ISpreadSheetInstructionBuilder builder)
+            {
+                firstCell = builder.LoadSingleCell(2, "A");
+            }
+
+            public async Task ResultsProcessed(ISpreadSheetQueryResults query)
+            {
+                ICellData d = await(await query.GetResults(firstCell)).FirstOrDefault();
+            }
+        }
 
         [Test]
-        public void OnlySecondCell()
+        public void OnlySecondCellTest()
         {
-            ICellData c;
-            List<List<ICellData>> ret = importer.ProcessAndGetListAsync(SHEET1, x => x.LoadSingleCell(2, "B")).GetAwaiter().GetResult();
-            c = ret.First().First();
-            //we will wait till we select the second cell before we select the first one. it should queue it in the defered area given enought time
+            OnlySecondCell osc = new OnlySecondCell();
+            importer.Process(osc).GetAwaiter().GetResult();
             System.Threading.Thread.Sleep(10000);
-            //...later
-            //it should be in a deferred state and we need to get the value here
-            List<List<ICellData>> ret2 = importer.ProcessAndGetListAsync(SHEET1, x => x.LoadSingleCell(2, "A")).GetAwaiter().GetResult();
-            Assert.IsTrue(c.Content() == "Data in another cell");
+            importer.Process(osc).GetAwaiter().GetResult();
+
         }
     }
 }
