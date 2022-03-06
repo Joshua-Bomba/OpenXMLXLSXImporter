@@ -43,15 +43,5 @@ namespace OpenXMLXLSXImporter.Indexers
             _lock.Spread(this, index);
             _lock.EnqueCell(index);
         }
-
-        public IEnumerable<ICellIndex> GetFullRowColumns(uint row, string startingColumn)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IEnumerable<ICellIndex> GetFullColumnRows(string column, uint startingRow)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

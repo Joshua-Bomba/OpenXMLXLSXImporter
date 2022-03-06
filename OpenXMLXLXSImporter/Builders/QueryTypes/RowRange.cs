@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OpenXMLXLSXImporter.Builders.QueryTypes
+namespace OpenXMLXLSXImporter.Builders
 {
     public class RowRange : BaseSpreadSheetInstruction
     {
@@ -15,7 +15,7 @@ namespace OpenXMLXLSXImporter.Builders.QueryTypes
         private string _column;
         private ICellIndex[] _cellItems;
 
-        public RowRange(uint startRow,uint endRow, string column)
+        public RowRange(string column,uint startRow,uint endRow)
         {
             _startRow = startRow;
             _endRow = endRow;

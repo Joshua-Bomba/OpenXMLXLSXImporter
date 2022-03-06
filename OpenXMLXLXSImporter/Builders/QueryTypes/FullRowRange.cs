@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OpenXMLXLSXImporter.Builders.QueryTypes
+namespace OpenXMLXLSXImporter.Builders
 {
     public class FullRowRange : BaseSpreadSheetInstruction
     {
@@ -20,7 +20,7 @@ namespace OpenXMLXLSXImporter.Builders.QueryTypes
         }
         protected override void EnqueCell(IIndexer indexer)
         {
-            _results = indexer.GetFullColumnRows(_column, _startRow);
+            //_results = indexer.GetFullColumnRows(_column, _startRow);
         }
 
         protected override IEnumerable<ICellIndex> GetResults() => _results;

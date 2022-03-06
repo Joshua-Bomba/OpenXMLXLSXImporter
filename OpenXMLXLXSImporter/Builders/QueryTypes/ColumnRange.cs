@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OpenXMLXLSXImporter.Builders.QueryTypes
+namespace OpenXMLXLSXImporter.Builders
 {
     public class ColumnRange : BaseSpreadSheetInstruction
     {

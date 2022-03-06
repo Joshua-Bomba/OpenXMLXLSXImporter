@@ -136,7 +136,46 @@ namespace SSUT
             importer.Process(osc).GetAwaiter().GetResult();
             System.Threading.Thread.Sleep(10000);
             importer.Process(osc).GetAwaiter().GetResult();
+        }
 
+        private class RangeCellsTest : ISpreadSheetInstructionBuilderManager
+        {
+            public string Sheet => SHEET1;
+
+            public void LoadConfig(ISpreadSheetInstructionBuilder builder)
+            {
+                
+            }
+
+            public Task ResultsProcessed(ISpreadSheetQueryResults query)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public void RangeCellTest()
+        {
+            RangeCellsTest rct = new RangeCellsTest();
+        }
+
+        private class FullRangeCellsTest: ISpreadSheetInstructionBuilderManager
+        {
+            public string Sheet => SHEET1;
+
+            public void LoadConfig(ISpreadSheetInstructionBuilder builder)
+            {
+                throw new NotImplementedException();
+            }
+
+            public Task ResultsProcessed(ISpreadSheetQueryResults query)
+            {
+                throw new NotImplementedException();
+            }
+        }
+        public void FullRangeCellTest()
+        {
+            FullRangeCellsTest rc = new FullRangeCellsTest();
+            importer.Process(rc).GetAwaiter().GetResult();
         }
     }
 }

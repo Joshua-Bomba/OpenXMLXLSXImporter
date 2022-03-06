@@ -9,5 +9,13 @@ namespace OpenXMLXLSXImporter.Builders
     public  interface ISpreadSheetInstructionBuilder
     {
         ISpreadSheetInstructionKey LoadSingleCell(uint row, string cell);
+
+        ISpreadSheetInstructionKey LoadColumnRange(uint row, string startColumn, string endColumn);
+
+        ISpreadSheetInstructionKey LoadRowRange(string column, uint startRow, uint endRow);
+
+        ISpreadSheetInstructionKey LoadFullColumnRange(uint row, string startColumn = "A");
+
+        ISpreadSheetInstructionKey LoadFullRowRange(string column, uint startRow);
     }
 }

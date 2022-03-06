@@ -26,6 +26,17 @@ namespace OpenXMLXLSXImporter.Builders
 
         public ISpreadSheetInstructionKey LoadSingleCell(uint row, string cell)
             => Add(new SingleCell(row, cell));
+        public ISpreadSheetInstructionKey LoadColumnRange(uint row, string startColumn, string endColumn)
+            => Add(new ColumnRange(row, startColumn, endColumn));
+
+        public ISpreadSheetInstructionKey LoadRowRange(string column, uint startRow, uint endRow)
+            => Add(new RowRange(column, startRow, endRow));
+
+        public ISpreadSheetInstructionKey LoadFullColumnRange(uint row, string startColumn = "A")
+            => Add(new FullColumnRange(row, startColumn));
+
+        public ISpreadSheetInstructionKey LoadFullRowRange(string column, uint startRow)
+            => Add(new FullRowRange(column, startRow));
 
         public async Task ProcessInstructions(SpreadSheetInstructionManager grid)
         {
