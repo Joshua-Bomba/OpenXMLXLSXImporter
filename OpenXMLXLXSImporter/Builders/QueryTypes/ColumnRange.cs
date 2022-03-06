@@ -42,13 +42,20 @@ namespace OpenXMLXLSXImporter.Builders.QueryTypes
         {
             for(uint i = _startColumnInt;i <= _endColumnInt;i++)
             {
-
+                string column = ExcelColumnHelper.GetColumnIndexAsString(i);
+                if(indexer.HasCell(_row,column))
+                {
+                    FutureCell item = new FutureCell(_row,column);
+                    indexer.Add(item);
+                    _cellItems[i - _startColumnInt] = item;
+                }
+                else
+                {
+                    _cellItems[i - _startColumnInt] = indexer.GetCell(_row,column);
+                }
             }
         }
 
-        protected override IEnumerable<ICellIndex> GetResults()
-        {
-            throw new NotImplementedException();
-        }
+        protected override IEnumerable<ICellIndex> GetResults() => _cellItems;
     }
 }

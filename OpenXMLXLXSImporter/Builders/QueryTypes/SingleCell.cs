@@ -34,9 +34,6 @@ namespace OpenXMLXLSXImporter.Builders
             {
                 _cellItem = indexer.GetCell(_row, _cell);
             }
-            
         }
-
-
     }
 }
