@@ -11,18 +11,18 @@ namespace OpenXMLXLSXImporter.Builders.QueryTypes
     public class FullRowRange : BaseSpreadSheetInstruction
     {
         private string _column;
-        public FullRowRange(string column)
+        private uint _startRow;
+        private IEnumerable<ICellIndex> _results;
+        public FullRowRange(string column, uint startRow)
         {
-
+            _column = column;
+            _startRow = startRow;
         }
         protected override void EnqueCell(IIndexer indexer)
         {
-            throw new NotImplementedException();
+            _results = indexer.GetFullColumnRows(_column, _startRow);
         }
 
-        protected override IEnumerable<ICellIndex> GetResults()
-        {
-            throw new NotImplementedException();
-        }
+        protected override IEnumerable<ICellIndex> GetResults() => _results;
     }
 }

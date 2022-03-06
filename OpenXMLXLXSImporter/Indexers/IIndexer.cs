@@ -18,6 +18,10 @@ namespace OpenXMLXLSXImporter.Indexers
 
         ICellIndex GetCell(uint rowIndex, string cellIndex);
 
+        IEnumerable<ICellIndex> GetFullRowColumns(uint row, string startingColumn);
+
+        IEnumerable<ICellIndex> GetFullColumnRows(string column, uint startingRow);
+
         void Spread(ICellIndex cell);
     }
 }
