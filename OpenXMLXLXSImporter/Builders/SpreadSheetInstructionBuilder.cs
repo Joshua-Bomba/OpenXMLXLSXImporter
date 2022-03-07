@@ -58,7 +58,15 @@ namespace OpenXMLXLSXImporter.Builders
                 await t;
         }
 
-        public async Task<IEnumerable<Task<ICellData>>> GetResults(ISpreadSheetInstructionKey key)
-            =>await _instructions[key].GetResults();
+        public async IAsyncEnumerable<ICellData> GetProcessedResults(ISpreadSheetInstructionKey key)
+        {
+            IEnumerable<Task<ICellData>>  cellDatas = await _instructions[key].GetResults();
+
+            foreach(Task<ICellData> cdT in cellDatas)
+            {
+                yield return await cdT;
+            }
+
+        }
     }
 }

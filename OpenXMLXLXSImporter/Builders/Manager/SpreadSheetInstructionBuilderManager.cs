@@ -18,7 +18,7 @@ namespace OpenXMLXLSXImporter.Builders.Managers
 
         private Action<ISpreadSheetInstructionBuilderManagerInstructionBuilder> _execute;
 
-        private IEnumerable<Task<IEnumerable<Task<ICellData>>>> _result;//lol
+        private IEnumerable<IAsyncEnumerable<ICellData>> _result;
         public SpreadSheetInstructionBuilderManager(string sheet,Action<ISpreadSheetInstructionBuilderManagerInstructionBuilder> ac)
         {
   
@@ -30,11 +30,7 @@ namespace OpenXMLXLSXImporter.Builders.Managers
         }
         string ISpreadSheetInstructionBuilderManager.Sheet => _sheet;
 
-        public async IAsyncEnumerable<IEnumerable<Task<ICellData>>> GetResults()
-        {
-            foreach(Task<IEnumerable<Task<ICellData>>> k in _result)
-                yield return await k;
-        }
+        public IEnumerable<IAsyncEnumerable<ICellData>> GetResults() => _result;
 
         ISpreadSheetInstructionBuilderManagerInstructionBuilder ISpreadSheetInstructionBuilderManagerInstructionBuilder.LoadSingleCell(uint row, string cell)
         {
@@ -50,7 +46,7 @@ namespace OpenXMLXLSXImporter.Builders.Managers
 
         async Task ISpreadSheetInstructionBuilderManager.ResultsProcessed(ISpreadSheetQueryResults query)
         {
-            _result = _keys.Select(x=>query.GetResults(x)).ToList();
+            _result = _keys.Select(x=>query.GetProcessedResults(x)).ToList();
         }
     }
 }
