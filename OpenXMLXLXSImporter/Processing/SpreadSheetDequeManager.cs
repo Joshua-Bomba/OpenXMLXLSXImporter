@@ -24,7 +24,7 @@ namespace OpenXMLXLSXImporter.Processing
         private IXlsxSheetFilePromise _filePromise;
         private IXlsxSheetFile sheetAccess;
 
-        private SortedSet<ICellProcessingTask> ss;
+        private List<ICellProcessingTask> ss;
         private Dictionary<Cell, ICellProcessingTask> fufil;
 
 
@@ -120,32 +120,29 @@ namespace OpenXMLXLSXImporter.Processing
 
         public bool KeepQueueLockedForDump() => true;
 
-        private class DequeOrder : IComparer<ICellProcessingTask>
-        {
-            public int Compare(ICellProcessingTask x, ICellProcessingTask y)
-            {
-                return x.CellColumnIndex.CompareTo(y.CellColumnIndex);
-            }
-        }
         public void PreProcessing()
         {
-            ss = new SortedSet<ICellProcessingTask>(new DequeOrder());
+            ss = new List<ICellProcessingTask>();
             fufil = new Dictionary<Cell, ICellProcessingTask>();
         }
 
         public void QueueDumpped(ref List<ICellProcessingTask> items)
         {
-
-            foreach(ICellProcessingTask item in items)
+            IOrderedEnumerable<IGrouping<uint,ICellProcessingTask>> g = items.GroupBy(x => x.CellRowIndex).OrderBy(x => x.Key);
+            foreach(IGrouping<uint,ICellProcessingTask> row in g)
             {
-                if (item.CellRowIndex == desiredRowIndex&&deferedCells.ContainsKey(item.CellColumnIndex))
+                IOrderedEnumerable<ICellProcessingTask> currentRow = row.OrderBy(x => ExcelColumnHelper.GetColumnStringAsIndex(x.CellColumnIndex));
+                foreach(ICellProcessingTask item in currentRow)
                 {
-                    fufil.Add(deferedCells[item.CellColumnIndex], item);
-                    deferedCells.Remove(item.CellColumnIndex);
-                }
-                else
-                {
-                    ss.Add(item);
+                    if (item.CellRowIndex == desiredRowIndex && deferedCells.ContainsKey(item.CellColumnIndex))
+                    {
+                        fufil.Add(deferedCells[item.CellColumnIndex], item);
+                        deferedCells.Remove(item.CellColumnIndex);
+                    }
+                    else
+                    {
+                        ss.Add(item);
+                    }
                 }
             }
             items = ss.ToList();
