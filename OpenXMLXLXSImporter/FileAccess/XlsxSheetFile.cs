@@ -88,6 +88,13 @@ namespace OpenXMLXLSXImporter.FileAccess
                     break;
                 }
             }
+            if(_rows.ContainsKey(desiredRowIndex))
+            {
+                cellEnumerator = _rows[desiredRowIndex];
+                return true;
+            }
+
+
             cellEnumerator = null;
             return false;
         }
