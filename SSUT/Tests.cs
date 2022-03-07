@@ -163,7 +163,8 @@ namespace SSUT
 
                 while(await columnEnumerator.MoveNextAsync())
                 {
-                    columnRanges.Add(columnEnumerator.Current.Content());
+                    ICellData d = columnEnumerator.Current;
+                    columnRanges.Add(d.Content());
                 }
 
                 IAsyncEnumerator<ICellData> RowEnumerator = rowRange.GetAsyncEnumerator();
@@ -175,10 +176,11 @@ namespace SSUT
 
             }
         }
-
+        [Test]
         public void RangeCellTest()
         {
             RangeCellsTest rct = new RangeCellsTest();
+            importer.Process(rct).GetAwaiter().GetResult();
         }
 
         private class FullRangeCellsTest: ISpreadSheetInstructionBuilderManager
@@ -195,6 +197,7 @@ namespace SSUT
                 throw new NotImplementedException();
             }
         }
+        [Test]
         public void FullRangeCellTest()
         {
             FullRangeCellsTest rc = new FullRangeCellsTest();

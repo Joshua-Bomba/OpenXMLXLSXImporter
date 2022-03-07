@@ -25,7 +25,7 @@ namespace OpenXMLXLSXImporter.Builders
             _startColumn = startColumn;
             _endColumn = endColumn;
             ValidateRange();
-            _cellItems = new ICellIndex[_endColumnInt - _startColumnInt];
+            _cellItems = new ICellIndex[(_endColumnInt - _startColumnInt) + 1];
         }
 
         private void ValidateRange()
@@ -43,7 +43,7 @@ namespace OpenXMLXLSXImporter.Builders
             for(uint i = _startColumnInt;i <= _endColumnInt;i++)
             {
                 string column = ExcelColumnHelper.GetColumnIndexAsString(i);
-                if(indexer.HasCell(_row,column))
+                if(!indexer.HasCell(_row,column))
                 {
                     FutureCell item = new FutureCell(_row,column);
                     indexer.Add(item);

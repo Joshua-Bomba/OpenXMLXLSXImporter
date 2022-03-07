@@ -22,7 +22,7 @@ namespace OpenXMLXLSXImporter.Builders
             _column = column;
             _cellItems = null;
             ValidateRange();
-            _cellItems = new ICellIndex[_endRow - _startRow];
+            _cellItems = new ICellIndex[(_endRow - _startRow) + 1];
         }
 
         private void ValidateRange()
