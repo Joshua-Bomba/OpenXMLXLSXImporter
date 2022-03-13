@@ -16,7 +16,7 @@ namespace OpenXMLXLSXImporter.Utils
 
         bool KeepQueueLockedForDump();
 
-        void QueueDumpped(ref List<T> items);
+        void ProcessQueue(ref Queue<T> items);
 
         void PostProcessing();
 
@@ -28,7 +28,7 @@ namespace OpenXMLXLSXImporter.Utils
     {
         private ManualResetEventSlim _mre;
         private BlockingCollection<T> _queue;
-        private IEnumerator<T> _chunkedItems;
+        private Queue<T> _chunkedItems;
         private IChunckBlock<T> _chunkBlock;
         public ChunkableBlockingCollection(IChunckBlock<T> chunkBlock)
         {
@@ -45,7 +45,7 @@ namespace OpenXMLXLSXImporter.Utils
             _queue.Add(item);
         }
 
-        private void SetupChunk()
+        private void Chunk()
         {
             _chunkBlock.PreProcessing();
             _mre.Reset();
@@ -57,14 +57,25 @@ namespace OpenXMLXLSXImporter.Utils
                 _mre.Set();
             }
             dumpCollection.CompleteAdding();
-            List<T> queueOutput = dumpCollection.ToList();
-            _chunkBlock.QueueDumpped(ref queueOutput);
+            if(_chunkedItems == null)
+            {
+                _chunkedItems = new Queue<T>(dumpCollection);
+            }
+            else
+            {
+                foreach (T item in dumpCollection)
+                {
+                    _chunkedItems.Enqueue(item);
+                }
+            }
+
+            _chunkBlock.ProcessQueue(ref _chunkedItems);
             if (keepLocked)
             {
                 _mre.Set();
             }
             _chunkBlock.PostProcessing();
-            _chunkedItems = queueOutput.GetEnumerator();
+            
         }
 
         public void Finish() => _queue.CompleteAdding();
@@ -73,9 +84,13 @@ namespace OpenXMLXLSXImporter.Utils
         {
             if (_chunkedItems != null)
             {
-                if (_chunkedItems.MoveNext())
+                if (_chunkedItems.TryDequeue(out T item))
                 {
-                    return _chunkedItems.Current;
+                    if(_chunkBlock.ShouldPullAndChunk)
+                    {
+                        Chunk();
+                    }
+                    return item;
                 }
                 else
                 {
@@ -84,10 +99,10 @@ namespace OpenXMLXLSXImporter.Utils
             }
             if (_chunkBlock.ShouldPullAndChunk)
             {
-                SetupChunk();
-                if (_chunkedItems.MoveNext())
+                Chunk();
+                if(_chunkedItems.TryDequeue(out T item))
                 {
-                    return _chunkedItems.Current;
+                    return item;
                 }
                 else
                 {

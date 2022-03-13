@@ -24,7 +24,7 @@ namespace OpenXMLXLSXImporter.Processing
         private IXlsxSheetFilePromise _filePromise;
         private IXlsxSheetFile sheetAccess;
 
-        private List<ICellProcessingTask> ss;
+        private Queue<ICellProcessingTask> ss;
         private Dictionary<Cell, ICellProcessingTask> fufil;
 
 
@@ -122,12 +122,13 @@ namespace OpenXMLXLSXImporter.Processing
 
         public void PreProcessing()
         {
-            ss = new List<ICellProcessingTask>();
+            ss = new Queue<ICellProcessingTask>();
             fufil = new Dictionary<Cell, ICellProcessingTask>();
         }
 
-        public void QueueDumpped(ref List<ICellProcessingTask> items)
+        public void ProcessQueue(ref Queue<ICellProcessingTask> items)
         {
+            Queue<ICellProcessingTask> newItems = new Queue<ICellProcessingTask>();
             IOrderedEnumerable<IGrouping<uint,ICellProcessingTask>> g = items.GroupBy(x => x.CellRowIndex).OrderBy(x => x.Key);
             foreach(IGrouping<uint,ICellProcessingTask> row in g)
             {
@@ -141,11 +142,11 @@ namespace OpenXMLXLSXImporter.Processing
                     }
                     else
                     {
-                        ss.Add(item);
+                        ss.Enqueue(item);
                     }
                 }
             }
-            items = ss.ToList();
+            items = ss;
 
             //We will add this deferredcell type to the IIndexers since we don't need them at the time
             foreach (KeyValuePair<string,Cell> cell in deferedCells)
@@ -166,6 +167,5 @@ namespace OpenXMLXLSXImporter.Processing
             }
             fufil = null;
         }
-
     }
 }
