@@ -186,15 +186,41 @@ namespace SSUT
         private class FullRangeCellsTest: ISpreadSheetInstructionBuilderManager
         {
             public string Sheet => SHEET1;
+            ISpreadSheetInstructionKey _columnRange;
+            ISpreadSheetInstructionKey _rowRange;
+            public FullRangeCellsTest()
+            {
+
+            }
 
             public void LoadConfig(ISpreadSheetInstructionBuilder builder)
             {
-                throw new NotImplementedException();
+                _columnRange = builder.LoadFullColumnRange(4);
+                _rowRange = builder.LoadFullRowRange("G");
             }
 
-            public Task ResultsProcessed(ISpreadSheetQueryResults query)
+            public async Task ResultsProcessed(ISpreadSheetQueryResults query)
             {
-                throw new NotImplementedException();
+                IAsyncEnumerable<ICellData> columnRange = query.GetProcessedResults(_columnRange);
+                IAsyncEnumerable<ICellData> rowRange = query.GetProcessedResults(_rowRange);
+
+                List<string> columnRanges = new List<string>();
+                List<string> rowRanges = new List<string>();
+
+                IAsyncEnumerator<ICellData> columnEnumerator = columnRange.GetAsyncEnumerator();
+
+                while (await columnEnumerator.MoveNextAsync())
+                {
+                    ICellData d = columnEnumerator.Current;
+                    columnRanges.Add(d.Content());
+                }
+
+                IAsyncEnumerator<ICellData> RowEnumerator = rowRange.GetAsyncEnumerator();
+
+                while (await RowEnumerator.MoveNextAsync())
+                {
+                    rowRanges.Add(RowEnumerator.Current.Content());
+                }
             }
         }
         [Test]

@@ -16,6 +16,6 @@ namespace OpenXMLXLSXImporter.Builders
 
         ISpreadSheetInstructionKey LoadFullColumnRange(uint row, string startColumn = "A");
 
-        ISpreadSheetInstructionKey LoadFullRowRange(string column, uint startRow);
+        ISpreadSheetInstructionKey LoadFullRowRange(string column, uint startRow = 1);
     }
 }

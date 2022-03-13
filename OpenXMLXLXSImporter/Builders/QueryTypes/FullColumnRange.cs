@@ -8,21 +8,29 @@ using System.Threading.Tasks;
 
 namespace OpenXMLXLSXImporter.Builders
 {
-    public class FullColumnRange : BaseSpreadSheetInstruction
+    public class FullColumnRange : ISpreadSheetInstruction
     {
         private uint _row;
         private string _startingColumn;
-        private IEnumerable<ICellIndex> _result;
+        ColumnRange _internalRange;
         public FullColumnRange(uint row,string startingColumn = "A")
         {
             _row = row;
             _startingColumn = startingColumn;
-        }
-        protected override void EnqueCell(IIndexer indexer)
-        {
-            //_result = indexer.GetFullRowColumns(_row, _startingColumn);
+            _internalRange = null;
         }
 
-        protected override IEnumerable<ICellIndex> GetResults() => _result;
+        public bool ByColumn => true;
+
+        void ISpreadSheetInstruction.EnqueCell(IIndexer indexer)
+        {
+            string column = indexer.ColumnLength(_row);
+            throw new NotImplementedException();
+        }
+
+        Task<IEnumerable<Task<ICellData>>> ISpreadSheetInstruction.GetResults()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

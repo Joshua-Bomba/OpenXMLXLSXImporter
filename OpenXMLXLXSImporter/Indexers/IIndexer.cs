@@ -14,9 +14,13 @@ namespace OpenXMLXLSXImporter.Indexers
 
         void Add(ICellProcessingTask index);
 
-        bool  HasCell(uint rowIndex, string cellIndex);
+        bool HasCell(uint rowIndex, string cellIndex);
 
         ICellIndex GetCell(uint rowIndex, string cellIndex);
+
+        uint RowLength(string cellIndex);
+
+        string ColumnLength(uint rowIndex);
 
         void Spread(ICellIndex cell);
     }

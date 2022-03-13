@@ -23,6 +23,9 @@ namespace OpenXMLXLSXImporter.Indexers
 
         public abstract bool HasCell(uint rowIndex, string cellIndex);
         public abstract ICellIndex GetCell(uint rowIndex, string cellIndex);
+        public virtual uint RowLength(string cellIndex) => throw new NotImplementedException();
+
+        public virtual string ColumnLength(uint rowIndex) => throw new NotImplementedException();
 
         public virtual async Task ProcessInstruction(ISpreadSheetInstruction instruction)
         {
