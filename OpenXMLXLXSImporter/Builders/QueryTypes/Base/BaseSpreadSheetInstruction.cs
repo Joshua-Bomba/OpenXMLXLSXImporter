@@ -47,8 +47,8 @@ namespace OpenXMLXLSXImporter.Builders
 
         void  ISpreadSheetInstruction.EnqueCell(IIndexer indexer)
         {
-            _mre.Set();
             EnqueCell(indexer);
+            _mre.Set();
         }
 
 
