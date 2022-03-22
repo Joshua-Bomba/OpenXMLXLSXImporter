@@ -1,5 +1,6 @@
 ﻿using OpenXMLXLSXImporter.CellData;
 using OpenXMLXLSXImporter.Indexers;
+using OpenXMLXLSXImporter.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,7 +14,7 @@ namespace OpenXMLXLSXImporter.Builders
         private uint _row;
         private string _startingColumn;
         private LastColumn _lastColumn;
-        private Task<IEnumerable<ICellData>> _d;
+        private IIndexer _indexer;
         public FullColumnRange(uint row,string startingColumn = "A")
         {
             _row = row;
@@ -24,28 +25,30 @@ namespace OpenXMLXLSXImporter.Builders
 
         void ISpreadSheetInstruction.EnqueCell(IIndexer indexer)
         {
+            _indexer = indexer;
             _lastColumn = new LastColumn(_row);
             indexer.Add(_lastColumn);
-            //_d = Task.Run(async () =>
-            //{
-            //    ICellData d = await _lastColumn.GetData();
-
-                
-            //});
-            //indexer.ProcessInstruction()
         }
 
         async IAsyncEnumerable<ICellData> ISpreadSheetInstruction.GetResults()
         {
-            //ICellIndex ci = await d;
+            ICellData lastCell = await _lastColumn.GetData();
 
-            ICellData[] cd = new ICellData[0];
+            uint startingColumn = ExcelColumnHelper.GetColumnStringAsIndex(_startingColumn);
+            uint lastColumn = ExcelColumnHelper.GetColumnStringAsIndex(lastCell.CellColumnIndex);
+            lastColumn--;
+            ISpreadSheetInstruction cr = new ColumnRange(lastCell.CellRowIndex, startingColumn, lastColumn);
+            await _indexer.ProcessInstruction(cr);
 
-            foreach(ICellIndex cell in cd)
+            IAsyncEnumerable<ICellData> result = cr.GetResults();
+            IAsyncEnumerator<ICellData> resultEnumerator = result.GetAsyncEnumerator();
+
+            while(await resultEnumerator.MoveNextAsync())
             {
-                yield return await BaseSpreadSheetInstruction.GetCellData(cell);
+                yield return resultEnumerator.Current;
             }
 
+            yield return await BaseSpreadSheetInstruction.GetCellData(lastCell);
         }
     }
 }

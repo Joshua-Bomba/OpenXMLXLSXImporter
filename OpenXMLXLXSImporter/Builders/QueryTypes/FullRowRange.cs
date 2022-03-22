@@ -8,23 +8,44 @@ using System.Threading.Tasks;
 
 namespace OpenXMLXLSXImporter.Builders
 {
-    public class FullRowRange : BaseSpreadSheetInstruction
+    public class FullRowRange : ISpreadSheetInstruction
     {
         private string _column;
         private uint _startRow;
-        private IEnumerable<ICellIndex> _results;
+        
+        private LastRow _lastRow;
+        private IIndexer _indexer;
         public FullRowRange(string column, uint startRow)
         {
             _column = column;
             _startRow = startRow;
         }
-        public override bool IndexedByRow => true;
 
-        protected override void EnqueCell(IIndexer indexer)
+        public bool IndexedByRow => true;
+
+        void ISpreadSheetInstruction.EnqueCell(IIndexer indexer)
         {
-            //_results = indexer.GetFullColumnRows(_column, _startRow);
+            _indexer = indexer;
+            _lastRow = new LastRow(_column);
+            indexer.Add(_lastRow);
         }
 
-        protected override IEnumerable<ICellIndex> GetResults() => _results;
+        async IAsyncEnumerable<ICellData> ISpreadSheetInstruction.GetResults()
+        {
+            ICellData lastCell = await _lastRow.GetData();
+
+            ISpreadSheetInstruction rr = new RowRange(_column, _startRow, lastCell.CellRowIndex - 1);
+            await _indexer.ProcessInstruction(rr);
+
+            IAsyncEnumerable<ICellData> result = rr.GetResults();
+            IAsyncEnumerator<ICellData> resultEnumerator = result.GetAsyncEnumerator();
+
+            while(await resultEnumerator.MoveNextAsync())
+            {
+                yield return resultEnumerator.Current;
+            }
+            yield return await BaseSpreadSheetInstruction.GetCellData(lastCell);
+
+        }
     }
 }

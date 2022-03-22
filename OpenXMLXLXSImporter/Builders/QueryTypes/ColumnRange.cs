@@ -12,8 +12,6 @@ namespace OpenXMLXLSXImporter.Builders
     public class ColumnRange : BaseSpreadSheetInstruction
     {
         private uint _row;
-        private string _startColumn;
-        private string _endColumn;
 
         private uint _startColumnInt;
         private uint _endColumnInt;
@@ -25,16 +23,24 @@ namespace OpenXMLXLSXImporter.Builders
         public ColumnRange(uint row, string startColumn, string endColumn)
         {
             _row = row;
-            _startColumn = startColumn;
-            _endColumn = endColumn;
+            _startColumnInt = ExcelColumnHelper.GetColumnStringAsIndex(startColumn);
+            _endColumnInt = ExcelColumnHelper.GetColumnStringAsIndex(endColumn);
+            ValidateRange();
+            _cellItems = new ICellIndex[(_endColumnInt - _startColumnInt) + 1];
+        }
+
+        public ColumnRange(uint row, uint startColumn, uint endcolumn)
+        {
+            _row = row;
+            _startColumnInt = startColumn;
+            _endColumnInt = endcolumn;
             ValidateRange();
             _cellItems = new ICellIndex[(_endColumnInt - _startColumnInt) + 1];
         }
 
         private void ValidateRange()
         {
-            _startColumnInt = ExcelColumnHelper.GetColumnStringAsIndex(_startColumn);
-            _endColumnInt = ExcelColumnHelper.GetColumnStringAsIndex(_endColumn);
+
             if(_startColumnInt > _endColumnInt)
             {//🤷 Guess I could just flip it but meh
                 throw new ArgumentException("The End Column has to be greater then the Start Column");
