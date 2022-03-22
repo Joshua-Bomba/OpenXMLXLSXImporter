@@ -12,7 +12,8 @@ namespace OpenXMLXLSXImporter.Builders
     {
         private uint _row;
         private string _startingColumn;
-        private Task<IEnumerable<ICellIndex>> d;
+        private LastColumn _lastColumn;
+        private Task<IEnumerable<ICellData>> _d;
         public FullColumnRange(uint row,string startingColumn = "A")
         {
             _row = row;
@@ -23,12 +24,24 @@ namespace OpenXMLXLSXImporter.Builders
 
         void ISpreadSheetInstruction.EnqueCell(IIndexer indexer)
         {
-            d = indexer.ToMaxColumnLength(_row,_startingColumn);
+            _lastColumn = new LastColumn(_row);
+            indexer.Add(_lastColumn);
+            //_d = Task.Run(async () =>
+            //{
+            //    ICellData d = await _lastColumn.GetData();
+
+                
+            //});
+            indexer.ProcessInstruction()
         }
 
         async IAsyncEnumerable<ICellData> ISpreadSheetInstruction.GetResults()
         {
-            foreach(ICellIndex cell in await d)
+            //ICellIndex ci = await d;
+
+            ICellData[] cd = new ICellData[0];
+
+            foreach(ICellIndex cell in cd)
             {
                 yield return await BaseSpreadSheetInstruction.GetCellData(cell);
             }

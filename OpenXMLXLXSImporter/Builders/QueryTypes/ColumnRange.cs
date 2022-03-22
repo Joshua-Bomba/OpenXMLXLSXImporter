@@ -43,15 +43,15 @@ namespace OpenXMLXLSXImporter.Builders
             for(uint i = _startColumnInt;i <= _endColumnInt;i++)
             {
                 string column = ExcelColumnHelper.GetColumnIndexAsString(i);
-                if(!indexer.HasCell(_row,column))
+                if(indexer.TryGetCell(_row, column, out ICellIndex ci))
                 {
-                    FutureCell item = new FutureCell(_row,column);
-                    indexer.Add(item);
-                    _cellItems[i - _startColumnInt] = item;
+                    _cellItems[i - _startColumnInt] = ci;
                 }
                 else
                 {
-                    _cellItems[i - _startColumnInt] = indexer.GetCell(_row,column);
+                    FutureCell item = new FutureCell(_row, column);
+                    indexer.Add(item);
+                    _cellItems[i - _startColumnInt] = item;
                 }
             }
         }
