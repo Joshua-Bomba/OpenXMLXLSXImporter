@@ -9,7 +9,7 @@ namespace OpenXMLXLSXImporter.Builders
 {
     public interface ISpreadSheetInstructionKey
     {
-        delegate void SpreadSheetAction(IEnumerable<Task<ICellData>> ac);
+        delegate void SpreadSheetAction(IAsyncEnumerable<ICellData> ac);
         void AddAction(SpreadSheetAction data);
     }
 }

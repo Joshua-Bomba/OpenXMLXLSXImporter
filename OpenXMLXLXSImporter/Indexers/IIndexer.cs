@@ -18,9 +18,9 @@ namespace OpenXMLXLSXImporter.Indexers
 
         ICellIndex GetCell(uint rowIndex, string cellIndex);
 
-        uint RowLength(string cellIndex);
+        Task<IEnumerable<ICellIndex>> ToMaxRowLength(string cellIndex, int startRow);
 
-        string ColumnLength(uint rowIndex);
+        Task<IEnumerable<ICellIndex>> ToMaxColumnLength(uint rowIndex, string StartColumn);
 
         void Spread(ICellIndex cell);
     }

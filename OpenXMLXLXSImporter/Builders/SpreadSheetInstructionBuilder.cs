@@ -60,13 +60,14 @@ namespace OpenXMLXLSXImporter.Builders
 
         public async IAsyncEnumerable<ICellData> GetProcessedResults(ISpreadSheetInstructionKey key)
         {
-            IEnumerable<Task<ICellData>>  cellDatas = await _instructions[key].GetResults();
+            IAsyncEnumerable<ICellData>  cellDatas = _instructions[key].GetResults();
 
-            foreach(Task<ICellData> cdT in cellDatas)
+            IAsyncEnumerator<ICellData> cdEnum = cellDatas.GetAsyncEnumerator();
+
+            while(await cdEnum.MoveNextAsync())
             {
-                yield return await cdT;
+                yield return cdEnum.Current;
             }
-
         }
     }
 }

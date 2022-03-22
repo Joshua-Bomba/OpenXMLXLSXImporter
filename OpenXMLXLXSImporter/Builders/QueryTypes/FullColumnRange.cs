@@ -12,25 +12,27 @@ namespace OpenXMLXLSXImporter.Builders
     {
         private uint _row;
         private string _startingColumn;
-        ColumnRange _internalRange;
+        private Task<IEnumerable<ICellIndex>> d;
         public FullColumnRange(uint row,string startingColumn = "A")
         {
             _row = row;
             _startingColumn = startingColumn;
-            _internalRange = null;
         }
 
         public bool ByColumn => true;
 
         void ISpreadSheetInstruction.EnqueCell(IIndexer indexer)
         {
-            string column = indexer.ColumnLength(_row);
-            throw new NotImplementedException();
+            d = indexer.ToMaxColumnLength(_row,_startingColumn);
         }
 
-        Task<IEnumerable<Task<ICellData>>> ISpreadSheetInstruction.GetResults()
+        async IAsyncEnumerable<ICellData> ISpreadSheetInstruction.GetResults()
         {
-            throw new NotImplementedException();
+            foreach(ICellIndex cell in await d)
+            {
+                yield return await BaseSpreadSheetInstruction.GetCellData(cell);
+            }
+
         }
     }
 }

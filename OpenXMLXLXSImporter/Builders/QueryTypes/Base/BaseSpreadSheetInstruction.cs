@@ -18,15 +18,18 @@ namespace OpenXMLXLSXImporter.Builders
 
         public virtual bool ByColumn => false;
 
-        async Task<IEnumerable<Task<ICellData>>> ISpreadSheetInstruction.GetResults()
+        async IAsyncEnumerable<ICellData> ISpreadSheetInstruction.GetResults()
         {
             await _mre.WaitAsync();
             IEnumerable<ICellIndex> cells = GetResults();
-            return cells.Select(GetCellData).ToArray();//iterate through the entire collection
+            foreach(ICellIndex cell in cells)
+            {
+                yield return await GetCellData(cell);
+            }
           
         }
 
-        private static async Task<ICellData> GetCellData(ICellIndex i)
+        public static async Task<ICellData> GetCellData(ICellIndex i)
         {
             if (i is IFutureCell fs)
             {

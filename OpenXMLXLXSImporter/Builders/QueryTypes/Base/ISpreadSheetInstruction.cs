@@ -14,6 +14,6 @@ namespace OpenXMLXLSXImporter.Builders
 
         void EnqueCell(IIndexer indexer);
 
-        Task<IEnumerable<Task<ICellData>>> GetResults();
+        IAsyncEnumerable<ICellData> GetResults();
     }
 }
