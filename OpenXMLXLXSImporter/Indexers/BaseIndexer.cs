@@ -42,8 +42,12 @@ namespace OpenXMLXLSXImporter.Indexers
 
         public void Add(ICellProcessingTask index)
         {
-            InternalAdd(index);
-            _lock.Spread(this, index);
+            if(index is ICellIndex c)
+            {
+                InternalAdd(c);
+                _lock.Spread(this, c);
+            }
+
             _lock.EnqueCell(index);
         }
     }

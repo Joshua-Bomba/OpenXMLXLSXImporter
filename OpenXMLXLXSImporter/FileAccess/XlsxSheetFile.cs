@@ -108,11 +108,11 @@ namespace OpenXMLXLSXImporter.FileAccess
                 cellData = new CellDataContent { Text = cellElement.CellValue.Text };
             }
 
-            if (cellData != null)
+            if (cellData != null&&cellPromise is ICellIndex ind)
             {
                 //use the same value from the promise
-                cellData.CellColumnIndex = cellPromise.CellColumnIndex;
-                cellData.CellRowIndex = cellPromise.CellRowIndex;
+                cellData.CellColumnIndex = ind.CellColumnIndex;
+                cellData.CellRowIndex = ind.CellRowIndex;
             }
             cellPromise.Resolve(cellData);
         }

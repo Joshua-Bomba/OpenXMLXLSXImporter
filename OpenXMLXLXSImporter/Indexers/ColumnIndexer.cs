@@ -33,5 +33,15 @@ namespace OpenXMLXLSXImporter.Indexers
 
         public override ICellIndex GetCell(uint rowIndex, string cellIndex)
             => _cells[cellIndex][rowIndex];
+
+        public  async override Task<IEnumerable<ICellIndex>> ToMaxRowLength(string cellIndex, int startRow)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async override Task<IEnumerable<ICellIndex>> ToMaxColumnLength(uint rowIndex, string StartColumn)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
