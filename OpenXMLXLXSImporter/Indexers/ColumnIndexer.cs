@@ -28,20 +28,25 @@ namespace OpenXMLXLSXImporter.Indexers
             _cells[cell.CellColumnIndex].Add(cell.CellRowIndex, cell);
         }
 
-        public override bool HasCell(uint rowIndex, string cellIndex)
-            => _cells.ContainsKey(cellIndex)&&_cells[cellIndex].ContainsKey(rowIndex);
-
-        public override ICellIndex GetCell(uint rowIndex, string cellIndex)
-            => _cells[cellIndex][rowIndex];
-
-        public  async override Task<IEnumerable<ICellIndex>> ToMaxRowLength(string cellIndex, int startRow)
+        public override bool TryGetCell(uint rowIndex, string cellIndex, out ICellIndex ci)
         {
-            throw new NotImplementedException();
+            if(_cells.ContainsKey(cellIndex)&&_cells[cellIndex].ContainsKey(rowIndex))
+            {
+                ci = _cells[cellIndex][rowIndex];
+                return true;
+            }
+            else
+            {
+                ci = null;
+                return false;
+            }
         }
 
-        public async override Task<IEnumerable<ICellIndex>> ToMaxColumnLength(uint rowIndex, string StartColumn)
-        {
-            throw new NotImplementedException();
-        }
+        //public override bool HasCell(uint rowIndex, string cellIndex)
+        //    => _cells.ContainsKey(cellIndex)&&_cells[cellIndex].ContainsKey(rowIndex);
+
+        //public override ICellIndex GetCell(uint rowIndex, string cellIndex)
+        //    => _cells[cellIndex][rowIndex];
+
     }
 }

@@ -24,7 +24,7 @@ namespace OpenXMLXLSXImporter.Builders
 
         protected override void EnqueCell(IIndexer indexer)
         {
-            if(! indexer.HasCell(_row, _cell))
+            if(! indexer.TryGetCell(_row, _cell,out ICellIndex ci))
             {
                 FutureCell item = new FutureCell(_row, _cell);
                 indexer.Add(item);
@@ -32,7 +32,7 @@ namespace OpenXMLXLSXImporter.Builders
             }
             else
             {
-                _cellItem = indexer.GetCell(_row, _cell);
+                _cellItem = ci;
             }
         }
     }

@@ -20,6 +20,7 @@ namespace OpenXMLXLSXImporter.Processing
         private ChunkableBlockingCollection<ICellProcessingTask> _queue;
 
         private uint desiredRowIndex;
+        private string desiredColumnIndex;
         private Dictionary<string,Cell> deferedCells = null;
         private IXlsxSheetFilePromise _filePromise;
         private IXlsxSheetFile sheetAccess;
@@ -66,54 +67,64 @@ namespace OpenXMLXLSXImporter.Processing
                 {
                     ICellProcessingTask dequed = _queue.Take();
 
-                    if(dequed is ICellIndex t)
+
+                    if (dequed is ICellIndex t)
                     {
                         desiredRowIndex = t.CellRowIndex;
-                        if (sheetAccess.TryGetRow(desiredRowIndex, out cellEnumerator))
-                        {
-                            string columnIndex = t.CellColumnIndex;
-                            bool cellsLoadedIn = false;
-                            string currentIndex;
-                            do
-                            {
-                                if (cellEnumerator.MoveNext())
-                                {
-                                    cell = cellEnumerator.Current;
-                                    currentIndex = XlsxSheetFile.GetColumnIndexByColumnReference(cell.CellReference);
-                                    if (currentIndex != columnIndex)
-                                    {
-                                        if (deferedCells == null)
-                                            deferedCells = new Dictionary<string, Cell>();
-                                        deferedCells.Add(currentIndex, cell);//this does not actually do anything since everything we need is loaded in at this point in our current version of the code. that's the first thing we should update
-                                                                             //also we should make the enque and fetch steps occur at the same time
-                                    }
-                                }
-                                else
-                                {
-                                    currentIndex = null;
-                                    cellsLoadedIn = true;
-                                }
-                            } while (!cellsLoadedIn && currentIndex != columnIndex);
+                        desiredColumnIndex = t.CellColumnIndex;
+                    }
+                    else if(dequed is LastRow m)
+                    {
+                        desiredRowIndex = sheetAccess.GetAllRows();
+                        desiredColumnIndex = m._column;
+                    }
+                    else if(dequed is LastColumn mc)
+                    {
+                        desiredRowIndex = mc._row;
+                        desiredColumnIndex = null;
+                    }
 
-                            if (currentIndex == columnIndex)
+                    if (sheetAccess.TryGetRow(desiredRowIndex, out cellEnumerator))
+                    {
+                        bool cellsLoadedIn = false;
+                        string currentIndex;
+                        do
+                        {
+                            if (cellEnumerator.MoveNext())
                             {
-                                sheetAccess.ProcessedCell(cell, dequed);
+                                cell = cellEnumerator.Current;
+                                currentIndex = XlsxSheetFile.GetColumnIndexByColumnReference(cell.CellReference);
+                                if (currentIndex != desiredColumnIndex)
+                                {
+                                    if (deferedCells == null)
+                                        deferedCells = new Dictionary<string, Cell>();
+                                    deferedCells.Add(currentIndex, cell);//this does not actually do anything since everything we need is loaded in at this point in our current version of the code. that's the first thing we should update
+                                                                            //also we should make the enque and fetch steps occur at the same time
+                                }
                             }
                             else
                             {
-                                //This Cell Does not exist
-                                dequed.Resolve(null);
+                                currentIndex = null;
+                                cellsLoadedIn = true;
                             }
+                        } while (!cellsLoadedIn && currentIndex != desiredColumnIndex);
 
+                        if (currentIndex == desiredColumnIndex)
+                        {
+                            sheetAccess.ProcessedCell(cell, dequed);
                         }
                         else
                         {
-                            //if we reached the end of the file and the row does not exist then what were trying to get does not exist
+                            //This Cell Does not exist
                             dequed.Resolve(null);
                         }
-                    }
 
-                   
+                    }
+                    else
+                    {
+                        //if we reached the end of the file and the row does not exist then what were trying to get does not exist
+                        dequed.Resolve(null);
+                    }
                 }
             }
             catch (InvalidOperationException ex)

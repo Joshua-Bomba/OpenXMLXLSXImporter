@@ -14,13 +14,7 @@ namespace OpenXMLXLSXImporter.Indexers
 
         void Add(ICellProcessingTask index);
 
-        bool HasCell(uint rowIndex, string cellIndex);
-
-        ICellIndex GetCell(uint rowIndex, string cellIndex);
-
-        Task<IEnumerable<ICellIndex>> ToMaxRowLength(string cellIndex, int startRow);
-
-        Task<IEnumerable<ICellIndex>> ToMaxColumnLength(uint rowIndex, string StartColumn);
+        bool TryGetCell(uint rowIndex, string cellIndex, out ICellIndex ci);
 
         void Spread(ICellIndex cell);
     }

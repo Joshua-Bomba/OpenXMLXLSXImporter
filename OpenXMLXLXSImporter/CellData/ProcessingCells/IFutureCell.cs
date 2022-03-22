@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace OpenXMLXLSXImporter.CellData
 {
-    public  interface IFutureCell : ICellIndex
+    public  interface IFutureCell
     {
         Task<ICellData> GetData();
     }

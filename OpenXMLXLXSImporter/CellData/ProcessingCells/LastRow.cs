@@ -7,19 +7,15 @@ using System.Threading.Tasks;
 
 namespace OpenXMLXLSXImporter.CellData
 {
-    public class FutureCell : IFutureCell, ICellProcessingTask, ICellIndex
+    public class LastRow : ICellProcessingTask, IFutureCell
     {
-        private  ICellData _result;
+        public string _column;
+        private ICellData _result;
         private AsyncManualResetEvent _mre;
-        public FutureCell(uint cellRowIndex, string cellColumnIndex)
+        public LastRow(string column)
         {
-            CellRowIndex = cellRowIndex;
-            CellColumnIndex = cellColumnIndex;
-            _mre = new AsyncManualResetEvent(false);
+            _column = column;
         }
-        public string CellColumnIndex { get; set; }
-
-        public uint CellRowIndex { get; set; }
 
         public async Task<ICellData> GetData()
         {

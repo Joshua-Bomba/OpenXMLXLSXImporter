@@ -20,13 +20,7 @@ namespace OpenXMLXLSXImporter.Indexers
         }
 
         protected abstract void InternalAdd(ICellIndex cell);
-
-        public abstract bool HasCell(uint rowIndex, string cellIndex);
-        public abstract ICellIndex GetCell(uint rowIndex, string cellIndex);
-        public abstract Task<IEnumerable<ICellIndex>> ToMaxRowLength(string cellIndex,int startRow);
-
-        public abstract Task<IEnumerable<ICellIndex>> ToMaxColumnLength(uint rowIndex,string StartColumn);
-
+        public abstract bool TryGetCell(uint rowIndex, string cellIndex, out ICellIndex ci);
         public virtual async Task ProcessInstruction(ISpreadSheetInstruction instruction)
         {
             using (await _lock.IndexerLock.LockAsync())
@@ -40,7 +34,7 @@ namespace OpenXMLXLSXImporter.Indexers
             InternalAdd(cell);
         }
 
-        public void Add(ICellProcessingTask index)
+        void IIndexer.Add(ICellProcessingTask index)
         {
             if(index is ICellIndex c)
             {

@@ -37,15 +37,15 @@ namespace OpenXMLXLSXImporter.Builders
         {
             for(uint i = _startRow;i <= _endRow;i++)
             {
-                if(!indexer.HasCell(i,_column))
+                if(indexer.TryGetCell(i,_column, out ICellIndex ci))
+                {
+                    _cellItems[i - _startRow] = ci;
+                }
+                else
                 {
                     FutureCell item = new FutureCell(i, _column);
                     indexer.Add(item);
                     _cellItems[i - _startRow] = item;
-                }
-                else
-                {
-                    _cellItems[i - _startRow] = indexer.GetCell(i, _column);
                 }
 
             }

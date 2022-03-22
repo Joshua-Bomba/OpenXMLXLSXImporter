@@ -99,6 +99,32 @@ namespace OpenXMLXLSXImporter.FileAccess
             return false;
         }
 
+        public uint GetAllRows()
+        {
+            IEnumerator<Cell> cellEnumerator;
+            while (!_rowsLoadedIn)
+            {
+                if (_rowEnumerator.MoveNext())
+                {
+                    _row = _rowEnumerator.Current;
+                    _rowIndexNullable = _row.RowIndex;
+                    if (_rowIndexNullable.HasValue)
+                    {
+                        _rowIndex = _rowIndexNullable.Value;
+                        _cellEnumerable = _row.Elements<Cell>();
+                        cellEnumerator = _cellEnumerable.GetEnumerator();
+                        _rows.Add(_rowIndex, cellEnumerator);
+                    }
+                }
+                else
+                {
+                    _rowsLoadedIn = true;
+                    break;
+                }
+            }
+            return _rowIndex;
+        }
+
         void IXlsxSheetFile.ProcessedCell(Cell cellElement, ICellProcessingTask cellPromise)
         {
             ICellData cellData;

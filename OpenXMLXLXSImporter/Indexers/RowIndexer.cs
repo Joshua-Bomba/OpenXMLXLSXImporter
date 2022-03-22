@@ -21,6 +21,11 @@ namespace OpenXMLXLSXImporter.Indexers
             _cells = new Dictionary<uint, Dictionary<string, ICellIndex>>();
         }
 
+        public override bool TryGetCell(uint rowIndex, string cellIndex, out ICellIndex ci)
+        {
+            throw new NotImplementedException();
+        }
+
         protected override void InternalAdd(ICellIndex cellData)
         {
             if (!_cells.ContainsKey(cellData.CellRowIndex))
@@ -28,23 +33,6 @@ namespace OpenXMLXLSXImporter.Indexers
                 _cells.Add(cellData.CellRowIndex, new Dictionary<string, ICellIndex>());
             }
             _cells[cellData.CellRowIndex].Add(cellData.CellColumnIndex,cellData);
-        }
-
-        public override bool HasCell(uint rowIndex, string cellIndex)
-            => _cells.ContainsKey(rowIndex)&&_cells[rowIndex].ContainsKey(cellIndex);
-
-
-        public override ICellIndex GetCell(uint rowIndex, string cellIndex)
-            => _cells[rowIndex][cellIndex];
-
-        public override Task<IEnumerable<ICellIndex>> ToMaxRowLength(string cellIndex, int startRow)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override Task<IEnumerable<ICellIndex>> ToMaxColumnLength(uint rowIndex, string StartColumn)
-        {
-            throw new NotImplementedException();
         }
     }
 }

@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace OpenXMLXLSXImporter.CellData
 {
-    public class DeferredCell : IFutureCell
+    public class DeferredCell : IFutureCell, ICellIndex
     {
         private Cell _deferredCell;
         private AsyncManualResetEvent _mre;
