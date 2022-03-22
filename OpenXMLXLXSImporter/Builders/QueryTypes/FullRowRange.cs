@@ -18,6 +18,8 @@ namespace OpenXMLXLSXImporter.Builders
             _column = column;
             _startRow = startRow;
         }
+        public override bool IndexedByRow => true;
+
         protected override void EnqueCell(IIndexer indexer)
         {
             //_results = indexer.GetFullColumnRows(_column, _startRow);

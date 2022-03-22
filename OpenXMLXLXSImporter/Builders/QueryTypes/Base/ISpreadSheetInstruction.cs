@@ -10,7 +10,7 @@ namespace OpenXMLXLSXImporter.Builders
 {
     public interface ISpreadSheetInstruction
     {
-        bool ByColumn { get; }
+        bool IndexedByRow { get; }
 
         void EnqueCell(IIndexer indexer);
 

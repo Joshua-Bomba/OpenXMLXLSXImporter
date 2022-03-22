@@ -20,7 +20,7 @@ namespace OpenXMLXLSXImporter.Builders
             _startingColumn = startingColumn;
         }
 
-        public bool ByColumn => true;
+        public bool IndexedByRow => false;
 
         void ISpreadSheetInstruction.EnqueCell(IIndexer indexer)
         {
@@ -32,7 +32,7 @@ namespace OpenXMLXLSXImporter.Builders
 
                 
             //});
-            indexer.ProcessInstruction()
+            //indexer.ProcessInstruction()
         }
 
         async IAsyncEnumerable<ICellData> ISpreadSheetInstruction.GetResults()

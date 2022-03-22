@@ -65,13 +65,13 @@ namespace OpenXMLXLSXImporter.Processing
 
         public async Task ProcessInstruction(ISpreadSheetInstruction spreadSheetInstruction)
         {
-            if (spreadSheetInstruction.ByColumn)
+            if (spreadSheetInstruction.IndexedByRow)
             {
-                await _columns.ProcessInstruction(spreadSheetInstruction);
+                await _rows.ProcessInstruction(spreadSheetInstruction);
             }
             else
             {
-                await _rows.ProcessInstruction(spreadSheetInstruction);
+                await _columns.ProcessInstruction(spreadSheetInstruction);
             }
         }
 

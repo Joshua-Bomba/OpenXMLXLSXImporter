@@ -13,6 +13,9 @@ namespace OpenXMLXLSXImporter.Builders
         private uint _row;
         private string _cell;
         private ICellIndex _cellItem;
+
+        public override bool IndexedByRow => true;
+
         public SingleCell(uint row, string cellIndex) : base()
         {
             _row = row;

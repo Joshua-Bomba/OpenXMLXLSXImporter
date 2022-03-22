@@ -16,7 +16,7 @@ namespace OpenXMLXLSXImporter.Builders
             _mre = new AsyncManualResetEvent(false);
         }
 
-        public virtual bool ByColumn => false;
+        public abstract bool IndexedByRow { get; }
 
         async IAsyncEnumerable<ICellData> ISpreadSheetInstruction.GetResults()
         {
