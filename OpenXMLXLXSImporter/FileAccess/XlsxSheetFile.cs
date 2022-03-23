@@ -125,7 +125,7 @@ namespace OpenXMLXLSXImporter.FileAccess
             return _rowIndex;
         }
 
-        void IXlsxSheetFile.ProcessedCell(Cell cellElement, ICellProcessingTask cellPromise)
+        ICellData IXlsxSheetFile.ProcessedCell(Cell cellElement, ICellIndex index)
         {
             ICellData cellData;
             bool hasBeenProcessed = ProcessCustomCell(cellElement, out cellData);
@@ -134,13 +134,13 @@ namespace OpenXMLXLSXImporter.FileAccess
                 cellData = new CellDataContent { Text = cellElement.CellValue.Text };
             }
 
-            if (cellData != null&&cellPromise is ICellIndex ind)
+            if (cellData != null&&index != null)
             {
                 //use the same value from the promise
-                cellData.CellColumnIndex = ind.CellColumnIndex;
-                cellData.CellRowIndex = ind.CellRowIndex;
+                cellData.CellColumnIndex = index.CellColumnIndex;
+                cellData.CellRowIndex = index.CellRowIndex;
             }
-            cellPromise.Resolve(cellData);
+            return cellData;
         }
 
 

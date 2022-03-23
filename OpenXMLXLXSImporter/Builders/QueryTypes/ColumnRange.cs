@@ -47,7 +47,7 @@ namespace OpenXMLXLSXImporter.Builders
             }
         }
 
-        protected override void EnqueCell(IIndexer indexer)
+        protected override async Task EnqueCell(IIndexer indexer)
         {
             for(uint i = _startColumnInt;i <= _endColumnInt;i++)
             {
@@ -59,7 +59,7 @@ namespace OpenXMLXLSXImporter.Builders
                 else
                 {
                     FutureCell item = new FutureCell(_row, column);
-                    indexer.Add(item);
+                    await indexer.Add(item);
                     _cellItems[i - _startColumnInt] = item;
                 }
             }

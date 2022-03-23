@@ -35,7 +35,7 @@ namespace OpenXMLXLSXImporter.Builders
                 throw new ArgumentException("The End Row has to be greater then the Start Row");
             }
         }
-        protected override void EnqueCell(IIndexer indexer)
+        protected override async Task EnqueCell(IIndexer indexer)
         {
             for(uint i = _startRow;i <= _endRow;i++)
             {
@@ -46,7 +46,7 @@ namespace OpenXMLXLSXImporter.Builders
                 else
                 {
                     FutureCell item = new FutureCell(i, _column);
-                    indexer.Add(item);
+                    await indexer.Add(item);
                     _cellItems[i - _startRow] = item;
                 }
 

@@ -23,11 +23,12 @@ namespace OpenXMLXLSXImporter.Builders
 
         public bool IndexedByRow => true;
 
-        void ISpreadSheetInstruction.EnqueCell(IIndexer indexer)
+        async Task ISpreadSheetInstruction.EnqueCell(IIndexer indexer)
         {
             _indexer = indexer;
             _lastRow = new LastRow(_column);
-            indexer.Add(_lastRow);
+            _lastRow.SetIndexer(_indexer);
+            await indexer.Add(_lastRow);
         }
 
         async IAsyncEnumerable<ICellData> ISpreadSheetInstruction.GetResults()

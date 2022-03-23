@@ -19,6 +19,15 @@ namespace OpenXMLXLSXImporter.Indexers
             _cells = new Dictionary<string, Dictionary<uint, ICellIndex>>();
         }
 
+        protected override void InternalSet(ICellIndex cell)
+        {
+            if (!_cells.ContainsKey(cell.CellColumnIndex))
+            {
+                _cells.Add(cell.CellColumnIndex, new Dictionary<uint, ICellIndex>());
+            }
+            _cells[cell.CellColumnIndex][cell.CellRowIndex] =  cell;
+        }
+
         protected override void InternalAdd(ICellIndex cell)
         {
             if(!_cells.ContainsKey(cell.CellColumnIndex))

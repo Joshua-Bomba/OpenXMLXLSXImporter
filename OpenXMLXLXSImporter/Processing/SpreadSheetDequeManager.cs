@@ -65,11 +65,13 @@ namespace OpenXMLXLSXImporter.Processing
 
                 while (true)
                 {
+                    cell = null;
                     ICellProcessingTask dequed = _queue.Take();
 
-
+                    ICellIndex index = null;
                     if (dequed is ICellIndex t)
                     {
+                        index = t;
                         desiredRowIndex = t.CellRowIndex;
                         desiredColumnIndex = t.CellColumnIndex;
                     }
@@ -77,6 +79,7 @@ namespace OpenXMLXLSXImporter.Processing
                     {
                         desiredRowIndex = sheetAccess.GetAllRows();
                         desiredColumnIndex = m._column;
+                        index = new FutureIndex { CellColumnIndex = desiredColumnIndex, CellRowIndex = desiredRowIndex };
                     }
                     else if(dequed is LastColumn mc)
                     {
@@ -87,7 +90,7 @@ namespace OpenXMLXLSXImporter.Processing
                     if (sheetAccess.TryGetRow(desiredRowIndex, out cellEnumerator))
                     {
                         bool cellsLoadedIn = false;
-                        string currentIndex;
+                        string currentIndex = null;
                         do
                         {
                             if (cellEnumerator.MoveNext())
@@ -104,6 +107,10 @@ namespace OpenXMLXLSXImporter.Processing
                             }
                             else
                             {
+                                if(index == null)
+                                {
+                                    index = new FutureIndex { CellColumnIndex = currentIndex, CellRowIndex = desiredRowIndex };
+                                }
                                 currentIndex = null;
                                 cellsLoadedIn = true;
                             }
@@ -111,19 +118,19 @@ namespace OpenXMLXLSXImporter.Processing
 
                         if (currentIndex == desiredColumnIndex)
                         {
-                            sheetAccess.ProcessedCell(cell, dequed);
+                            dequed.Resolve(sheetAccess, cell, index);
                         }
                         else
                         {
                             //This Cell Does not exist
-                            dequed.Resolve(null);
+                            dequed.Resolve(sheetAccess,cell,index);
                         }
 
                     }
                     else
                     {
                         //if we reached the end of the file and the row does not exist then what were trying to get does not exist
-                        dequed.Resolve(null);
+                        dequed.Resolve(sheetAccess, cell,index);
                     }
                 }
             }
@@ -145,7 +152,7 @@ namespace OpenXMLXLSXImporter.Processing
 
         public void ProcessQueue(ref Queue<ICellProcessingTask> items)
         {           
-            IOrderedEnumerable<IGrouping<uint,ICellIndex>> g = items.Select(x=>x as ICellIndex).GroupBy(x => x.CellRowIndex).OrderBy(x => x.Key);
+            IOrderedEnumerable<IGrouping<uint,ICellIndex>> g = items.Select(x=>x as ICellIndex).Where(x=>x != null).GroupBy(x => x.CellRowIndex).OrderBy(x => x.Key);
             foreach(IGrouping<uint, ICellIndex> row in g)
             {
                 IOrderedEnumerable<ICellIndex> currentRow = row.OrderBy(x => ExcelColumnHelper.GetColumnStringAsIndex(x.CellColumnIndex));
@@ -163,7 +170,7 @@ namespace OpenXMLXLSXImporter.Processing
                 }
             }
 
-            foreach (ICellProcessingTask t in items.Where(x => x is not ICellIndex))
+            foreach (ICellProcessingTask t in items.Where(x => x as ICellIndex == null))
             {
                 ss.Enqueue(t);
             }
@@ -174,7 +181,7 @@ namespace OpenXMLXLSXImporter.Processing
             foreach (KeyValuePair<string,Cell> cell in deferedCells)
             {
                 DeferredCell dc = new DeferredCell(desiredRowIndex,cell.Key,cell.Value);
-                _importer.Spread(dc);
+                _importer.AddDeferredCell(dc);
             }
         }
 
@@ -185,7 +192,7 @@ namespace OpenXMLXLSXImporter.Processing
             //fufill any cells that were enqued during the processing of the last add
             foreach(KeyValuePair<Cell,ICellProcessingTask> kv in fufil)
             {
-                sheetAccess.ProcessedCell(kv.Key, kv.Value);
+                sheetAccess.ProcessedCell(kv.Key, kv.Value as ICellIndex);
             }
             fufil = null;
         }

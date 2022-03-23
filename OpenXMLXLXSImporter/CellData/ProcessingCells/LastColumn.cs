@@ -1,4 +1,7 @@
-﻿using Nito.AsyncEx;
+﻿using DocumentFormat.OpenXml.Spreadsheet;
+using Nito.AsyncEx;
+using OpenXMLXLSXImporter.FileAccess;
+using OpenXMLXLSXImporter.Indexers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,6 +17,7 @@ namespace OpenXMLXLSXImporter.CellData
         private AsyncManualResetEvent _mre;
         public LastColumn(uint row)
         {
+            _mre = new AsyncManualResetEvent(false);
             _row = row;
         }
 
@@ -23,10 +27,12 @@ namespace OpenXMLXLSXImporter.CellData
             return _result;
         }
 
-        public void Resolve(ICellData data)
+        public void Resolve(IXlsxSheetFile file, Cell cellElement, ICellIndex index)
         {
-            _result = data;
+            _result = file.ProcessedCell(cellElement, index);
             _mre.Set();
         }
+
+        public void SetIndexer(IIndexer indexer) { }
     }
 }

@@ -35,9 +35,11 @@ namespace OpenXMLXLSXImporter
             _streamSheetFile = new XlsxDocumentFile(stream);
         }
 
-        public void Spread(ICellIndex c)
+        public void AddDeferredCell(DeferredCell c)
         {
             ISpreadSheetIndexersLock whatever = (ssim as ISpreadSheetIndexersLock);
+            c.InstructionManager = ssim;
+            ssim.SetFutureCellIndexer(c);
             whatever.Spread(null, c);
         }
 

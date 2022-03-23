@@ -25,12 +25,12 @@ namespace OpenXMLXLSXImporter.Builders
 
         protected override IEnumerable<ICellIndex> GetResults() => new ICellIndex[] { _cellItem };
 
-        protected override void EnqueCell(IIndexer indexer)
+        protected override async Task EnqueCell(IIndexer indexer)
         {
             if(! indexer.TryGetCell(_row, _cell,out ICellIndex ci))
             {
                 FutureCell item = new FutureCell(_row, _cell);
-                indexer.Add(item);
+               await indexer.Add(item);
                 _cellItem = item;
             }
             else

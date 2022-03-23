@@ -49,10 +49,12 @@ namespace OpenXMLXLSXImporter.Processing
             }
         }
 
-        void ISpreadSheetIndexersLock.EnqueCell(ICellProcessingTask cell)
+        async Task ISpreadSheetIndexersLock.EnqueCell(ICellProcessingTask cell)
         {
-            _loadQueueManager.Enque(cell);
+            await _loadQueueManager.Enque(cell);
         }
+
+
 
         public SpreadSheetInstructionManager(SpreadSheetDequeManager dequeManager)
         {
@@ -74,6 +76,13 @@ namespace OpenXMLXLSXImporter.Processing
                 await _columns.ProcessInstruction(spreadSheetInstruction);
             }
         }
+
+        public void SetFutureCellIndexer(IFutureCell c)
+        {
+            c.SetIndexer(_rows);
+        }
+
+
 
         //public async Task Add(ICellData cellData)
         //{

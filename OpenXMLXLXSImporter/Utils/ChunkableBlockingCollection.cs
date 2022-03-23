@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Nito.AsyncEx;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,22 +27,22 @@ namespace OpenXMLXLSXImporter.Utils
 
     public class ChunkableBlockingCollection<T>
     {
-        private ManualResetEventSlim _mre;
+        private AsyncManualResetEvent _mre;
         private BlockingCollection<T> _queue;
         private Queue<T> _chunkedItems;
         private IChunckBlock<T> _chunkBlock;
         public ChunkableBlockingCollection(IChunckBlock<T> chunkBlock)
         {
             _chunkBlock = chunkBlock;
-            _mre = new ManualResetEventSlim(true);//we will make the mre's inital state as true
+            _mre = new AsyncManualResetEvent(true);//we will make the mre's inital state as true
             _queue = new BlockingCollection<T>();
             _chunkedItems = null;
             chunkBlock.Init(this);
         }
 
-        public void Enque(T item)
+        public async Task  Enque(T item)
         {
-            _mre.Wait();
+            await _mre.WaitAsync();
             _queue.Add(item);
         }
 

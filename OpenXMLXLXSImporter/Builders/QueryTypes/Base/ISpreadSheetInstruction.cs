@@ -12,7 +12,7 @@ namespace OpenXMLXLSXImporter.Builders
     {
         bool IndexedByRow { get; }
 
-        void EnqueCell(IIndexer indexer);
+        Task EnqueCell(IIndexer indexer);
 
         IAsyncEnumerable<ICellData> GetResults();
     }

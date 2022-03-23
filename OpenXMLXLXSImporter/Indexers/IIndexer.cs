@@ -12,9 +12,11 @@ namespace OpenXMLXLSXImporter.Indexers
     {
         Task ProcessInstruction(ISpreadSheetInstruction instruction);
 
-        void Add(ICellProcessingTask index);
+        Task Add(ICellProcessingTask index);
 
         bool TryGetCell(uint rowIndex, string cellIndex, out ICellIndex ci);
+
+        Task SetCell(ICellData d);
 
         void Spread(ICellIndex cell);
     }

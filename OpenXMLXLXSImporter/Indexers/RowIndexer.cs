@@ -23,7 +23,24 @@ namespace OpenXMLXLSXImporter.Indexers
 
         public override bool TryGetCell(uint rowIndex, string cellIndex, out ICellIndex ci)
         {
-            throw new NotImplementedException();
+            if (_cells.ContainsKey(rowIndex) && _cells[rowIndex].ContainsKey(cellIndex))
+            {
+                ci = _cells[rowIndex][cellIndex];
+                return true;
+            }
+            else
+            {
+                ci = null;
+                return false;
+            }
+        }
+        protected override void InternalSet(ICellIndex cellData)
+        {
+            if (!_cells.ContainsKey(cellData.CellRowIndex))
+            {
+                _cells.Add(cellData.CellRowIndex, new Dictionary<string, ICellIndex>());
+            }
+            _cells[cellData.CellRowIndex][cellData.CellColumnIndex] = cellData;
         }
 
         protected override void InternalAdd(ICellIndex cellData)

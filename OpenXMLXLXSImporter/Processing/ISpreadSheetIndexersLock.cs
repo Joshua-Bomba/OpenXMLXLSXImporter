@@ -14,6 +14,6 @@ namespace OpenXMLXLSXImporter.Processing
         AsyncLock IndexerLock { get; }
         void AddIndexer(IIndexer a);
         void Spread(IIndexer a, ICellIndex b);
-        void EnqueCell(ICellProcessingTask t);   
+        Task EnqueCell(ICellProcessingTask t);   
     }
 }
