@@ -66,7 +66,12 @@ namespace OpenXMLXLSXImporter.FileAccess
             //this will only load in up to the row we need
             //if we try loading in a row that does not exist then we will load all of them in
             //I'm assuming that data from here might still be in the file and we don't want to read things we don't need
-            while (!_rowsLoadedIn && !_rows.ContainsKey(desiredRowIndex))
+            if(_rows.ContainsKey(desiredRowIndex))
+            {
+                cellEnumerator = _rows[desiredRowIndex];
+                return true;
+            }
+            while (!_rowsLoadedIn)
             {
                 if (_rowEnumerator.MoveNext())
                 {
@@ -88,12 +93,6 @@ namespace OpenXMLXLSXImporter.FileAccess
                     break;
                 }
             }
-            if(_rows.ContainsKey(desiredRowIndex))
-            {
-                cellEnumerator = _rows[desiredRowIndex];
-                return true;
-            }
-
 
             cellEnumerator = null;
             return false;

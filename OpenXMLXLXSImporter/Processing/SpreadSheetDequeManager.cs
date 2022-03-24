@@ -66,7 +66,7 @@ namespace OpenXMLXLSXImporter.Processing
                 while (true)
                 {
                     cell = null;
-                    ICellProcessingTask dequed = _queue.Take();
+                    ICellProcessingTask dequed = await _queue.Take();
 
                     ICellIndex index = null;
                     if (dequed is ICellIndex t)
@@ -142,8 +142,6 @@ namespace OpenXMLXLSXImporter.Processing
 
         public bool ShouldPullAndChunk => deferedCells?.Any()??false;
 
-        public bool KeepQueueLockedForDump() => true;
-
         public void PreProcessing()
         {
             ss = new Queue<ICellProcessingTask>();
@@ -178,11 +176,7 @@ namespace OpenXMLXLSXImporter.Processing
             items = ss;
 
             //We will add this deferredcell type to the IIndexers since we don't need them at the time
-            foreach (KeyValuePair<string,Cell> cell in deferedCells)
-            {
-                DeferredCell dc = new DeferredCell(desiredRowIndex,cell.Key,cell.Value);
-                _importer.AddDeferredCell(dc);
-            }
+            _importer.AddDeferredCells(deferedCells.Select(x => new DeferredCell(desiredRowIndex, x.Key, x.Value)));
         }
 
         public void PostProcessing()

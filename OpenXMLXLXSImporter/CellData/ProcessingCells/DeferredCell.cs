@@ -37,7 +37,7 @@ namespace OpenXMLXLSXImporter.CellData
 
             public async Task EnqueCell(IIndexer indexer)
             {
-                await indexer.Add(this);
+                await indexer.QueueNonIndexedCell(this);
             }
 
             public async IAsyncEnumerable<ICellData> GetResults()

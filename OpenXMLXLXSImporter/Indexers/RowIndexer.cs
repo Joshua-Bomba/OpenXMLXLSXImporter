@@ -16,24 +16,20 @@ namespace OpenXMLXLSXImporter.Indexers
     public class RowIndexer : BaseIndexer
     {
         protected Dictionary<uint,Dictionary<string, ICellIndex>> _cells;
-        public RowIndexer(ISpreadSheetIndexersLock indexerLock) : base(indexerLock)
+        public RowIndexer(SpreadSheetInstructionManager instructionManager) : base(instructionManager)
         {
             _cells = new Dictionary<uint, Dictionary<string, ICellIndex>>();
         }
 
-        public override bool TryGetCell(uint rowIndex, string cellIndex, out ICellIndex ci)
+        protected override ICellIndex InternalGet(uint rowIndex, string cellIndex)
         {
             if (_cells.ContainsKey(rowIndex) && _cells[rowIndex].ContainsKey(cellIndex))
             {
-                ci = _cells[rowIndex][cellIndex];
-                return true;
+                return _cells[rowIndex][cellIndex];
             }
-            else
-            {
-                ci = null;
-                return false;
-            }
+            return null;
         }
+
         protected override void InternalSet(ICellIndex cellData)
         {
             if (!_cells.ContainsKey(cellData.CellRowIndex))

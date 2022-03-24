@@ -15,8 +15,6 @@ namespace OpenXMLXLSXImporter.Utils
 
         bool ShouldPullAndChunk { get; }
 
-        bool KeepQueueLockedForDump();
-
         void ProcessQueue(ref Queue<T> items);
 
         void PostProcessing();
@@ -24,56 +22,53 @@ namespace OpenXMLXLSXImporter.Utils
         void PreProcessing();
     }
 
-
-    public class ChunkableBlockingCollection<T>
+    public interface IChunkableBlockingCollection<T>
     {
-        private AsyncManualResetEvent _mre;
+        AsyncLock Mutex { get; }
+        void Enque(T item);
+
+    }
+
+    public class ChunkableBlockingCollection<T> : IChunkableBlockingCollection<T>
+    {
+        private AsyncLock _mutext;
         private BlockingCollection<T> _queue;
         private Queue<T> _chunkedItems;
         private IChunckBlock<T> _chunkBlock;
         public ChunkableBlockingCollection(IChunckBlock<T> chunkBlock)
         {
             _chunkBlock = chunkBlock;
-            _mre = new AsyncManualResetEvent(true);//we will make the mre's inital state as true
+            _mutext = new AsyncLock();//we will make the mre's inital state as true
             _queue = new BlockingCollection<T>();
             _chunkedItems = null;
             chunkBlock.Init(this);
         }
 
-        public async Task  Enque(T item)
-        {
-            await _mre.WaitAsync();
-            _queue.Add(item);
-        }
+        public AsyncLock Mutex => _mutext;
 
-        private void Chunk()
+        public void Enque(T item) => _queue.Add(item);
+
+        private async Task Chunk()
         {
             _chunkBlock.PreProcessing();
-            _mre.Reset();
-            BlockingCollection<T> dumpCollection = _queue;
-            _queue = new BlockingCollection<T>();
-            bool keepLocked = _chunkBlock.KeepQueueLockedForDump();
-            if (!keepLocked)
+            using(await _mutext.LockAsync())
             {
-                _mre.Set();
-            }
-            dumpCollection.CompleteAdding();
-            if(_chunkedItems == null)
-            {
-                _chunkedItems = new Queue<T>(dumpCollection);
-            }
-            else
-            {
-                foreach (T item in dumpCollection)
+                BlockingCollection<T> dumpCollection = _queue;
+                _queue = new BlockingCollection<T>();
+                dumpCollection.CompleteAdding();
+                if (_chunkedItems == null)
                 {
-                    _chunkedItems.Enqueue(item);
+                    _chunkedItems = new Queue<T>(dumpCollection);
                 }
-            }
+                else
+                {
+                    foreach (T item in dumpCollection)
+                    {
+                        _chunkedItems.Enqueue(item);
+                    }
+                }
 
-            _chunkBlock.ProcessQueue(ref _chunkedItems);
-            if (keepLocked)
-            {
-                _mre.Set();
+                _chunkBlock.ProcessQueue(ref _chunkedItems);
             }
             _chunkBlock.PostProcessing();
             
@@ -81,7 +76,7 @@ namespace OpenXMLXLSXImporter.Utils
 
         public void Finish() => _queue.CompleteAdding();
 
-        public T Take()
+        public async Task<T> Take()
         {
             if (_chunkedItems != null)
             {
@@ -89,7 +84,7 @@ namespace OpenXMLXLSXImporter.Utils
                 {
                     if(_chunkBlock.ShouldPullAndChunk)
                     {
-                        Chunk();
+                        await Chunk();
                     }
                     return item;
                 }
@@ -100,7 +95,7 @@ namespace OpenXMLXLSXImporter.Utils
             }
             if (_chunkBlock.ShouldPullAndChunk)
             {
-                Chunk();
+                await Chunk();
                 if(_chunkedItems.TryDequeue(out T item))
                 {
                     return item;

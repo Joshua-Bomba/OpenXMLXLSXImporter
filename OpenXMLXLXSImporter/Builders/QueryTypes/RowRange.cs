@@ -13,7 +13,7 @@ namespace OpenXMLXLSXImporter.Builders
         private uint _startRow;
         private uint _endRow;
         private string _column;
-        private ICellIndex[] _cellItems;
+        private Task<ICellIndex>[] _cellItems;
 
         public override bool IndexedByRow => true;
 
@@ -24,7 +24,7 @@ namespace OpenXMLXLSXImporter.Builders
             _column = column;
             _cellItems = null;
             ValidateRange();
-            _cellItems = new ICellIndex[(_endRow - _startRow) + 1];
+            _cellItems = new Task<ICellIndex>[(_endRow - _startRow) + 1];
         }
 
         private void ValidateRange()
@@ -37,22 +37,21 @@ namespace OpenXMLXLSXImporter.Builders
         }
         protected override async Task EnqueCell(IIndexer indexer)
         {
-            for(uint i = _startRow;i <= _endRow;i++)
+            for (uint i = _startRow;i <= _endRow;i++)
             {
-                if(indexer.TryGetCell(i,_column, out ICellIndex ci))
+                _cellItems[i - _startRow] = indexer.GetCell(i, _column, () =>
                 {
-                    _cellItems[i - _startRow] = ci;
-                }
-                else
-                {
-                    FutureCell item = new FutureCell(i, _column);
-                    await indexer.Add(item);
-                    _cellItems[i - _startRow] = item;
-                }
-
+                    return new FutureCell(i, _column);
+                });
             }
         }
 
-        protected override IEnumerable<ICellIndex> GetResults() => _cellItems;
+        protected override async IAsyncEnumerable<ICellIndex> GetResults()
+        {
+            foreach(Task<ICellIndex> el in _cellItems)
+            {
+                yield return await el;
+            }
+        }
     }
 }

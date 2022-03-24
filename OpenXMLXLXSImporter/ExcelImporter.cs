@@ -35,15 +35,7 @@ namespace OpenXMLXLSXImporter
             _streamSheetFile = new XlsxDocumentFile(stream);
         }
 
-        public void AddDeferredCell(DeferredCell c)
-        {
-            ISpreadSheetIndexersLock whatever = (ssim as ISpreadSheetIndexersLock);
-            c.InstructionManager = ssim;
-            ssim.SetFutureCellIndexer(c);
-            whatever.Spread(null, c);
-        }
-
-
+        public Task AddDeferredCells(IEnumerable<DeferredCell> c) => ssim.AddDeferredCells(c);
         public Task Process(ISpreadSheetInstructionBuilderManager sheet)
         {
             return Task.Run(async() =>

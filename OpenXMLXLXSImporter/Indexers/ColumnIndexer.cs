@@ -14,7 +14,7 @@ namespace OpenXMLXLSXImporter.Indexers
     public class ColumnIndexer : BaseIndexer
     {
         private Dictionary<string,Dictionary<uint, ICellIndex>> _cells;
-        public ColumnIndexer(ISpreadSheetIndexersLock indexerLock) : base(indexerLock)
+        public ColumnIndexer(SpreadSheetInstructionManager instructionManager) : base(instructionManager)
         {
             _cells = new Dictionary<string, Dictionary<uint, ICellIndex>>();
         }
@@ -37,18 +37,13 @@ namespace OpenXMLXLSXImporter.Indexers
             _cells[cell.CellColumnIndex].Add(cell.CellRowIndex, cell);
         }
 
-        public override bool TryGetCell(uint rowIndex, string cellIndex, out ICellIndex ci)
+        protected override ICellIndex InternalGet(uint rowIndex, string cellIndex)
         {
-            if(_cells.ContainsKey(cellIndex)&&_cells[cellIndex].ContainsKey(rowIndex))
+            if (_cells.ContainsKey(cellIndex) && _cells[cellIndex].ContainsKey(rowIndex))
             {
-                ci = _cells[cellIndex][rowIndex];
-                return true;
+                return _cells[cellIndex][rowIndex];
             }
-            else
-            {
-                ci = null;
-                return false;
-            }
+            return null;
         }
 
         //public override bool HasCell(uint rowIndex, string cellIndex)

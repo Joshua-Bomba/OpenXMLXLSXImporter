@@ -28,7 +28,7 @@ namespace OpenXMLXLSXImporter.Builders
             _indexer = indexer;
             _lastRow = new LastRow(_column);
             _lastRow.SetIndexer(_indexer);
-            await indexer.Add(_lastRow);
+            await indexer.QueueNonIndexedCell(_lastRow);
         }
 
         async IAsyncEnumerable<ICellData> ISpreadSheetInstruction.GetResults()

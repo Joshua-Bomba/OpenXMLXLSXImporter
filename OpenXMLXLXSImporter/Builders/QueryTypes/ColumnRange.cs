@@ -16,7 +16,7 @@ namespace OpenXMLXLSXImporter.Builders
         private uint _startColumnInt;
         private uint _endColumnInt;
 
-        private ICellIndex[] _cellItems;
+        private Task<ICellIndex>[] _cellItems;
 
         public override bool IndexedByRow => false;
 
@@ -26,7 +26,7 @@ namespace OpenXMLXLSXImporter.Builders
             _startColumnInt = ExcelColumnHelper.GetColumnStringAsIndex(startColumn);
             _endColumnInt = ExcelColumnHelper.GetColumnStringAsIndex(endColumn);
             ValidateRange();
-            _cellItems = new ICellIndex[(_endColumnInt - _startColumnInt) + 1];
+            _cellItems = new Task<ICellIndex>[(_endColumnInt - _startColumnInt) + 1];
         }
 
         public ColumnRange(uint row, uint startColumn, uint endcolumn)
@@ -35,7 +35,7 @@ namespace OpenXMLXLSXImporter.Builders
             _startColumnInt = startColumn;
             _endColumnInt = endcolumn;
             ValidateRange();
-            _cellItems = new ICellIndex[(_endColumnInt - _startColumnInt) + 1];
+            _cellItems = new Task<ICellIndex>[(_endColumnInt - _startColumnInt) + 1];
         }
 
         private void ValidateRange()
@@ -52,19 +52,20 @@ namespace OpenXMLXLSXImporter.Builders
             for(uint i = _startColumnInt;i <= _endColumnInt;i++)
             {
                 string column = ExcelColumnHelper.GetColumnIndexAsString(i);
-                if(indexer.TryGetCell(_row, column, out ICellIndex ci))
+
+                _cellItems[i - _startColumnInt] = indexer.GetCell(_row, column, () =>
                 {
-                    _cellItems[i - _startColumnInt] = ci;
-                }
-                else
-                {
-                    FutureCell item = new FutureCell(_row, column);
-                    await indexer.Add(item);
-                    _cellItems[i - _startColumnInt] = item;
-                }
+                    return new FutureCell(_row, column);
+                });
             }
         }
 
-        protected override IEnumerable<ICellIndex> GetResults() => _cellItems;
+        protected override async IAsyncEnumerable<ICellIndex> GetResults()
+        {
+            foreach(Task<ICellIndex> el in _cellItems)
+            {
+                yield return await el;
+            }
+        }
     }
 }
