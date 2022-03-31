@@ -16,6 +16,11 @@ namespace SSUT
         public const string SHEET1 = "Sheet1";
         public const string SHEET2 = "Sheet2";
         public const string TEST_FILE = "tesxtcel.xlsx";
+
+        public readonly static string[] EXPECTED_COLUMNS = new string[] { "Table Time", "Column1", "Column 2", "Column 3", "Data I want to Reference", "Maths", "Reference Math", "Another Sheet Reference", "Another Sheet Maths", null, null, null, null, null, "2", "0.26" };
+        public readonly static string[] EXPECTED_ROWS = new string[] { null, null, null, "Reference Math", "433.26", "115.52", "104.53" };
+
+
         Stream stream = null;
         IExcelImporter importer = null;
 
@@ -183,14 +188,33 @@ namespace SSUT
             importer.Process(rct).GetAwaiter().GetResult();
         }
 
+        public static void CheckResults(List<string> columnRanges, List<string> rowRanges)
+        {
+            Assert.IsTrue(EXPECTED_COLUMNS.Length == columnRanges.Count);
+            Assert.IsTrue(EXPECTED_ROWS.Length == rowRanges.Count);
+            for (int i = 0; i < EXPECTED_COLUMNS.Length; i++)
+            {
+                Assert.AreEqual(EXPECTED_COLUMNS[i], columnRanges[i]);
+            }
+
+            for (int i = 0; i < EXPECTED_ROWS.Length; i++)
+            {
+                Assert.AreEqual(EXPECTED_ROWS[i], rowRanges[i]);
+            }
+        }
+
         private class FullRangeCellsTest: ISpreadSheetInstructionBuilderManager
         {
             public string Sheet => SHEET1;
             ISpreadSheetInstructionKey _columnRange;
             ISpreadSheetInstructionKey _rowRange;
+
+            public List<string> columnRanges;
+            public List<string> rowRanges;
             public FullRangeCellsTest()
             {
-
+                columnRanges = null;
+                rowRanges = null;
             }
 
             public void LoadConfig(ISpreadSheetInstructionBuilder builder)
@@ -199,13 +223,17 @@ namespace SSUT
                 _rowRange = builder.LoadFullRowRange("G");
             }
 
+            public void CompareResults()
+            {
+
+            }
+
             public async Task ResultsProcessed(ISpreadSheetQueryResults query)
             {
                 IAsyncEnumerable<ICellData> columnRange = query.GetProcessedResults(_columnRange);
                 IAsyncEnumerable<ICellData> rowRange = query.GetProcessedResults(_rowRange);
-
-                List<string> columnRanges = new List<string>();
-                List<string> rowRanges = new List<string>();
+                columnRanges = new List<string>();
+                rowRanges = new List<string>();
 
                 IAsyncEnumerator<ICellData> columnEnumerator = columnRange.GetAsyncEnumerator();
 
@@ -228,6 +256,7 @@ namespace SSUT
         {
             FullRangeCellsTest rc = new FullRangeCellsTest();
             importer.Process(rc).GetAwaiter().GetResult();
+            CheckResults(rc.columnRanges, rc.rowRanges);
         }
     }
 }
