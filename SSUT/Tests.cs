@@ -188,18 +188,18 @@ namespace SSUT
             importer.Process(rct).GetAwaiter().GetResult();
         }
 
-        public static void CheckResults(List<string> columnRanges, List<string> rowRanges)
+        public static void CheckResults(List<ICellData> columnRanges, List<ICellData> rowRanges)
         {
             Assert.IsTrue(EXPECTED_COLUMNS.Length == columnRanges.Count);
             Assert.IsTrue(EXPECTED_ROWS.Length == rowRanges.Count);
             for (int i = 0; i < EXPECTED_COLUMNS.Length; i++)
             {
-                Assert.AreEqual(EXPECTED_COLUMNS[i], columnRanges[i]);
+                Assert.AreEqual(EXPECTED_COLUMNS[i], columnRanges[i].Content());
             }
 
             for (int i = 0; i < EXPECTED_ROWS.Length; i++)
             {
-                Assert.AreEqual(EXPECTED_ROWS[i], rowRanges[i]);
+                Assert.AreEqual(EXPECTED_ROWS[i], rowRanges[i].Content());
             }
         }
 
@@ -209,8 +209,8 @@ namespace SSUT
             ISpreadSheetInstructionKey _columnRange;
             ISpreadSheetInstructionKey _rowRange;
 
-            public List<string> columnRanges;
-            public List<string> rowRanges;
+            public List<ICellData> columnRanges;
+            public List<ICellData> rowRanges;
             public FullRangeCellsTest()
             {
                 columnRanges = null;
@@ -232,31 +232,34 @@ namespace SSUT
             {
                 IAsyncEnumerable<ICellData> columnRange = query.GetProcessedResults(_columnRange);
                 IAsyncEnumerable<ICellData> rowRange = query.GetProcessedResults(_rowRange);
-                columnRanges = new List<string>();
-                rowRanges = new List<string>();
+                columnRanges = new List<ICellData>();
+                rowRanges = new List<ICellData>();
 
                 IAsyncEnumerator<ICellData> columnEnumerator = columnRange.GetAsyncEnumerator();
 
                 while (await columnEnumerator.MoveNextAsync())
                 {
                     ICellData d = columnEnumerator.Current;
-                    columnRanges.Add(d.Content());
+                    columnRanges.Add(d);
                 }
 
                 IAsyncEnumerator<ICellData> RowEnumerator = rowRange.GetAsyncEnumerator();
 
                 while (await RowEnumerator.MoveNextAsync())
                 {
-                    rowRanges.Add(RowEnumerator.Current.Content());
+                    rowRanges.Add(RowEnumerator.Current);
                 }
             }
         }
         [Test]
         public void FullRangeCellTest()
         {
-            FullRangeCellsTest rc = new FullRangeCellsTest();
-            importer.Process(rc).GetAwaiter().GetResult();
-            CheckResults(rc.columnRanges, rc.rowRanges);
+            for(int i = 0; i < 10000;i++)
+            {
+                FullRangeCellsTest rc = new FullRangeCellsTest();
+                importer.Process(rc).GetAwaiter().GetResult();
+                CheckResults(rc.columnRanges, rc.rowRanges);
+            }
         }
     }
 }
