@@ -127,18 +127,26 @@ namespace OpenXMLXLSXImporter.FileAccess
         ICellData IXlsxSheetFile.ProcessedCell(Cell cellElement, ICellIndex index)
         {
             ICellData cellData;
-            bool hasBeenProcessed = ProcessCustomCell(cellElement, out cellData);
-            if (!hasBeenProcessed)//if there is no custom cell then we will use add a simple CellDataContent
+            if(cellElement != null)
             {
-                cellData = new CellDataContent { Text = cellElement.CellValue.Text };
+                bool hasBeenProcessed = ProcessCustomCell(cellElement, out cellData);
+                if (!hasBeenProcessed)//if there is no custom cell then we will use add a simple CellDataContent
+                {
+                    cellData = new CellDataContent { Text = cellElement.CellValue.Text };
+                }
+            }
+            else
+            {
+                cellData = new EmptyCell();
             }
 
-            if (cellData != null&&index != null)
+            if (cellData != null && index != null)
             {
                 //use the same value from the promise
                 cellData.CellColumnIndex = index.CellColumnIndex;
                 cellData.CellRowIndex = index.CellRowIndex;
             }
+
             return cellData;
         }
 

@@ -23,6 +23,7 @@ namespace OpenXMLXLSXImporter.Indexers
 
         protected abstract void InternalAdd(ICellIndex cell);
         protected abstract void InternalSet(ICellIndex cell);
+
         public async Task<ICellIndex> GetCell(uint rowIndex, string cellIndex, Func<ICellProcessingTask> newCell = null)
         {
             ICellIndex result = InternalGet(rowIndex, cellIndex);
@@ -36,8 +37,19 @@ namespace OpenXMLXLSXImporter.Indexers
                         ICellProcessingTask t = newCell();
                         if (t != null)
                         {
+                            if (t is IFutureCell fc)
+                            {
+                                fc.SetIndexer(this);
+                            }
                             this._instructionManager.Queue.Enque(t);
+                            if (t is ICellIndex index)
+                            {
+                                r = index;
+                                this.InternalSet(index);
+                                _instructionManager.Spread(this, index);
+                            }
                         }
+                       
                     }
                     return r;
                 }
@@ -73,12 +85,12 @@ namespace OpenXMLXLSXImporter.Indexers
         //   await _lock.EnqueCell(index);
         //}
 
-        async Task IIndexer.SetCell(ICellData d)
+        public async Task SetCell(ICellIndex index)
         {
             using(await _instructionManager.IndexerLock.LockAsync())
             {
-                InternalSet(d);
-                _instructionManager.Spread(this, d);
+                InternalSet(index);
+                _instructionManager.Spread(this, index);
             }
         }
 

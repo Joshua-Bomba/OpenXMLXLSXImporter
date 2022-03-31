@@ -65,7 +65,6 @@ namespace OpenXMLXLSXImporter.Processing
 
                 while (true)
                 {
-                    cell = null;
                     ICellProcessingTask dequed = await _queue.Take();
 
                     ICellIndex index = null;
@@ -86,7 +85,7 @@ namespace OpenXMLXLSXImporter.Processing
                         desiredRowIndex = mc._row;
                         desiredColumnIndex = null;
                     }
-
+                    cell = null;
                     if (sheetAccess.TryGetRow(desiredRowIndex, out cellEnumerator))
                     {
                         bool cellsLoadedIn = false;
@@ -123,7 +122,7 @@ namespace OpenXMLXLSXImporter.Processing
                         else
                         {
                             //This Cell Does not exist
-                            dequed.Resolve(sheetAccess,cell,index);
+                            dequed.Resolve(sheetAccess,null,index);
                         }
 
                     }

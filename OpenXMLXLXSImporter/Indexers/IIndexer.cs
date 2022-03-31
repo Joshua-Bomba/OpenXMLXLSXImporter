@@ -14,7 +14,7 @@ namespace OpenXMLXLSXImporter.Indexers
 
         Task<ICellIndex> GetCell(uint rowIndex, string cellIndex,Func<ICellProcessingTask> newCell = null);
 
-        Task SetCell(ICellData d);
+        Task SetCell(ICellIndex d);
 
         Task QueueNonIndexedCell(ICellProcessingTask t);
 
