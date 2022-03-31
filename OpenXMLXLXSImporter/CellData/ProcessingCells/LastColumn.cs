@@ -29,7 +29,11 @@ namespace OpenXMLXLSXImporter.CellData
 
         public void Resolve(IXlsxSheetFile file, Cell cellElement, ICellIndex index)
         {
-            _result = file.ProcessedCell(cellElement, index);
+            if(cellElement != null)
+            {
+                _result = file.ProcessedCell(cellElement, index);
+            }
+
             _mre.Set();
         }
 
