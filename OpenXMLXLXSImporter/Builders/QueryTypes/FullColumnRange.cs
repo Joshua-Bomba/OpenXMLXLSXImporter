@@ -26,8 +26,7 @@ namespace OpenXMLXLSXImporter.Builders
         async Task ISpreadSheetInstruction.EnqueCell(IDataStore indexer)
         {
             _indexer = indexer;
-            _lastColumn = new LastColumn(_row);
-            await indexer.QueueNonIndexedCell(_lastColumn);
+            _lastColumn = await _indexer.GetLastColumn(_row);
         }
 
         async IAsyncEnumerable<ICellData> ISpreadSheetInstruction.GetResults()

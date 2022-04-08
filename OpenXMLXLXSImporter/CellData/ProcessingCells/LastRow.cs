@@ -15,10 +15,9 @@ namespace OpenXMLXLSXImporter.CellData
         public string _column;
         private ICellData _result;
         private AsyncManualResetEvent _mre;
-        public LastRow(string column)
+        public LastRow()
         {
             _mre = new AsyncManualResetEvent(false);
-            _column = column;
         }
 
         public async Task<ICellData> GetData()

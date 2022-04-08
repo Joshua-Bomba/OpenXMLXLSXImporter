@@ -13,5 +13,7 @@ namespace OpenXMLXLSXImporter.Indexers
         {
 
         }
+
+        public LastColumn LastColumn { get; set; }
     }
 }

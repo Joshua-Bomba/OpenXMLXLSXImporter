@@ -14,8 +14,8 @@ namespace OpenXMLXLSXImporter.Indexers
 
         Task<ICellIndex> GetCell(uint rowIndex, string cellIndex,Func<ICellProcessingTask> newCell = null);
 
-        Task<ICellIndex> GetLastColumn(uint rowIndex);
-        Task<ICellIndex> GetLastRow(uint columnIndex);
+        Task<LastColumn> GetLastColumn(uint rowIndex);
+        Task<LastRow> GetLastRow();
 
         Task SetCell(ICellIndex d);
         Task SetCells(IEnumerable<ICellIndex> cells);

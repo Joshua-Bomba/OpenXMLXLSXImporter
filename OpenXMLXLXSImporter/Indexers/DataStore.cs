@@ -21,14 +21,40 @@ namespace OpenXMLXLSXImporter.Indexers
             _rowIndexer = new RowIndexer();
             _instructionManager = instructionManager;
         }
-        public async Task<ICellIndex> GetLastColumn(uint rowIndex)
+        public async Task<LastColumn> GetLastColumn(uint rowIndex)
         {
-            throw new NotImplementedException();
+            if(!_rowIndexer.ContainsKey(rowIndex)||_rowIndexer[rowIndex].LastColumn == null)
+            {
+                using (await _accessorLock.LockAsync())
+                {
+                    if(!_rowIndexer.ContainsKey(rowIndex))
+                    {
+                        _rowIndexer[rowIndex] = new ColumnIndexer();
+                    }
+                    if (_rowIndexer[rowIndex].LastColumn == null)
+                    {
+                        _rowIndexer[rowIndex].LastColumn = new LastColumn(rowIndex);
+                        await this.QueueNonIndexedCell(_rowIndexer[rowIndex].LastColumn);
+                    }
+                }
+            }
+            return _rowIndexer[rowIndex].LastColumn;
         }
 
-        public async Task<ICellIndex> GetLastRow(uint columnIndex)
+        public async Task<LastRow> GetLastRow()
         {
-            throw new NotImplementedException();
+            if(_rowIndexer.LastRow == null)
+            {
+                using (await _accessorLock.LockAsync())
+                {
+                    if(_rowIndexer.LastRow == null)
+                    {
+                        _rowIndexer.LastRow = new LastRow();
+                        await this.QueueNonIndexedCell(_rowIndexer.LastRow);
+                    }
+                }
+            }
+            return _rowIndexer.LastRow;
         }
 
         public async Task<ICellIndex> GetCell(uint rowIndex, string cellIndex, Func<ICellProcessingTask> newCell = null)

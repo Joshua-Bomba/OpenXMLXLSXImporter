@@ -13,43 +13,40 @@ namespace OpenXMLXLSXImporter.Indexers
     /// <summary>
     /// this manages access by row then cell
     /// </summary>
-    public class RowIndexer 
+    public class RowIndexer : Dictionary<uint,ColumnIndexer>
     {
-        //protected Dictionary<uint,Dictionary<string, ICellIndex>> _cells;
-        protected Dictionary<uint, ColumnIndexer> _cells;
-        protected LastRow _lastRow;
         public RowIndexer()
         {
-            _cells = new Dictionary<uint, ColumnIndexer>();
-            //_cells = new Dictionary<uint, Dictionary<string, ICellIndex>>();
-            //_lastRow = null;
+            
         }
+
+        public LastRow LastRow { get; set; }
 
         public  ICellIndex Get(uint rowIndex, string cellIndex)
         {
-            if (_cells.ContainsKey(rowIndex) && _cells[rowIndex].ContainsKey(cellIndex))
+            if (base.ContainsKey(rowIndex) && base[rowIndex].ContainsKey(cellIndex))
             {
-                return _cells[rowIndex][cellIndex];
+                return base[rowIndex][cellIndex];
             }
             return null;
         }
 
         public void Set(ICellIndex cellData)
         {
-            if (!_cells.ContainsKey(cellData.CellRowIndex))
+            if (!base.ContainsKey(cellData.CellRowIndex))
             {
-                _cells.Add(cellData.CellRowIndex, new ColumnIndexer());
+                base.Add(cellData.CellRowIndex, new ColumnIndexer());
             }
-            _cells[cellData.CellRowIndex][cellData.CellColumnIndex] = cellData;
+            base[cellData.CellRowIndex][cellData.CellColumnIndex] = cellData;
         }
 
         public void Add(ICellIndex cellData)
         {
-            if (!_cells.ContainsKey(cellData.CellRowIndex))
+            if (!base.ContainsKey(cellData.CellRowIndex))
             {
-                _cells.Add(cellData.CellRowIndex, new ColumnIndexer());
+                base.Add(cellData.CellRowIndex, new ColumnIndexer());
             }
-            _cells[cellData.CellRowIndex].Add(cellData.CellColumnIndex, cellData);
+            base[cellData.CellRowIndex].Add(cellData.CellColumnIndex, cellData);
         }
     }
 }
