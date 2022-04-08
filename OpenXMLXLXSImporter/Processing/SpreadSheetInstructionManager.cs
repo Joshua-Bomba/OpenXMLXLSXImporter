@@ -24,19 +24,24 @@ namespace OpenXMLXLSXImporter.Processing
     /// interate through all the cells for an entire row
     /// interate through all the cells
     /// </summary>
-    public class SpreadSheetInstructionManager
+    /// 
+
+    public interface IQueueAccess
+    {
+        Task QueueNonIndexedCell(ICellProcessingTask t);
+    }
+
+    public class SpreadSheetInstructionManager : IQueueAccess
     {       
-        private DataStore _dataStore;
+        private ConcurrentDataStore _dataStore;
 
 
         private ChunkableBlockingCollection<ICellProcessingTask> _loadQueueManager;
 
-        public IChunkableBlockingCollection<ICellProcessingTask> Queue => _loadQueueManager;
-
         public SpreadSheetInstructionManager(SpreadSheetDequeManager dequeManager)
         {
             _loadQueueManager = new ChunkableBlockingCollection<ICellProcessingTask>(dequeManager);
-            _dataStore = new DataStore(this);
+            _dataStore = new ConcurrentDataStore(this);
         }
 
         public async Task ProcessInstruction(ISpreadSheetInstruction spreadSheetInstruction)
@@ -52,6 +57,11 @@ namespace OpenXMLXLSXImporter.Processing
                 cells[i].InstructionManager = this;
             }
             await _dataStore.SetCells(cells);         
+        }
+
+        public Task QueueNonIndexedCell(ICellProcessingTask t)
+        {
+            throw new NotImplementedException();
         }
     }
 }

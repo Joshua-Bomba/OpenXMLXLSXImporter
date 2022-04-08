@@ -18,10 +18,6 @@ namespace OpenXMLXLSXImporter.Indexers
         Task<LastRow> GetLastRow();
 
         Task SetCell(ICellIndex d);
-        Task SetCells(IEnumerable<ICellIndex> cells);
-
-        Task QueueNonIndexedCell(ICellProcessingTask t);
-
-        
+        Task SetCells(IEnumerable<ICellIndex> cells);        
     }
 }
