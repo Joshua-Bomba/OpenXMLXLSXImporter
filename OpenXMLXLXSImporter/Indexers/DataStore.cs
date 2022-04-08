@@ -46,7 +46,7 @@ namespace OpenXMLXLSXImporter.Indexers
                         {
                             if (t is IFutureCell fc)
                             {
-                                fc.SetIndexer(this);
+                                fc.SetDataStore(this);
                             }
                             this._instructionManager.Queue.Enque(t);
                             if (t is ICellIndex index)
@@ -70,26 +70,14 @@ namespace OpenXMLXLSXImporter.Indexers
             }
         }
 
-        //async Task IIndexer.Add(ICellProcessingTask index)
-        //{
-        //    if(index is IFutureCell fc)
-        //    {
-        //        fc.SetIndexer(this);
-        //    }
-
-        //    if(index is ICellIndex c)
-        //    {
-        //        InternalAdd(c);
-        //        _lock.Spread(this, c);
-        //    }
-
-        //   await _lock.EnqueCell(index);
-        //}
-
         public async Task SetCell(ICellIndex index)
         {
             using(await _accessorLock.LockAsync())
             {
+                if(index is IFutureCell fc)
+                {
+                    fc.SetDataStore(this);
+                }
                 _rowIndexer.Set(index);
             }
         }
@@ -106,7 +94,14 @@ namespace OpenXMLXLSXImporter.Indexers
         {
             using (await _accessorLock.LockAsync())
             {
-
+                foreach(ICellIndex cell in cells)
+                {
+                    if (cell is IFutureCell fc)
+                    {
+                        fc.SetDataStore(this);
+                    }
+                    _rowIndexer.Set(cell);
+                }
             }
         }
     }

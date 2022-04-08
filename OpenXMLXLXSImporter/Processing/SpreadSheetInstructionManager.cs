@@ -31,8 +31,6 @@ namespace OpenXMLXLSXImporter.Processing
 
         private ChunkableBlockingCollection<ICellProcessingTask> _loadQueueManager;
 
-        public AsyncLock IndexerLock => _accessorLock;
-
         public IChunkableBlockingCollection<ICellProcessingTask> Queue => _loadQueueManager;
 
         public SpreadSheetInstructionManager(SpreadSheetDequeManager dequeManager)
@@ -53,44 +51,7 @@ namespace OpenXMLXLSXImporter.Processing
             {
                 cells[i].InstructionManager = this;
             }
-            using(await IndexerLock.LockAsync())
-            {
-                foreach (DeferredCell deferredCell in cells)
-                {
-                    deferredCell.SetIndexer(_dataStore);
-                    _dataStore.SetCell(deferredCell);
-                }
-            }            
+            await _dataStore.SetCells(cells);         
         }
-
-
-
-        //public async Task Add(ICellData cellData)
-        //{
-        //    using(await _lockRow.LockAsync())
-        //    {
-        //        if (!_rows.ContainsKey(cellData.CellRowIndex))
-        //        {
-        //            _rows[cellData.CellRowIndex] = new RowIndexer();
-        //        }
-
-        //        _rows[cellData.CellRowIndex].Add(cellData);
-        //        if(_listeners != null)
-        //        {
-        //            //intresting so this will call each method and won't await till it's finished calling all of them
-        //            //pretty handy neat pattern
-        //            await Task.WhenAll(_listeners.Select(x => x.NotifyAsync(cellData)));
-        //        }
-        //    }
-        //    using (await _lockColumn.LockAsync())
-        //    {
-        //        if (!_columns.ContainsKey(cellData.CellColumnIndex))
-        //        {
-        //            _columns[cellData.CellColumnIndex] = new ColumnIndexer(this);
-        //        }
-
-        //        _columns[cellData.CellColumnIndex].Add(cellData);
-        //    }
-        //}
     }
 }

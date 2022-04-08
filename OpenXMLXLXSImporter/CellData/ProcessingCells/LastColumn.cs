@@ -36,6 +36,6 @@ namespace OpenXMLXLSXImporter.CellData
             _mre.Set();
         }
 
-        public void SetIndexer(IDataStore indexer) { }
+        public void SetDataStore(IDataStore indexer) { }
     }
 }

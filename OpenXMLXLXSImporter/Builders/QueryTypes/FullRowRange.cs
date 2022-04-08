@@ -27,7 +27,7 @@ namespace OpenXMLXLSXImporter.Builders
         {
             _indexer = indexer;
             _lastRow = new LastRow(_column);
-            _lastRow.SetIndexer(_indexer);
+            _lastRow.SetDataStore(_indexer);
             await indexer.QueueNonIndexedCell(_lastRow);
         }
 

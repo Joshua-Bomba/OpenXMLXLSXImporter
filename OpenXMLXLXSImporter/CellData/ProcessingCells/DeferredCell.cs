@@ -67,7 +67,7 @@ namespace OpenXMLXLSXImporter.CellData
             return d.Current;
         }
 
-        public void SetIndexer(IDataStore indexer)
+        public void SetDataStore(IDataStore indexer)
         {
             _indexer = indexer;
         }
