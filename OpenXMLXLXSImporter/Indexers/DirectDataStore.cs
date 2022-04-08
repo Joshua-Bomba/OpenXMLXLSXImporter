@@ -62,21 +62,27 @@ namespace OpenXMLXLSXImporter.Indexers
             ICellIndex r = this.Get(rowIndex, cellIndex);
             if (r == null&&newCell != null)
             {
-                ICellProcessingTask t = newCell();
-                if (t != null)
+                await _queueAccess.LockQueue(x =>
                 {
-                    if (t is IFutureCell fc)
+                    r = this.Get(rowIndex, cellIndex);
+                    if (r == null && newCell != null)
                     {
-                        fc.Updateder(_futureUpdate);
+                        ICellProcessingTask t = newCell();
+                        if (t != null)
+                        {
+                            if (t is IFutureCell fc)
+                            {
+                                fc.Updateder(_futureUpdate);
+                            }
+                            x.Enque(t);
+                            if (t is ICellIndex index)
+                            {
+                                r = index;
+                                this.Set(index);
+                            }
+                        }
                     }
-                    await this._queueAccess.QueueNonIndexedCell(t);
-                    if (t is ICellIndex index)
-                    {
-                        r = index;
-                        this.Set(index);
-                    }
-                }
-
+                });
             }
             return r;
         }

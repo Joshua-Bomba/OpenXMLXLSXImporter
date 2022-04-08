@@ -10,10 +10,7 @@ namespace OpenXMLXLSXImporter.Indexers
 {
     public interface IDataStore
     {
-        Task ProcessInstruction(ISpreadSheetInstruction instruction);
-
         Task<ICellIndex> GetCell(uint rowIndex, string cellIndex,Func<ICellProcessingTask> newCell = null);
-
         Task<LastColumn> GetLastColumn(uint rowIndex);
         Task<LastRow> GetLastRow();
     }
