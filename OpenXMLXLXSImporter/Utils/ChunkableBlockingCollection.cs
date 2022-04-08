@@ -15,11 +15,13 @@ namespace OpenXMLXLSXImporter.Utils
 
         bool ShouldPullAndChunk { get; }
 
+        Task PreQueueProcessing();
         void ProcessQueue(ref Queue<T> items);
+        Task PostQueueProcessing();
 
-        void PostProcessing();
+        Task PostLockProcessing();
 
-        void PreProcessing();
+        Task PreLockProcessing();
     }
 
     public interface IChunkableBlockingCollection<T>
@@ -50,9 +52,10 @@ namespace OpenXMLXLSXImporter.Utils
 
         private async Task Chunk()
         {
-            _chunkBlock.PreProcessing();
+            await _chunkBlock.PreLockProcessing();
             using(await _mutext.LockAsync())
             {
+                await _chunkBlock.PreQueueProcessing();
                 BlockingCollection<T> dumpCollection = _queue;
                 _queue = new BlockingCollection<T>();
                 dumpCollection.CompleteAdding();
@@ -67,10 +70,10 @@ namespace OpenXMLXLSXImporter.Utils
                         _chunkedItems.Enqueue(item);
                     }
                 }
-
                 _chunkBlock.ProcessQueue(ref _chunkedItems);
+                await _chunkBlock.PostQueueProcessing();
             }
-            _chunkBlock.PostProcessing();
+            await _chunkBlock.PostLockProcessing();
             
         }
 
