@@ -13,7 +13,7 @@ namespace OpenXMLXLSXImporter.CellData
     public class FutureCell : IFutureCell, ICellProcessingTask, ICellIndex
     {
         private  ICellData _result;
-        private IIndexer _indexer;
+        private IDataStore _indexer;
         private AsyncManualResetEvent _mre;
         public FutureCell(uint cellRowIndex, string cellColumnIndex)
         {
@@ -37,7 +37,7 @@ namespace OpenXMLXLSXImporter.CellData
             _result = file.ProcessedCell(cellElement, index);
             _mre.Set();
         }
-        public void SetIndexer(IIndexer indexer)
+        public void SetIndexer(IDataStore indexer)
         {
             _indexer = indexer;
         }

@@ -26,50 +26,24 @@ namespace OpenXMLXLSXImporter.Processing
     /// </summary>
     public class SpreadSheetInstructionManager
     {       
-        private RowIndexer _rows;
-        private ColumnIndexer _columns;
-        private AsyncLock _accessorLock = new AsyncLock();
-        private List<IIndexer> _indexers;
+        private DataStore _dataStore;
+
 
         private ChunkableBlockingCollection<ICellProcessingTask> _loadQueueManager;
 
         public AsyncLock IndexerLock => _accessorLock;
 
-        public void AddIndexer(IIndexer a)
-        {
-            _indexers.Add(a);
-        }
-
-        public void Spread(IIndexer a, ICellIndex b)
-        {
-            foreach(IIndexer i in _indexers)
-            {
-                if (i != a)
-                    i.Spread(b);
-            }
-        }
-
         public IChunkableBlockingCollection<ICellProcessingTask> Queue => _loadQueueManager;
 
         public SpreadSheetInstructionManager(SpreadSheetDequeManager dequeManager)
         {
-            _indexers = new List<IIndexer>();
             _loadQueueManager = new ChunkableBlockingCollection<ICellProcessingTask>(dequeManager);
-
-            _rows = new RowIndexer(this);
-            _columns = new ColumnIndexer(this);
+            _dataStore = new DataStore(this);
         }
 
         public async Task ProcessInstruction(ISpreadSheetInstruction spreadSheetInstruction)
         {
-            if (spreadSheetInstruction.IndexedByRow)
-            {
-                await _rows.ProcessInstruction(spreadSheetInstruction);
-            }
-            else
-            {
-                await _columns.ProcessInstruction(spreadSheetInstruction);
-            }
+            await _dataStore.ProcessInstruction(spreadSheetInstruction);
         }
 
         public  async Task AddDeferredCells(IEnumerable<DeferredCell> deferredCells)
@@ -83,8 +57,8 @@ namespace OpenXMLXLSXImporter.Processing
             {
                 foreach (DeferredCell deferredCell in cells)
                 {
-                    deferredCell.SetIndexer(_rows);
-                    this.Spread(null, deferredCell);
+                    deferredCell.SetIndexer(_dataStore);
+                    _dataStore.SetCell(deferredCell);
                 }
             }            
         }

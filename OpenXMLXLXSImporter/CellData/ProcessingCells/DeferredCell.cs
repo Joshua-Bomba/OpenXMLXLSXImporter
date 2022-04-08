@@ -15,7 +15,7 @@ namespace OpenXMLXLSXImporter.CellData
     public class DeferredCell : IFutureCell, ICellIndex
     {
         private Cell _deferredCell;
-        private IIndexer _indexer;
+        private IDataStore _indexer;
         public DeferredCell(uint cellRowIndex, string cellColumnIndex, Cell cell)
         {
             CellRowIndex = cellRowIndex;
@@ -35,7 +35,7 @@ namespace OpenXMLXLSXImporter.CellData
             }
             public bool IndexedByRow => true;
 
-            public async Task EnqueCell(IIndexer indexer)
+            public async Task EnqueCell(IDataStore indexer)
             {
                 await indexer.QueueNonIndexedCell(this);
             }
@@ -67,7 +67,7 @@ namespace OpenXMLXLSXImporter.CellData
             return d.Current;
         }
 
-        public void SetIndexer(IIndexer indexer)
+        public void SetIndexer(IDataStore indexer)
         {
             _indexer = indexer;
         }

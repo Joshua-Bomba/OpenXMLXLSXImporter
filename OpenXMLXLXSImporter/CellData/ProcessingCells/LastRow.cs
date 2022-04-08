@@ -32,7 +32,7 @@ namespace OpenXMLXLSXImporter.CellData
             _mre.Set();
         }
 
-        public void SetIndexer(IIndexer indexer)
+        public void SetIndexer(IDataStore indexer)
         {
 
         }

@@ -33,10 +33,9 @@ namespace OpenXMLXLSXImporter.CellData
             {
                 _result = file.ProcessedCell(cellElement, index);
             }
-
             _mre.Set();
         }
 
-        public void SetIndexer(IIndexer indexer) { }
+        public void SetIndexer(IDataStore indexer) { }
     }
 }

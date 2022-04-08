@@ -13,15 +13,19 @@ namespace OpenXMLXLSXImporter.Indexers
     /// <summary>
     /// this manages access by row then cell
     /// </summary>
-    public class RowIndexer : BaseIndexer
+    public class RowIndexer 
     {
-        protected Dictionary<uint,Dictionary<string, ICellIndex>> _cells;
-        public RowIndexer(SpreadSheetInstructionManager instructionManager) : base(instructionManager)
+        //protected Dictionary<uint,Dictionary<string, ICellIndex>> _cells;
+        protected Dictionary<uint, ColumnIndexer> _cells;
+        protected LastRow _lastRow;
+        public RowIndexer()
         {
-            _cells = new Dictionary<uint, Dictionary<string, ICellIndex>>();
+            _cells = new Dictionary<uint, ColumnIndexer>();
+            //_cells = new Dictionary<uint, Dictionary<string, ICellIndex>>();
+            //_lastRow = null;
         }
 
-        protected override ICellIndex InternalGet(uint rowIndex, string cellIndex)
+        public  ICellIndex Get(uint rowIndex, string cellIndex)
         {
             if (_cells.ContainsKey(rowIndex) && _cells[rowIndex].ContainsKey(cellIndex))
             {
@@ -30,22 +34,22 @@ namespace OpenXMLXLSXImporter.Indexers
             return null;
         }
 
-        protected override void InternalSet(ICellIndex cellData)
+        public void Set(ICellIndex cellData)
         {
             if (!_cells.ContainsKey(cellData.CellRowIndex))
             {
-                _cells.Add(cellData.CellRowIndex, new Dictionary<string, ICellIndex>());
+                _cells.Add(cellData.CellRowIndex, new ColumnIndexer());
             }
             _cells[cellData.CellRowIndex][cellData.CellColumnIndex] = cellData;
         }
 
-        protected override void InternalAdd(ICellIndex cellData)
+        public void Add(ICellIndex cellData)
         {
             if (!_cells.ContainsKey(cellData.CellRowIndex))
             {
-                _cells.Add(cellData.CellRowIndex, new Dictionary<string, ICellIndex>());
+                _cells.Add(cellData.CellRowIndex, new ColumnIndexer());
             }
-            _cells[cellData.CellRowIndex].Add(cellData.CellColumnIndex,cellData);
+            _cells[cellData.CellRowIndex].Add(cellData.CellColumnIndex, cellData);
         }
     }
 }

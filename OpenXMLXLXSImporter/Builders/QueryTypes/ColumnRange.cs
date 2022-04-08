@@ -47,7 +47,7 @@ namespace OpenXMLXLSXImporter.Builders
             }
         }
 
-        protected override async Task EnqueCell(IIndexer indexer)
+        protected override async Task EnqueCell(IDataStore indexer)
         {
             for(uint i = _startColumnInt;i <= _endColumnInt;i++)
             {

@@ -44,13 +44,13 @@ namespace OpenXMLXLSXImporter.Builders
 
         protected abstract IAsyncEnumerable<ICellIndex> GetResults();
 
-        async Task  ISpreadSheetInstruction.EnqueCell(IIndexer indexer)
+        async Task  ISpreadSheetInstruction.EnqueCell(IDataStore indexer)
         {
             await EnqueCell(indexer);
             _mre.Set();
         }
 
 
-        protected abstract Task EnqueCell(IIndexer indexer);
+        protected abstract Task EnqueCell(IDataStore indexer);
     }
 }

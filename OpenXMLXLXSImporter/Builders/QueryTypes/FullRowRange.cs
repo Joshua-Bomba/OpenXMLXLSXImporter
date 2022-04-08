@@ -14,7 +14,7 @@ namespace OpenXMLXLSXImporter.Builders
         private uint _startRow;
         
         private LastRow _lastRow;
-        private IIndexer _indexer;
+        private IDataStore _indexer;
         public FullRowRange(string column, uint startRow)
         {
             _column = column;
@@ -23,7 +23,7 @@ namespace OpenXMLXLSXImporter.Builders
 
         public bool IndexedByRow => true;
 
-        async Task ISpreadSheetInstruction.EnqueCell(IIndexer indexer)
+        async Task ISpreadSheetInstruction.EnqueCell(IDataStore indexer)
         {
             _indexer = indexer;
             _lastRow = new LastRow(_column);

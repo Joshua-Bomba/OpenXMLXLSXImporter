@@ -10,6 +10,6 @@ namespace OpenXMLXLSXImporter.CellData
     public  interface IFutureCell
     {
         Task<ICellData> GetData();
-        void SetIndexer(IIndexer indexer);
+        void SetIndexer(IDataStore indexer);
     }
 }

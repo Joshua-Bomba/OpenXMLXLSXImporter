@@ -10,28 +10,35 @@ using System.Threading.Tasks;
 
 namespace OpenXMLXLSXImporter.Indexers
 {
-    public abstract class BaseIndexer : IIndexer
+    public class DataStore : IDataStore
     {
         protected SpreadSheetInstructionManager _instructionManager;
-        public BaseIndexer(SpreadSheetInstructionManager instructionManager)
+
+        protected RowIndexer _rowIndexer;
+        private AsyncLock _accessorLock = new AsyncLock();
+        public DataStore(SpreadSheetInstructionManager instructionManager)
         {
+            _rowIndexer = new RowIndexer();
             _instructionManager = instructionManager;
-            _instructionManager.AddIndexer(this);
+        }
+        public async Task<ICellIndex> GetLastColumn(uint rowIndex)
+        {
+            throw new NotImplementedException();
         }
 
-        protected abstract ICellIndex InternalGet(uint rowIndex, string cellIndex);
-
-        protected abstract void InternalAdd(ICellIndex cell);
-        protected abstract void InternalSet(ICellIndex cell);
+        public async Task<ICellIndex> GetLastRow(uint columnIndex)
+        {
+            throw new NotImplementedException();
+        }
 
         public async Task<ICellIndex> GetCell(uint rowIndex, string cellIndex, Func<ICellProcessingTask> newCell = null)
         {
-            ICellIndex result = InternalGet(rowIndex, cellIndex);
+            ICellIndex result = _rowIndexer.Get(rowIndex, cellIndex);
             if (result == null&&newCell != null)
             {
                 using (await this._instructionManager.Queue.Mutex.LockAsync())
                 {
-                    ICellIndex r = InternalGet(rowIndex, cellIndex);
+                    ICellIndex r = _rowIndexer.Get(rowIndex, cellIndex);
                     if (r == null)
                     {
                         ICellProcessingTask t = newCell();
@@ -45,8 +52,7 @@ namespace OpenXMLXLSXImporter.Indexers
                             if (t is ICellIndex index)
                             {
                                 r = index;
-                                this.InternalSet(index);
-                                _instructionManager.Spread(this, index);
+                                _rowIndexer.Set(index);
                             }
                         }
                        
@@ -58,15 +64,10 @@ namespace OpenXMLXLSXImporter.Indexers
         }
         public virtual async Task ProcessInstruction(ISpreadSheetInstruction instruction)
         {
-            using (await _instructionManager.IndexerLock.LockAsync())
+            using (await _accessorLock.LockAsync())
             {
                 await instruction.EnqueCell(this);
             }
-        }
-
-        public void Spread(ICellIndex cell)
-        {
-            InternalSet(cell);
         }
 
         //async Task IIndexer.Add(ICellProcessingTask index)
@@ -87,10 +88,9 @@ namespace OpenXMLXLSXImporter.Indexers
 
         public async Task SetCell(ICellIndex index)
         {
-            using(await _instructionManager.IndexerLock.LockAsync())
+            using(await _accessorLock.LockAsync())
             {
-                InternalSet(index);
-                _instructionManager.Spread(this, index);
+                _rowIndexer.Set(index);
             }
         }
 
@@ -99,6 +99,14 @@ namespace OpenXMLXLSXImporter.Indexers
             using (await _instructionManager.Queue.Mutex.LockAsync())
             {
                 _instructionManager.Queue.Enque(t);
+            }
+        }
+
+        public async Task SetCells(IEnumerable<ICellIndex> cells)
+        {
+            using (await _accessorLock.LockAsync())
+            {
+
             }
         }
     }
