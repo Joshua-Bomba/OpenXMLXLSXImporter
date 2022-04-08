@@ -88,6 +88,7 @@ namespace OpenXMLXLSXImporter.Processing
                     }
                     else
                     {
+                         dequed.Resolve(sheetAccess, null, null);
                         continue;
                     }
                     cell = null;
@@ -171,7 +172,7 @@ namespace OpenXMLXLSXImporter.Processing
                     tasks[i] = null;
                     if (task is ICellIndex item)
                     {
-                        if (item.CellRowIndex == desiredRowIndex)
+                        if (item.CellRowIndex == desiredRowIndex&&deferedCells.ContainsKey(item.CellColumnIndex))
                         {
                             fufil.Add(deferedCells[item.CellColumnIndex], task);
                             deferedCells.Remove(item.CellColumnIndex);
@@ -215,7 +216,10 @@ namespace OpenXMLXLSXImporter.Processing
         public async Task PostQueueProcessing()
         {
             //We will add this deferredcell type to the IIndexers since we don't need them at the time
-            await _importer.Instructions.AddDeferredCells(deferedCells.Select(x => new DeferredCell(desiredRowIndex, x.Key, x.Value)));
+            if(deferedCells.Any())
+            {
+                await _importer.Instructions.AddDeferredCells(deferedCells.Select(x => new DeferredCell(desiredRowIndex, x.Key, x.Value)));
+            }
         }
 
         public async Task PostLockProcessing()
