@@ -10,10 +10,10 @@ using System.Threading.Tasks;
 
 namespace OpenXMLXLSXImporter.CellData
 {
-    public class LastColumn : ICellProcessingTask, IFutureCell
+    public class LastColumn : ICellProcessingTask
     {
         public uint _row;
-        private ICellData _result;
+        private ICellIndex _result;
         private AsyncManualResetEvent _mre;
         public LastColumn(uint row)
         {
@@ -21,7 +21,7 @@ namespace OpenXMLXLSXImporter.CellData
             _row = row;
         }
 
-        public async Task<ICellData> GetData()
+        public async Task<ICellIndex> GetIndex()
         {
             await _mre.WaitAsync();
             return _result;
@@ -29,13 +29,8 @@ namespace OpenXMLXLSXImporter.CellData
 
         public void Resolve(IXlsxSheetFile file, Cell cellElement, ICellIndex index)
         {
-            if(cellElement != null)
-            {
-                _result = file.ProcessedCell(cellElement, index);
-            }
+            _result = index;
             _mre.Set();
         }
-
-        public void SetDataStore(IDataStore indexer) { }
     }
 }

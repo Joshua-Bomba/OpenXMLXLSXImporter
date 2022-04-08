@@ -31,23 +31,22 @@ namespace OpenXMLXLSXImporter.Builders
 
         async IAsyncEnumerable<ICellData> ISpreadSheetInstruction.GetResults()
         {
-            ICellData lastCell = await _lastColumn.GetData();
-
-            uint startingColumn = ExcelColumnHelper.GetColumnStringAsIndex(_startingColumn);
-            uint lastColumn = ExcelColumnHelper.GetColumnStringAsIndex(lastCell.CellColumnIndex);
-            lastColumn--;
-            ISpreadSheetInstruction cr = new ColumnRange(lastCell.CellRowIndex, startingColumn, lastColumn);
-            await _indexer.ProcessInstruction(cr);
-
-            IAsyncEnumerable<ICellData> result = cr.GetResults();
-            IAsyncEnumerator<ICellData> resultEnumerator = result.GetAsyncEnumerator();
-
-            while(await resultEnumerator.MoveNextAsync())
+            ICellIndex lastCell = await _lastColumn.GetIndex();
+            if(lastCell != null)
             {
-                yield return resultEnumerator.Current;
-            }
+                uint startingColumn = ExcelColumnHelper.GetColumnStringAsIndex(_startingColumn);
+                uint lastColumn = ExcelColumnHelper.GetColumnStringAsIndex(lastCell.CellColumnIndex);
+                ISpreadSheetInstruction cr = new ColumnRange(lastCell.CellRowIndex, startingColumn, lastColumn);
+                await _indexer.ProcessInstruction(cr);
 
-            yield return await BaseSpreadSheetInstruction.GetCellData(lastCell);
+                IAsyncEnumerable<ICellData> result = cr.GetResults();
+                IAsyncEnumerator<ICellData> resultEnumerator = result.GetAsyncEnumerator();
+
+                while (await resultEnumerator.MoveNextAsync())
+                {
+                    yield return resultEnumerator.Current;
+                }
+            }
         }
     }
 }

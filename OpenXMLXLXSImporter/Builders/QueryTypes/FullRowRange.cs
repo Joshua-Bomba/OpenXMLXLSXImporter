@@ -31,9 +31,9 @@ namespace OpenXMLXLSXImporter.Builders
 
         async IAsyncEnumerable<ICellData> ISpreadSheetInstruction.GetResults()
         {
-            ICellData lastCell = await _lastRow.GetData();
+            ICellIndex lastCell = await _lastRow.GetIndex();
 
-            ISpreadSheetInstruction rr = new RowRange(_column, _startRow, lastCell.CellRowIndex - 1);
+            ISpreadSheetInstruction rr = new RowRange(_column, _startRow, lastCell.CellRowIndex);
             await _indexer.ProcessInstruction(rr);
 
             IAsyncEnumerable<ICellData> result = rr.GetResults();
@@ -43,8 +43,6 @@ namespace OpenXMLXLSXImporter.Builders
             {
                 yield return resultEnumerator.Current;
             }
-            yield return await BaseSpreadSheetInstruction.GetCellData(lastCell);
-
         }
     }
 }

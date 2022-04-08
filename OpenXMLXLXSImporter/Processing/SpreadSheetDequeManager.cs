@@ -67,7 +67,7 @@ namespace OpenXMLXLSXImporter.Processing
                 {
                     ICellProcessingTask dequed = await _queue.Take();
 
-                    ICellIndex index = null;
+                    ICellIndex index;
                     if (dequed is ICellIndex t)
                     {
                         index = t;
@@ -76,14 +76,19 @@ namespace OpenXMLXLSXImporter.Processing
                     }
                     else if(dequed is LastRow m)
                     {
-                        desiredRowIndex = sheetAccess.GetAllRows();
-                        desiredColumnIndex = m._column;
-                        index = new FutureIndex { CellColumnIndex = desiredColumnIndex, CellRowIndex = desiredRowIndex };
+                        index = new FutureIndex { CellRowIndex = sheetAccess.GetAllRows() };
+                        dequed.Resolve(sheetAccess, null, index);
+                        continue;
                     }
                     else if(dequed is LastColumn mc)
                     {
+                        index = null;
                         desiredRowIndex = mc._row;
                         desiredColumnIndex = null;
+                    }
+                    else
+                    {
+                        continue;
                     }
                     cell = null;
                     if (sheetAccess.TryGetRow(desiredRowIndex, out cellEnumerator))
