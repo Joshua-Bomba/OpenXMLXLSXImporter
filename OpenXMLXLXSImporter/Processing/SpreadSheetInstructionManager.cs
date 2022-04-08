@@ -59,9 +59,12 @@ namespace OpenXMLXLSXImporter.Processing
             await _dataStore.SetCells(cells);         
         }
 
-        public Task QueueNonIndexedCell(ICellProcessingTask t)
+        public async Task QueueNonIndexedCell(ICellProcessingTask t)
         {
-            throw new NotImplementedException();
+            using(await _loadQueueManager.Mutex.LockAsync())
+            {
+                _loadQueueManager.Enque(t);
+            }
         }
     }
 }
