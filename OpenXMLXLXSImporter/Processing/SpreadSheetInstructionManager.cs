@@ -18,25 +18,25 @@ using System.Threading.Tasks;
 
 namespace OpenXMLXLSXImporter.Processing
 {
-    /// <summary>
-    /// this will handle accessing the grid and iterateing over the spreadsheetgrid
-    /// interate through all the cells for an entire column
-    /// interate through all the cells for an entire row
-    /// interate through all the cells
-    /// </summary>
-    /// 
-
     public interface IQueueAccess
     {
         Task QueueNonIndexedCell(ICellProcessingTask t);
     }
 
-    public class SpreadSheetInstructionManager : IQueueAccess
+    public interface ISpreadSheetInstructionManager
+    {
+        Task AddDeferredCells(IEnumerable<DeferredCell> deferredCells);
+        Task ProcessInstruction(ISpreadSheetInstruction spreadSheetInstruction);
+        IQueueAccess Queue { get; }//Did it like this so that way I can possbily replace IQueueAccess with another implementation
+    }
+
+    public class SpreadSheetInstructionManager : IQueueAccess, ISpreadSheetInstructionManager
     {       
         private ConcurrentDataStore _dataStore;
 
-
         private ChunkableBlockingCollection<ICellProcessingTask> _loadQueueManager;
+
+        public IQueueAccess Queue => this;
 
         public SpreadSheetInstructionManager(SpreadSheetDequeManager dequeManager)
         {

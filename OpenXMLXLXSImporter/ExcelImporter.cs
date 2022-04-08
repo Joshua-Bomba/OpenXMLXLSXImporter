@@ -29,13 +29,14 @@ namespace OpenXMLXLSXImporter
         private XlsxDocumentFile _streamSheetFile;
         private SpreadSheetDequeManager dequeManager;
         private SpreadSheetInstructionManager ssim;
-        public static IExcelImporter CreateExcelImporter(Stream stream) => new ExcelImporter(stream);
+
         public ExcelImporter(Stream stream)
         {
             _streamSheetFile = new XlsxDocumentFile(stream);
         }
 
-        public Task AddDeferredCells(IEnumerable<DeferredCell> c) => ssim.AddDeferredCells(c);
+        public ISpreadSheetInstructionManager Instructions { get; set; }
+
         public Task Process(ISpreadSheetInstructionBuilderManager sheet)
         {
             return Task.Run(async() =>
