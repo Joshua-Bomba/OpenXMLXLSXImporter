@@ -146,19 +146,24 @@ namespace OpenXMLXLSXImporter.Processing
 
         public bool ShouldPullAndChunk => deferedCells?.Any()??false;
 
-        public void PreProcessing()
+        public async Task PreLockProcessing()
         {
             ss = new Queue<ICellProcessingTask>();
             fufil = new Dictionary<Cell, ICellProcessingTask>();
         }
 
+        public async Task PreQueueProcessing()
+        {
+            
+        }
+
         public void ProcessQueue(ref Queue<ICellProcessingTask> items)
-        {           
-            IOrderedEnumerable<IGrouping<uint,ICellIndex>> g = items.Select(x=>x as ICellIndex).Where(x=>x != null).GroupBy(x => x.CellRowIndex).OrderBy(x => x.Key);
-            foreach(IGrouping<uint, ICellIndex> row in g)
+        {
+            IOrderedEnumerable<IGrouping<uint, ICellIndex>> g = items.Select(x => x as ICellIndex).Where(x => x != null).GroupBy(x => x.CellRowIndex).OrderBy(x => x.Key);
+            foreach (IGrouping<uint, ICellIndex> row in g)
             {
                 IOrderedEnumerable<ICellIndex> currentRow = row.OrderBy(x => ExcelColumnHelper.GetColumnStringAsIndex(x.CellColumnIndex));
-                foreach(ICellIndex item in currentRow)
+                foreach (ICellIndex item in currentRow)
                 {
                     if (item.CellRowIndex == desiredRowIndex && deferedCells.ContainsKey(item.CellColumnIndex))
                     {
@@ -178,18 +183,20 @@ namespace OpenXMLXLSXImporter.Processing
             }
 
             items = ss;
-
-            //We will add this deferredcell type to the IIndexers since we don't need them at the time
-            _importer.AddDeferredCells(deferedCells.Select(x => new DeferredCell(desiredRowIndex, x.Key, x.Value)));
-            _importer.Instructions.AddDeferredCells(deferedCells.Select(x => new DeferredCell(desiredRowIndex, x.Key, x.Value)));
         }
 
-        public void PostProcessing()
+        public async Task PostQueueProcessing()
+        {
+            //We will add this deferredcell type to the IIndexers since we don't need them at the time
+            await _importer.AddDeferredCells(deferedCells.Select(x => new DeferredCell(desiredRowIndex, x.Key, x.Value)));
+        }
+
+        public async Task PostLockProcessing()
         {
             deferedCells = null;
             ss = null;
             //fufill any cells that were enqued during the processing of the last add
-            foreach(KeyValuePair<Cell,ICellProcessingTask> kv in fufil)
+            foreach (KeyValuePair<Cell, ICellProcessingTask> kv in fufil)
             {
                 sheetAccess.ProcessedCell(kv.Key, kv.Value as ICellIndex);
             }
