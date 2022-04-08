@@ -1,5 +1,6 @@
 ﻿using OpenXMLXLSXImporter.CellData;
 using OpenXMLXLSXImporter.Indexers;
+using OpenXMLXLSXImporter.Processing;
 using OpenXMLXLSXImporter.Utils;
 using System;
 using System.Collections.Generic;
@@ -14,17 +15,21 @@ namespace OpenXMLXLSXImporter.Builders
         private uint _row;
         private string _startingColumn;
         private LastColumn _lastColumn;
-        private IDataStore _indexer;
+        private ISpreadSheetInstructionManager _manger;
         public FullColumnRange(uint row,string startingColumn = "A")
         {
             _row = row;
             _startingColumn = startingColumn;
         }
 
+        public void AttachSpreadSheetInstructionManager(ISpreadSheetInstructionManager spreadSheetInstructionManager)
+        {
+            _manger = spreadSheetInstructionManager;
+        }
+
         async Task ISpreadSheetInstruction.EnqueCell(IDataStore indexer)
         {
-            _indexer = indexer;
-            _lastColumn = await _indexer.GetLastColumn(_row);
+            _lastColumn = await indexer.GetLastColumn(_row);
         }
 
         async IAsyncEnumerable<ICellData> ISpreadSheetInstruction.GetResults()
@@ -35,7 +40,7 @@ namespace OpenXMLXLSXImporter.Builders
                 uint startingColumn = ExcelColumnHelper.GetColumnStringAsIndex(_startingColumn);
                 uint lastColumn = ExcelColumnHelper.GetColumnStringAsIndex(lastCell.CellColumnIndex);
                 ISpreadSheetInstruction cr = new ColumnRange(lastCell.CellRowIndex, startingColumn, lastColumn);
-                await _indexer.ProcessInstruction(cr);
+                await _manger.ProcessInstruction(cr);
 
                 IAsyncEnumerable<ICellData> result = cr.GetResults();
                 IAsyncEnumerator<ICellData> resultEnumerator = result.GetAsyncEnumerator();

@@ -1,5 +1,6 @@
 ﻿using OpenXMLXLSXImporter.CellData;
 using OpenXMLXLSXImporter.Indexers;
+using OpenXMLXLSXImporter.Processing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +11,8 @@ namespace OpenXMLXLSXImporter.Builders
 {
     public interface ISpreadSheetInstruction
     {
+        void AttachSpreadSheetInstructionManager(ISpreadSheetInstructionManager spreadSheetInstructionManager);
+
         Task EnqueCell(IDataStore indexer);
 
         IAsyncEnumerable<ICellData> GetResults();
