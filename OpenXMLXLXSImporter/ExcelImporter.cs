@@ -35,7 +35,7 @@ namespace OpenXMLXLSXImporter
             _streamSheetFile = new XlsxDocumentFile(stream);
         }
 
-        public ISpreadSheetInstructionManager Instructions { get; set; }
+        public ISpreadSheetInstructionManager Instructions => ssim;
 
         public Task Process(ISpreadSheetInstructionBuilderManager sheet)
         {

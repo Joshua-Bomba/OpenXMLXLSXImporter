@@ -159,30 +159,57 @@ namespace OpenXMLXLSXImporter.Processing
 
         public void ProcessQueue(ref Queue<ICellProcessingTask> items)
         {
-            IOrderedEnumerable<IGrouping<uint, ICellIndex>> g = items.Select(x => x as ICellIndex).Where(x => x != null).GroupBy(x => x.CellRowIndex).OrderBy(x => x.Key);
-            foreach (IGrouping<uint, ICellIndex> row in g)
+            try
             {
-                IOrderedEnumerable<ICellIndex> currentRow = row.OrderBy(x => ExcelColumnHelper.GetColumnStringAsIndex(x.CellColumnIndex));
-                foreach (ICellIndex item in currentRow)
+                ICellProcessingTask[] tasks = items.ToArray();
+                List<ICellIndex> indexes = new List<ICellIndex>(tasks.Length);
+                int reuse = 0;
+                ICellProcessingTask task;
+                for (int i = 0; i < tasks.Length; i++)
                 {
-                    if (item.CellRowIndex == desiredRowIndex && deferedCells.ContainsKey(item.CellColumnIndex))
+                    task = tasks[i];
+                    tasks[i] = null;
+                    if (task is ICellIndex item)
                     {
-                        fufil.Add(deferedCells[item.CellColumnIndex], item as ICellProcessingTask);
-                        deferedCells.Remove(item.CellColumnIndex);
+                        if (item.CellRowIndex == desiredRowIndex)
+                        {
+                            fufil.Add(deferedCells[item.CellColumnIndex], task);
+                            deferedCells.Remove(item.CellColumnIndex);
+                        }
+                        else
+                        {
+                            indexes.Add(item);
+                        }
                     }
                     else
+                    {
+                        tasks[reuse] = task;
+                        reuse++;
+                    }
+                }
+
+                IOrderedEnumerable<IGrouping<uint, ICellIndex>> g = indexes.GroupBy(x => x.CellRowIndex).OrderBy(x => x.Key);
+                foreach (IGrouping<uint, ICellIndex> row in g)
+                {
+                    IOrderedEnumerable<ICellIndex> currentRow = row.OrderBy(x => ExcelColumnHelper.GetColumnStringAsIndex(x.CellColumnIndex));
+                    foreach (ICellIndex item in currentRow)
                     {
                         ss.Enqueue(item as ICellProcessingTask);
                     }
                 }
-            }
 
-            foreach (ICellProcessingTask t in items.Where(x => x as ICellIndex == null))
+                for (int i = 0; i < reuse; i++)
+                {
+                    ss.Enqueue(tasks[i]);
+                }
+
+                items = ss;
+            }
+            catch (Exception ex)
             {
-                ss.Enqueue(t);
-            }
 
-            items = ss;
+            }
+           
         }
 
         public async Task PostQueueProcessing()
