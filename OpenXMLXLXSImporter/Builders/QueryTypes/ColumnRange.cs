@@ -18,7 +18,6 @@ namespace OpenXMLXLSXImporter.Builders
 
         private Task<ICellIndex>[] _cellItems;
 
-        public override bool IndexedByRow => false;
 
         public ColumnRange(uint row, string startColumn, string endColumn)
         {

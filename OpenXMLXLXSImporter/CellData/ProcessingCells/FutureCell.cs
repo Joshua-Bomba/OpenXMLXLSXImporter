@@ -13,7 +13,7 @@ namespace OpenXMLXLSXImporter.CellData
     public class FutureCell : IFutureCell, ICellProcessingTask, ICellIndex
     {
         private  ICellData _result;
-        private IDataStore _indexer;
+        private IFutureUpdate _updater;
         private AsyncManualResetEvent _mre;
         public FutureCell(uint cellRowIndex, string cellColumnIndex)
         {
@@ -28,18 +28,18 @@ namespace OpenXMLXLSXImporter.CellData
         public async Task<ICellData> GetData()
         {
             await _mre.WaitAsync();
-            await _indexer.SetCell(_result);
             return _result;
+        }
+        public void Updateder(IFutureUpdate updater)
+        {
+            _updater = updater;
         }
 
         public void Resolve(IXlsxSheetFile file, Cell cellElement, ICellIndex index)
         {
             _result = file.ProcessedCell(cellElement, index);
+            _updater?.Update(_result);
             _mre.Set();
-        }
-        public void SetDataStore(IDataStore indexer)
-        {
-            _indexer = indexer;
         }
     }
 }

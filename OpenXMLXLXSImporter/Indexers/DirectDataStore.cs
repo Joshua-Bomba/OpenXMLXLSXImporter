@@ -15,9 +15,11 @@ namespace OpenXMLXLSXImporter.Indexers
     public class DirectDataStore : Dictionary<uint,ColumnIndexer>, IDataStore
     {
         private IQueueAccess _queueAccess;
-        public DirectDataStore(IQueueAccess queueAccess)
+        private IFutureUpdate _futureUpdate;
+        public DirectDataStore(IQueueAccess queueAccess, IFutureUpdate updater)
         {
             _queueAccess = queueAccess;
+            _futureUpdate = updater;
         }
 
         public LastRow LastRow { get; set; }
@@ -65,7 +67,7 @@ namespace OpenXMLXLSXImporter.Indexers
                 {
                     if (t is IFutureCell fc)
                     {
-                        fc.SetDataStore(this);
+                        fc.Updateder(_futureUpdate);
                     }
                     await this._queueAccess.QueueNonIndexedCell(t);
                     if (t is ICellIndex index)
@@ -101,27 +103,6 @@ namespace OpenXMLXLSXImporter.Indexers
                 await this._queueAccess.QueueNonIndexedCell(this.LastRow);
             }
             return this.LastRow;
-        }
-
-        public async Task SetCell(ICellIndex index)
-        {
-            if (index is IFutureCell fc)
-            {
-                fc.SetDataStore(this);
-            }
-            this.Set(index);
-        }
-
-        public async Task SetCells(IEnumerable<ICellIndex> cells)
-        {
-            foreach (ICellIndex cell in cells)
-            {
-                if (cell is IFutureCell fc)
-                {
-                    fc.SetDataStore(this);
-                }
-                this.Set(cell);
-            }
         }
     }
 }

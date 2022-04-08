@@ -11,17 +11,13 @@ using System.Threading.Tasks;
 
 namespace OpenXMLXLSXImporter.Indexers
 {
-
-
-
-
-    public class ConcurrentDataStore : IDataStore
+    public class ConcurrentDataStore : IDataStore, IFutureUpdate
     {
         protected DirectDataStore _rowIndexer;
         private AsyncLock _accessorLock = new AsyncLock();
         public ConcurrentDataStore(IQueueAccess queue)
         {
-            _rowIndexer = new DirectDataStore(queue);
+            _rowIndexer = new DirectDataStore(queue,this);
         }
         public async Task<LastColumn> GetLastColumn(uint rowIndex)
         {
@@ -70,20 +66,50 @@ namespace OpenXMLXLSXImporter.Indexers
             }
         }
 
-        public async Task SetCell(ICellIndex index)
+        //public async Task SetCell(ICellIndex index)
+        //{
+        //    using(await _accessorLock.LockAsync())
+        //    {
+        //        await this._rowIndexer.SetCell(index);
+        //    }
+        //}
+
+        //public async Task SetCells(IEnumerable<ICellIndex> cells)
+        //{
+        //    using (await _accessorLock.LockAsync())
+        //    {
+        //        await this._rowIndexer.SetCells(cells);
+        //    }
+        //}
+        //public async Task SetCell(ICellIndex index)
+        //{
+        //    if (index is IFutureCell fc)
+        //    {
+        //        fc.SetDataStore(this);
+        //    }
+        //    this.Set(index);
+        //}
+
+        //public async Task SetCells(IEnumerable<ICellIndex> cells)
+        //{
+        //    foreach (ICellIndex cell in cells)
+        //    {
+        //        if (cell is IFutureCell fc)
+        //        {
+        //            fc.SetDataStore(this);
+        //        }
+        //        this.Set(cell);
+        //    }
+        //}
+
+        void IFutureUpdate.Update(ICellIndex cell)
         {
-            using(await _accessorLock.LockAsync())
-            {
-                await this._rowIndexer.SetCell(index);
-            }
+            throw new NotImplementedException();
         }
 
-        public async Task SetCells(IEnumerable<ICellIndex> cells)
+        void IFutureUpdate.Update(IEnumerable<ICellIndex> cells)
         {
-            using (await _accessorLock.LockAsync())
-            {
-                await this._rowIndexer.SetCells(cells);
-            }
+            throw new NotImplementedException();
         }
     }
 }

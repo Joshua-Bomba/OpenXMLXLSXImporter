@@ -14,8 +14,6 @@ namespace OpenXMLXLSXImporter.Builders
         private string _cell;
         private Task<ICellIndex> _cellItem;
 
-        public override bool IndexedByRow => true;
-
         public SingleCell(uint row, string cellIndex) : base()
         {
             _row = row;

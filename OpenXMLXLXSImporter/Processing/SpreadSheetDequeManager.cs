@@ -188,7 +188,7 @@ namespace OpenXMLXLSXImporter.Processing
         public async Task PostQueueProcessing()
         {
             //We will add this deferredcell type to the IIndexers since we don't need them at the time
-            await _importer.AddDeferredCells(deferedCells.Select(x => new DeferredCell(desiredRowIndex, x.Key, x.Value)));
+            await _importer.Instructions.AddDeferredCells(deferedCells.Select(x => new DeferredCell(desiredRowIndex, x.Key, x.Value)));
         }
 
         public async Task PostLockProcessing()

@@ -21,8 +21,6 @@ namespace OpenXMLXLSXImporter.Builders
             _startingColumn = startingColumn;
         }
 
-        public bool IndexedByRow => false;
-
         async Task ISpreadSheetInstruction.EnqueCell(IDataStore indexer)
         {
             _indexer = indexer;
