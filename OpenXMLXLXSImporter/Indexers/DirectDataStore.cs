@@ -104,5 +104,26 @@ namespace OpenXMLXLSXImporter.Indexers
             }
             return this.LastRow;
         }
+
+        public async Task SetCell(ICellIndex index)
+        {
+            if (index is IFutureCell fc)
+            {
+                fc.Updateder(_futureUpdate);
+            }
+            this.Set(index);
+        }
+
+        public async Task SetCells(IEnumerable<ICellIndex> cells)
+        {
+            foreach (ICellIndex cell in cells)
+            {
+                if (cell is IFutureCell fc)
+                {
+                    fc.Updateder(_futureUpdate);
+                }
+                this.Set(cell);
+            }
+        }
     }
 }

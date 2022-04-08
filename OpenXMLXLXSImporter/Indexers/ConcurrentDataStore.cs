@@ -66,50 +66,25 @@ namespace OpenXMLXLSXImporter.Indexers
             }
         }
 
-        //public async Task SetCell(ICellIndex index)
-        //{
-        //    using(await _accessorLock.LockAsync())
-        //    {
-        //        await this._rowIndexer.SetCell(index);
-        //    }
-        //}
-
-        //public async Task SetCells(IEnumerable<ICellIndex> cells)
-        //{
-        //    using (await _accessorLock.LockAsync())
-        //    {
-        //        await this._rowIndexer.SetCells(cells);
-        //    }
-        //}
-        //public async Task SetCell(ICellIndex index)
-        //{
-        //    if (index is IFutureCell fc)
-        //    {
-        //        fc.SetDataStore(this);
-        //    }
-        //    this.Set(index);
-        //}
-
-        //public async Task SetCells(IEnumerable<ICellIndex> cells)
-        //{
-        //    foreach (ICellIndex cell in cells)
-        //    {
-        //        if (cell is IFutureCell fc)
-        //        {
-        //            fc.SetDataStore(this);
-        //        }
-        //        this.Set(cell);
-        //    }
-        //}
-
-        void IFutureUpdate.Update(ICellIndex cell)
+        public async Task SetCell(ICellIndex index)
         {
-            throw new NotImplementedException();
+            using (await _accessorLock.LockAsync())
+            {
+                await this._rowIndexer.SetCell(index);
+            }
         }
 
-        void IFutureUpdate.Update(IEnumerable<ICellIndex> cells)
+        public async Task SetCells(IEnumerable<ICellIndex> cells)
         {
-            throw new NotImplementedException();
+            using (await _accessorLock.LockAsync())
+            {
+                await this._rowIndexer.SetCells(cells);
+            }
         }
+
+        //we don't want to wait for this, we will update it when we get around to it
+        void IFutureUpdate.Update(ICellIndex cell) => Task.Run(async () => await SetCell(cell));
+
+        void IFutureUpdate.Update(IEnumerable<ICellIndex> cells) => Task.Run(async() => await SetCells(cells));
     }
 }
