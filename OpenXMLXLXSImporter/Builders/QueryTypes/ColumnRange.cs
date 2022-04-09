@@ -52,10 +52,7 @@ namespace OpenXMLXLSXImporter.Builders
             {
                 string column = ExcelColumnHelper.GetColumnIndexAsString(i);
 
-                _cellItems[i - _startColumnInt] = indexer.GetCell(_row, column, () =>
-                {
-                    return new FutureCell(_row, column);
-                });
+                _cellItems[i - _startColumnInt] = indexer.GetCell(_row, column);
             }
         }
 

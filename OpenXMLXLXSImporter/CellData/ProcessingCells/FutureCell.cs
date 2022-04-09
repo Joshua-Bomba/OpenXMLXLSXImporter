@@ -15,11 +15,13 @@ namespace OpenXMLXLSXImporter.CellData
         private  ICellData _result;
         private IFutureUpdate _updater;
         private AsyncManualResetEvent _mre;
-        public FutureCell(uint cellRowIndex, string cellColumnIndex)
+        public FutureCell(uint cellRowIndex, string cellColumnIndex, IFutureUpdate updater)
         {
             CellRowIndex = cellRowIndex;
             CellColumnIndex = cellColumnIndex;
             _mre = new AsyncManualResetEvent(false);
+            _updater = updater;
+
         }
         public string CellColumnIndex { get; set; }
 
@@ -29,10 +31,6 @@ namespace OpenXMLXLSXImporter.CellData
         {
             await _mre.WaitAsync();
             return _result;
-        }
-        public void Updateder(IFutureUpdate updater)
-        {
-            _updater = updater;
         }
 
         public void Resolve(IXlsxSheetFile file, Cell cellElement, ICellIndex index)

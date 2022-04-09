@@ -44,14 +44,14 @@ namespace OpenXMLXLSXImporter.Indexers
         }
 
 
-        public async Task<ICellIndex> GetCell(uint rowIndex, string cellIndex, Func<ICellProcessingTask> newCell = null)
+        public async Task<ICellIndex> GetCell(uint rowIndex, string cellIndex)
         {
             ICellIndex result = _rowIndexer.Get(rowIndex, cellIndex);
-            if (result == null&&newCell != null)
+            if (result == null)
             {
                 using (await this._accessorLock.LockAsync())
                 {
-                    return await this._rowIndexer.GetCell(rowIndex, cellIndex, newCell);
+                    return await this._rowIndexer.GetCell(rowIndex, cellIndex);
                 }
             }
             return result;

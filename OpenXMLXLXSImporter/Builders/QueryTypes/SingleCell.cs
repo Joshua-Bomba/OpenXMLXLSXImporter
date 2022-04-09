@@ -28,10 +28,7 @@ namespace OpenXMLXLSXImporter.Builders
 
         protected override async Task EnqueCell(IDataStore indexer)
         {
-            _cellItem = indexer.GetCell(_row, _cell, () =>
-            {
-                return new FutureCell(_row, _cell);
-            });
+            _cellItem = indexer.GetCell(_row, _cell);
         }
     }
 }

@@ -57,23 +57,19 @@ namespace OpenXMLXLSXImporter.Indexers
             await instruction.EnqueCell(this);
         }
 
-        public async Task<ICellIndex> GetCell(uint rowIndex, string cellIndex, Func<ICellProcessingTask> newCell = null)
+        public async Task<ICellIndex> GetCell(uint rowIndex, string cellIndex)
         {
             ICellIndex r = this.Get(rowIndex, cellIndex);
-            if (r == null&&newCell != null)
+            if (r == null)
             {
                 await _queueAccess.LockQueue(x =>
                 {
                     r = this.Get(rowIndex, cellIndex);
-                    if (r == null && newCell != null)
+                    if (r == null)
                     {
-                        ICellProcessingTask t = newCell();
+                        ICellProcessingTask t = new FutureCell(rowIndex, cellIndex,_futureUpdate);
                         if (t != null)
                         {
-                            if (t is IFutureCell fc)
-                            {
-                                fc.Updateder(_futureUpdate);
-                            }
                             x.Enque(t);
                             if (t is ICellIndex index)
                             {
@@ -113,10 +109,6 @@ namespace OpenXMLXLSXImporter.Indexers
 
         public async Task SetCell(ICellIndex index)
         {
-            if (index is IFutureCell fc)
-            {
-                fc.Updateder(_futureUpdate);
-            }
             this.Set(index);
         }
 
@@ -124,10 +116,6 @@ namespace OpenXMLXLSXImporter.Indexers
         {
             foreach (ICellIndex cell in cells)
             {
-                if (cell is IFutureCell fc)
-                {
-                    fc.Updateder(_futureUpdate);
-                }
                 this.Set(cell);
             }
         }
