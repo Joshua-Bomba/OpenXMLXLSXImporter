@@ -86,7 +86,7 @@ namespace OpenXMLXLSXImporter.Indexers
             if (this[rowIndex].LastColumn == null)
             {
                 this[rowIndex].LastColumn = new LastColumn(rowIndex);
-                await this._queueAccess.QueueNonIndexedCell(this[rowIndex].LastColumn);
+                this._queueAccess.QueueNonIndexedCell(this[rowIndex].LastColumn);
             }
             return this[rowIndex].LastColumn;
         }
@@ -96,7 +96,7 @@ namespace OpenXMLXLSXImporter.Indexers
             if (this.LastRow == null)
             {
                 this.LastRow = new LastRow();
-                await this._queueAccess.QueueNonIndexedCell(this.LastRow);
+                this._queueAccess.QueueNonIndexedCell(this.LastRow);
             }
             return this.LastRow;
         }

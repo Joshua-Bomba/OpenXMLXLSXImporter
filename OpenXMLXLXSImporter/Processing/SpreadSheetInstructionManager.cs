@@ -20,7 +20,7 @@ namespace OpenXMLXLSXImporter.Processing
 {
     public interface IQueueAccess
     {
-        Task QueueNonIndexedCell(ICellProcessingTask t);
+        void QueueNonIndexedCell(ICellProcessingTask t);
 
         Task LockQueue(Action<IChunkableBlockingCollection<ICellProcessingTask>> lockedQueue);
     }
@@ -102,13 +102,16 @@ namespace OpenXMLXLSXImporter.Processing
             await _dataStore.SetCells(cells);         
         }
 
-        public async Task QueueNonIndexedCell(ICellProcessingTask t)
+        public void QueueNonIndexedCell(ICellProcessingTask t)
         {
-            await _queueInit.WaitAsync();
-            using (await _loadQueueManager.Mutex.LockAsync())
+            Task.Run(async() =>
             {
-                _loadQueueManager.Enque(t);
-            }
+                await _queueInit.WaitAsync();
+                using (await _loadQueueManager.Mutex.LockAsync())
+                {
+                    _loadQueueManager.Enque(t);
+                }
+            });
         }
 
         public async Task LockQueue(Action<IChunkableBlockingCollection<ICellProcessingTask>> lockedQueue)
