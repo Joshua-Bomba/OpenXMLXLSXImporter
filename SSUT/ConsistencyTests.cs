@@ -15,28 +15,19 @@ namespace SSUT
     public  class ConsistencyTests : BaseTest
     {
         public const int LOOPS = 10000;
-        [Test]
-        public void FullRangeCellTestLoadTheSameDataAgain()
+
+        private void LoopUsingSameDataSet(BaseTest context,Action r)
         {
-            SpreadSheetInstructionBuilderTest b = new SpreadSheetInstructionBuilderTest();
-            b.importer = this.importer;
+            context.importer = this.importer;
             Parallel.For(0, LOOPS, new ParallelOptions { }, (i) =>
             {
-                try
-                {
-                    b.FullRangeCellTest();
-                }
-                catch
-                {
-
-                }
+                r();
             });
         }
 
-        [Test]
-        public void FullRangeCellTestBurnInTest()
+
+        private void LoopUsingNewDataSet<TProp>(Action<TProp> r) where TProp : BaseTest, new()
         {
-            SpreadSheetInstructionBuilderTest b = new SpreadSheetInstructionBuilderTest();
             byte[] data;
             using (MemoryStream baseStream = new MemoryStream())
             {
@@ -46,26 +37,40 @@ namespace SSUT
                 }
                 data = baseStream.ToArray();
             }
-
             Parallel.For(0, LOOPS, new ParallelOptions { MaxDegreeOfParallelism = 2 }, (i) =>
             {
                 using (MemoryStream ms = new MemoryStream(data, false))
                 {
                     using (IExcelImporter importer = new ExcelImporter(ms))
                     {
-                        try
-                        {
-                            b.importer = importer;
-                            b.FullRangeCellTest();
-                        }
-                        catch
-                        {
-
-                        }
+                        TProp context = new TProp();
+                        context.importer = importer;
+                        r(context);
 
                     }
                 }
             });
+
+        }
+
+
+
+        [Test]
+        public void FullRangeCellTestLoadTheSameDataAgain()
+        {
+            SpreadSheetInstructionBuilderTest b = new SpreadSheetInstructionBuilderTest();
+            LoopUsingSameDataSet(b, b.FullRangeCellTest);
+        }
+            
+
+        [Test]
+        public void FullRangeCellTestBurnInTest()
+        {
+            LoopUsingNewDataSet<SpreadSheetInstructionBuilderTest>(x => x.FullRangeCellTest());
+        }
+        [Test]
+        public void MultipleSheetsBundlerTestBurnInTest()
+        {
 
         }
     }
