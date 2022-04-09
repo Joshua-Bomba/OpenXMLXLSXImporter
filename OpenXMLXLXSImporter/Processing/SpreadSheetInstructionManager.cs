@@ -58,6 +58,7 @@ namespace OpenXMLXLSXImporter.Processing
             for(int i =0;i < cells.Length;i++)
             {
                 cells[i].InstructionManager = this;
+                cells[i].Updater = _dataStore;
             }
             await _dataStore.SetCells(cells);         
         }
