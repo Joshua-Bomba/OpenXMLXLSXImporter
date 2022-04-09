@@ -71,7 +71,7 @@ namespace SSUT
         [Test]
         public void MultipleSheetsBundlerTestBurnInTest()
         {
-
+            LoopUsingNewDataSet<ConcurrencyTests>(x => x.MultipleSheetsBundlerTest());
         }
     }
 }
