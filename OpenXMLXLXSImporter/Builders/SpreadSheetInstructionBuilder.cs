@@ -61,7 +61,7 @@ namespace OpenXMLXLSXImporter.Builders
             }
         }
 
-        async IAsyncEnumerable<ICellIndex> ISpreadSheetInstructionRunner.LoadCustomInstruction(ISpreadSheetInstruction instruction)
+        async IAsyncEnumerable<ICellData> ISpreadSheetInstructionRunner.LoadCustomInstruction(ISpreadSheetInstruction instruction)
         {
             await ssim.ProcessInstruction(instruction);
             IAsyncEnumerator<ICellData> en =  instruction.GetResults().GetAsyncEnumerator();
@@ -78,16 +78,16 @@ namespace OpenXMLXLSXImporter.Builders
             return await instr.GetResults().FirstOrDefaultAsync();
         }
 
-        IAsyncEnumerable<ICellIndex> ISpreadSheetInstructionRunner.LoadColumnRange(uint row, string startColumn, string endColumn)
+        IAsyncEnumerable<ICellData> ISpreadSheetInstructionRunner.LoadColumnRange(uint row, string startColumn, string endColumn)
             => Runner.LoadCustomInstruction(this.LoadColumnRange(row, startColumn, endColumn));
 
-        IAsyncEnumerable<ICellIndex> ISpreadSheetInstructionRunner.LoadRowRange(string column, uint startRow, uint endRow)
+        IAsyncEnumerable<ICellData> ISpreadSheetInstructionRunner.LoadRowRange(string column, uint startRow, uint endRow)
             => Runner.LoadCustomInstruction(this.LoadRowRange(column,startRow, endRow));
 
-        IAsyncEnumerable<ICellIndex> ISpreadSheetInstructionRunner.LoadFullColumnRange(uint row, string startColumn)
+        IAsyncEnumerable<ICellData> ISpreadSheetInstructionRunner.LoadFullColumnRange(uint row, string startColumn)
             => Runner.LoadCustomInstruction(this.LoadFullColumnRange(row, startColumn));
 
-        IAsyncEnumerable<ICellIndex> ISpreadSheetInstructionRunner.LoadFullRowRange(string column, uint startRow)
+        IAsyncEnumerable<ICellData> ISpreadSheetInstructionRunner.LoadFullRowRange(string column, uint startRow)
             => Runner.LoadCustomInstruction(this.LoadFullRowRange(column, startRow));
 
     }

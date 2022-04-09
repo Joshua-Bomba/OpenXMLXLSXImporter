@@ -116,173 +116,43 @@ namespace SSUT
             t.Wait();
             t2.Wait();
         }
-        //private class OnlySecondCell : ISpreadSheetInstructionBuilderManager
-        //{
-        //    private ISpreadSheetInstructionKey secondCell;
-        //    public OnlySecondCell()
-        //    {
+        [Test]
+        public void RangeCellTest()
+        {
+            ISpreadSheetInstructionBuilder builder = importer.GetSheetBuilder(SHEET1).GetAwaiter().GetResult();
+            ValueTask<ICellData[]> rowRange = builder.Runner.LoadColumnRange(4, "A", "P").ToArrayAsync();
+            ValueTask<ICellData[]> columnRange = builder.Runner.LoadRowRange("G", 1, 7).ToArrayAsync();
+            CheckResultsAsync(columnRange, rowRange).GetAwaiter().GetResult();
+        }
 
-        //    }
-        //    public string Sheet => SHEET1;
+        public static async Task CheckResultsAsync(ValueTask<ICellData[]> columnRanges, ValueTask<ICellData[]> rowRanges)
+        {
+            CheckResults(await columnRanges, await rowRanges);
+        }
 
-        //    public void LoadConfig(ISpreadSheetInstructionBuilder builder)
-        //    {
-        //        secondCell = builder.LoadSingleCell(2, "B");
-        //        //we will wait till we select the second cell before we select the first one. it should queue it in the defered area given enought time
+        public static void CheckResults(ICellData[] columnRanges, ICellData[] rowRanges)
+        {
+            Assert.IsTrue(EXPECTED_COLUMNS.Length == columnRanges.Length);
+            Assert.IsTrue(EXPECTED_ROWS.Length == rowRanges.Length);
+            for (int i = 0; i < EXPECTED_COLUMNS.Length; i++)
+            {
+                Assert.AreEqual(EXPECTED_COLUMNS[i], columnRanges[i].Content());
+            }
 
-        //    }
+            for (int i = 0; i < EXPECTED_ROWS.Length; i++)
+            {
+                Assert.AreEqual(EXPECTED_ROWS[i], rowRanges[i].Content());
+            }
+        }
 
-        //    public async Task ResultsProcessed(ISpreadSheetQueryResults query)
-        //    {
-        //        ICellData cell = await query.GetProcessedResults(secondCell).FirstOrDefaultAsync();
-
-        //    }
-        //}
-
-        //private class PostFirstCell : ISpreadSheetInstructionBuilderManager
-        //{
-        //    private ISpreadSheetInstructionKey firstCell;
-        //    public string Sheet => SHEET1;
-
-        //    public void LoadConfig(ISpreadSheetInstructionBuilder builder)
-        //    {
-        //        firstCell = builder.LoadSingleCell(2, "A");
-        //    }
-
-        //    public async Task ResultsProcessed(ISpreadSheetQueryResults query)
-        //    {
-        //        ICellData d = await query.GetProcessedResults(firstCell).FirstOrDefaultAsync();
-        //    }
-        //}
-
-        //[Test]
-        //public void OnlySecondCellTest()
-        //{
-        //    OnlySecondCell osc = new OnlySecondCell();
-        //    importer.Process(osc).GetAwaiter().GetResult();
-        //    System.Threading.Thread.Sleep(10000);
-        //    importer.Process(osc).GetAwaiter().GetResult();
-        //}
-
-        //private class RangeCellsTest : ISpreadSheetInstructionBuilderManager
-        //{
-        //    public string Sheet => SHEET1;
-        //    ISpreadSheetInstructionKey _columnRangek;
-        //    ISpreadSheetInstructionKey _rowRangek;
-
-        //    public List<ICellData> columnRanges;
-        //    public List<ICellData> rowRanges;
-
-        //    public void LoadConfig(ISpreadSheetInstructionBuilder builder)
-        //    {
-        //        _columnRangek = builder.LoadColumnRange(4, "A", "P");
-        //        _rowRangek = builder.LoadRowRange("G", 1, 7);
-        //    }
-
-        //    public async Task ResultsProcessed(ISpreadSheetQueryResults query)
-        //    {
-        //        IAsyncEnumerable<ICellData> columnRange = query.GetProcessedResults(_columnRangek);
-        //        IAsyncEnumerable<ICellData> rowRange = query.GetProcessedResults(_rowRangek);
-
-        //        columnRanges = new List<ICellData>();
-        //        rowRanges = new List<ICellData>();
-
-        //        IAsyncEnumerator<ICellData> columnEnumerator = columnRange.GetAsyncEnumerator();
-
-        //        while(await columnEnumerator.MoveNextAsync())
-        //        {
-        //            ICellData d = columnEnumerator.Current;
-        //            columnRanges.Add(d);
-        //        }
-
-        //        IAsyncEnumerator<ICellData> RowEnumerator = rowRange.GetAsyncEnumerator();
-
-        //        while(await RowEnumerator.MoveNextAsync())
-        //        {
-        //            rowRanges.Add(RowEnumerator.Current);
-        //        }
-
-        //    }
-        //}
-        //[Test]
-        //public void RangeCellTest()
-        //{
-        //    RangeCellsTest rct = new RangeCellsTest();
-        //    importer.Process(rct).GetAwaiter().GetResult();
-        //    CheckResults(rct.columnRanges, rct.rowRanges);
-        //}
-
-        //public static void CheckResults(List<ICellData> columnRanges, List<ICellData> rowRanges)
-        //{
-        //    Assert.IsTrue(EXPECTED_COLUMNS.Length == columnRanges.Count);
-        //    Assert.IsTrue(EXPECTED_ROWS.Length == rowRanges.Count);
-        //    for (int i = 0; i < EXPECTED_COLUMNS.Length; i++)
-        //    {
-        //        Assert.AreEqual(EXPECTED_COLUMNS[i], columnRanges[i].Content());
-        //    }
-
-        //    for (int i = 0; i < EXPECTED_ROWS.Length; i++)
-        //    {
-        //        Assert.AreEqual(EXPECTED_ROWS[i], rowRanges[i].Content());
-        //    }
-        //}
-
-        //private class FullRangeCellsTest: ISpreadSheetInstructionBuilderManager
-        //{
-        //    public string Sheet => SHEET1;
-        //    ISpreadSheetInstructionKey _columnRange;
-        //    ISpreadSheetInstructionKey _rowRange;
-
-        //    public List<ICellData> columnRanges;
-        //    public List<ICellData> rowRanges;
-        //    public FullRangeCellsTest()
-        //    {
-        //        columnRanges = null;
-        //        rowRanges = null;
-        //    }
-
-        //    public void LoadConfig(ISpreadSheetInstructionBuilder builder)
-        //    {
-        //        _columnRange = builder.LoadFullColumnRange(4);
-        //        _rowRange = builder.LoadFullRowRange("G");
-        //    }
-
-        //    public void CompareResults()
-        //    {
-
-        //    }
-
-        //    public async Task ResultsProcessed(ISpreadSheetQueryResults query)
-        //    {
-        //        IAsyncEnumerable<ICellData> columnRange = query.GetProcessedResults(_columnRange);
-        //        IAsyncEnumerable<ICellData> rowRange = query.GetProcessedResults(_rowRange);
-        //        columnRanges = new List<ICellData>();
-        //        rowRanges = new List<ICellData>();
-
-        //        IAsyncEnumerator<ICellData> columnEnumerator = columnRange.GetAsyncEnumerator();
-
-        //        while (await columnEnumerator.MoveNextAsync())
-        //        {
-        //            ICellData d = columnEnumerator.Current;
-        //            columnRanges.Add(d);
-        //        }
-
-        //        IAsyncEnumerator<ICellData> RowEnumerator = rowRange.GetAsyncEnumerator();
-
-        //        while (await RowEnumerator.MoveNextAsync())
-        //        {
-        //            rowRanges.Add(RowEnumerator.Current);
-        //        }
-        //    }
-        //}
-
-        //[Test]
-        //public void FullRangeCellTest()
-        //{
-        //    FullRangeCellsTest rc = new FullRangeCellsTest();
-        //    importer.Process(rc).GetAwaiter().GetResult();
-        //    CheckResults(rc.columnRanges, rc.rowRanges);
-        //}
+        [Test]
+        public void FullRangeCellTest()
+        {
+            ISpreadSheetInstructionBuilder builder = importer.GetSheetBuilder(SHEET1).GetAwaiter().GetResult();
+            ValueTask<ICellData[]> rowRange = builder.Runner.LoadFullColumnRange(4).ToArrayAsync();
+            ValueTask<ICellData[]> columnRange = builder.Runner.LoadFullRowRange("G").ToArrayAsync();
+            CheckResultsAsync(columnRange, rowRange).GetAwaiter().GetResult();
+        }
 
         //internal class testThing<T>
         //{
@@ -355,6 +225,14 @@ namespace SSUT
         //        }
         //    });
 
+        //}
+
+
+
+        //[Test]
+        //public void CloseConnectionToEarly()
+        //{
+        //    ISpreadSheetInstructionBuilder builder = importer.GetSheetBuilder(SHEET1).GetAwaiter().GetResult();
         //}
     }
 }
