@@ -27,23 +27,19 @@ namespace OpenXMLXLSXImporter.Builders
         {
             await _mre.WaitAsync();
             IAsyncEnumerator<ICellIndex> cells = GetResults().GetAsyncEnumerator();
+            ICellIndex i;
             while(await cells.MoveNextAsync())
             {
-                yield return await GetCellData(cells.Current);
+                i = cells.Current;
+                if (i is IFutureCell fs)
+                {
+                    yield return await fs.GetData();
+                }
+                else if (i is ICellData cd)
+                {
+                    yield return cd;
+                }
             }
-        }
-
-        public static async Task<ICellData> GetCellData(ICellIndex i)
-        {
-            if (i is IFutureCell fs)
-            {
-                return await fs.GetData();
-            }
-            else if(i is ICellData cd)
-            {
-                return cd;
-            }
-            throw new InvalidOperationException();
         }
 
 

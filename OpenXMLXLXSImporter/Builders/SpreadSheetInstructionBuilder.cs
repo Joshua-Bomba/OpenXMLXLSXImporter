@@ -44,18 +44,16 @@ namespace OpenXMLXLSXImporter.Builders
                 await grid.ProcessInstruction(instruction.Value);
         }
 
-        protected static async Task ProcessResult(KeyValuePair<ISpreadSheetInstructionKey, ISpreadSheetInstruction> x)
-        {
-            if(x.Key is SpreadSheetActionManager ssam)
-            {
-                await ssam.TriggerEvent(x.Value);
-            }
-        }
-
         public async Task ProcessResults()
         {
-            foreach (Task t in _instructions.Select(ProcessResult).ToArray())
-                await t;
+            foreach (KeyValuePair<ISpreadSheetInstructionKey,ISpreadSheetInstruction> kv in _instructions)
+            {
+                if (kv.Key is SpreadSheetActionManager ssam)
+                {
+                    await ssam.TriggerEvent(kv.Value);
+                }
+            }
+
         }
 
         public async IAsyncEnumerable<ICellData> GetProcessedResults(ISpreadSheetInstructionKey key)

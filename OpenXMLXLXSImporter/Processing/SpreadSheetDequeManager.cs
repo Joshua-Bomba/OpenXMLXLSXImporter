@@ -147,7 +147,7 @@ namespace OpenXMLXLSXImporter.Processing
             }
         }
 
-        public bool ShouldPullAndChunk => true;
+        public bool ShouldPullAndChunk => deferedCells?.Any() ?? false;
 
         public async Task PreLockProcessing()
         {

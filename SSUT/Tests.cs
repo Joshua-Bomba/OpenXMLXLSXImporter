@@ -267,6 +267,42 @@ namespace SSUT
             CheckResults(rc.columnRanges, rc.rowRanges);
         }
 
+        //internal class testThing<T>
+        //{
+        //    public HashSet<T> set;
+        //    private object l;
+
+        //    public testThing()
+        //    {
+        //        set = new HashSet<T>();
+        //        l = new object();
+        //    }
+        //    public void LogEnque(T c)
+        //    {
+        //        Task.Run(() =>
+        //        {
+        //            lock (l)
+        //            {
+        //                set.Add(c);
+        //            }
+        //        });
+        //    }
+
+        //    public void LogDeque(T c)
+        //    {
+        //        Task.Run(() =>
+        //        {
+        //            lock (l)
+        //            {
+        //                if (set.Contains(c))
+        //                {
+        //                    set.Remove(c);
+        //                }
+        //            }
+        //        });
+        //    }
+        //}
+
 
         [Test]
         public void FullRangeCellTestBurnInTest()
@@ -281,9 +317,9 @@ namespace SSUT
                 data = baseStream.ToArray();
             }
 
-            Parallel.For(0, 100000,new ParallelOptions { MaxDegreeOfParallelism = 1 }, (i) =>
+            Parallel.For(0, 100000,new ParallelOptions { MaxDegreeOfParallelism = 2 } , (i) =>
             {
-                using (MemoryStream ms = new MemoryStream(data))
+                using (MemoryStream ms = new MemoryStream(data,false))
                 {
                     using (IExcelImporter importer = new ExcelImporter(ms))
                     {
@@ -293,10 +329,11 @@ namespace SSUT
                             importer.Process(rc).GetAwaiter().GetResult();
                             CheckResults(rc.columnRanges, rc.rowRanges);
                         }
-                        catch (Exception ex)
+                        catch
                         {
 
                         }
+
                     }
                 }
             });
