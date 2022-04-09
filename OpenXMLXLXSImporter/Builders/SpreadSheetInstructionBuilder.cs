@@ -1,71 +1,94 @@
 ﻿using OpenXMLXLSXImporter.CellData;
+using OpenXMLXLSXImporter.FileAccess;
 using OpenXMLXLSXImporter.Processing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Nito.AsyncEx;
 
 namespace OpenXMLXLSXImporter.Builders
 {
-    public class SpreadSheetInstructionBuilder : ISpreadSheetInstructionBuilder, ISpreadSheetQueryResults
+    public class SpreadSheetInstructionBuilder : ISpreadSheetInstructionRunner, ISpreadSheetInstructionBundler, ISpreadSheetInstructionBuilder
     {
-        private Dictionary<ISpreadSheetInstructionKey, ISpreadSheetInstruction> _instructions;
-        public SpreadSheetInstructionBuilder()
+
+        private SpreadSheetInstructionManager ssim;
+
+        public ISpreadSheetInstructionRunner Runner => this;
+
+        public ISpreadSheetInstructionBundler Bundler => this;
+
+        public SpreadSheetInstructionBuilder(SpreadSheetInstructionManager spreadSheetInstructionManager)
         {
-            _instructions = new Dictionary<ISpreadSheetInstructionKey, ISpreadSheetInstruction>();
+            ssim = spreadSheetInstructionManager;
         }
 
+        public ISpreadSheetInstruction LoadSingleCell(uint row, string cell)
+            => new SingleCell(row, cell);
+        public ISpreadSheetInstruction LoadColumnRange(uint row, string startColumn, string endColumn)
+            => new ColumnRange(row, startColumn, endColumn);
 
-        protected virtual ISpreadSheetInstructionKey Add(ISpreadSheetInstruction i)
+        public ISpreadSheetInstruction LoadRowRange(string column, uint startRow, uint endRow)
+            => new RowRange(column, startRow, endRow);
+
+        public ISpreadSheetInstruction LoadFullColumnRange(uint row, string startColumn)
+            => new FullColumnRange(row, startColumn);
+
+        public ISpreadSheetInstruction LoadFullRowRange(string column, uint startRow)
+            => new FullRowRange(column, startRow);
+
+
+        public async Task BundleRequeset(IEnumerable<ISpreadSheetInstruction> sheetInstructions)
         {
-            SpreadSheetActionManager ssam = new SpreadSheetActionManager();
-            _instructions.Add(ssam, i);
-            return ssam;
+            await ssim.ProcessInstructionBundle(sheetInstructions);
         }
 
-        public ISpreadSheetInstructionKey LoadSingleCell(uint row, string cell)
-            => Add(new SingleCell(row, cell));
-        public ISpreadSheetInstructionKey LoadColumnRange(uint row, string startColumn, string endColumn)
-            => Add(new ColumnRange(row, startColumn, endColumn));
-
-        public ISpreadSheetInstructionKey LoadRowRange(string column, uint startRow, uint endRow)
-            => Add(new RowRange(column, startRow, endRow));
-
-        public ISpreadSheetInstructionKey LoadFullColumnRange(uint row, string startColumn = "A")
-            => Add(new FullColumnRange(row, startColumn));
-
-        public ISpreadSheetInstructionKey LoadFullRowRange(string column, uint startRow)
-            => Add(new FullRowRange(column, startRow));
-
-        public async Task ProcessInstructions(SpreadSheetInstructionManager grid)
+        public async IAsyncEnumerable<ICellData> GetBundledResults(IEnumerable<ISpreadSheetInstruction> ins)
         {
-            foreach(KeyValuePair<ISpreadSheetInstructionKey, ISpreadSheetInstruction> instruction in _instructions)
-                await grid.ProcessInstruction(instruction.Value);
-        }
-
-        public async Task ProcessResults()
-        {
-            foreach (KeyValuePair<ISpreadSheetInstructionKey,ISpreadSheetInstruction> kv in _instructions)
+            ISpreadSheetInstruction[] instructions = ins.ToArray();
+            Task t = ssim.ProcessInstructionBundle(instructions);
+            IDictionary<ISpreadSheetInstruction, IAsyncEnumerable<ICellData>> dic = new Dictionary<ISpreadSheetInstruction, IAsyncEnumerable<ICellData>>(instructions.Length);
+            IAsyncEnumerator<ICellData> enumerator = null;
+            await t;
+            foreach(ISpreadSheetInstruction instruction in instructions)
             {
-                if (kv.Key is SpreadSheetActionManager ssam)
+                enumerator = instruction.GetResults().GetAsyncEnumerator();
+                while(await enumerator.MoveNextAsync())
                 {
-                    await ssam.TriggerEvent(kv.Value);
+                    yield return enumerator.Current;
                 }
             }
-
         }
 
-        public async IAsyncEnumerable<ICellData> GetProcessedResults(ISpreadSheetInstructionKey key)
+        async IAsyncEnumerable<ICellData> ISpreadSheetInstructionRunner.LoadCustomInstruction(ISpreadSheetInstruction instruction)
         {
-            IAsyncEnumerable<ICellData>  cellDatas = _instructions[key].GetResults();
-
-            IAsyncEnumerator<ICellData> cdEnum = cellDatas.GetAsyncEnumerator();
-
-            while(await cdEnum.MoveNextAsync())
+            await ssim.ProcessInstruction(instruction);
+            IAsyncEnumerator<ICellData> en =  instruction.GetResults().GetAsyncEnumerator();
+            while(await en.MoveNextAsync())
             {
-                yield return cdEnum.Current;
+                yield return en.Current;
             }
         }
+
+        async Task<ICellData> ISpreadSheetInstructionRunner.LoadSingleCell(uint row, string cell)
+        {
+            ISpreadSheetInstruction instr = LoadSingleCell(row,cell);
+            await ssim.ProcessInstruction(instr);
+            return await instr.GetResults().FirstOrDefaultAsync();
+        }
+
+        IAsyncEnumerable<ICellData> ISpreadSheetInstructionRunner.LoadColumnRange(uint row, string startColumn, string endColumn)
+            => Runner.LoadCustomInstruction(this.LoadColumnRange(row, startColumn, endColumn));
+
+        IAsyncEnumerable<ICellData> ISpreadSheetInstructionRunner.LoadRowRange(string column, uint startRow, uint endRow)
+            => Runner.LoadCustomInstruction(this.LoadRowRange(column,startRow, endRow));
+
+        IAsyncEnumerable<ICellData> ISpreadSheetInstructionRunner.LoadFullColumnRange(uint row, string startColumn)
+            => Runner.LoadCustomInstruction(this.LoadFullColumnRange(row, startColumn));
+
+        IAsyncEnumerable<ICellData> ISpreadSheetInstructionRunner.LoadFullRowRange(string column, uint startRow)
+            => Runner.LoadCustomInstruction(this.LoadFullRowRange(column, startRow));
+
     }
 }

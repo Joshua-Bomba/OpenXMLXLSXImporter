@@ -36,16 +36,28 @@ namespace OpenXMLXLSXImporter.CellData
             private ICellData _result;
             private AsyncManualResetEvent _mre;
             private IFutureUpdate _updater;
+            private Exception _fail;
             public DeferredCellExecution(DeferredCell deferredCell, IFutureUpdate updater)
             {
+                _fail = null;
                 _mre = new AsyncManualResetEvent(false);
                 _deferredCell = deferredCell;
                 _updater = updater;
             }
 
+            public void Failure(Exception e)
+            {
+                _fail = e;
+                _mre.Set();
+            }
+
             public async Task<ICellData> GetData()
             {
                 await _mre.WaitAsync();
+                if(_fail != null)
+                {
+                    throw _fail;
+                }
                 return _result;
             }
 

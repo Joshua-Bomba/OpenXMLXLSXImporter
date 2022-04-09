@@ -1,5 +1,6 @@
 ﻿using DocumentFormat.OpenXml.Spreadsheet;
 using Nito.AsyncEx;
+using OpenXMLXLSXImporter.Builders;
 using OpenXMLXLSXImporter.CellData;
 using OpenXMLXLSXImporter.FileAccess;
 using OpenXMLXLSXImporter.Utils;
@@ -15,7 +16,7 @@ namespace OpenXMLXLSXImporter.Processing
 {
     public class SpreadSheetDequeManager : IChunckBlock<ICellProcessingTask>
     {
-        private ExcelImporter _importer;
+        private ISpreadSheetInstructionManager _instructionManager;
 
         private ChunkableBlockingCollection<ICellProcessingTask> _queue;
 
@@ -28,13 +29,10 @@ namespace OpenXMLXLSXImporter.Processing
         private Queue<ICellProcessingTask> ss;
         private Dictionary<Cell, ICellProcessingTask> fufil;
 
-
-        private Task _processRequestTask;
-        public SpreadSheetDequeManager(ExcelImporter importer)
+        public SpreadSheetDequeManager(ISpreadSheetInstructionManager instructionManager)
         {
-            _importer = importer;
+            _instructionManager = instructionManager;
             _filePromise = null;
-            _processRequestTask = null;
         }
 
         public void Finish() => _queue.Finish();
@@ -44,18 +42,18 @@ namespace OpenXMLXLSXImporter.Processing
             _queue = collection;
         }
 
-        public void StartRequestProcessor(IXlsxSheetFilePromise file)
+        public void Terminate(Exception e)
         {
-            if (_processRequestTask == null)
+           ICellProcessingTask[] tasks= _queue.Finish().ToArray();
+            foreach(ICellProcessingTask t in tasks)
             {
-                _filePromise = file;
-                _processRequestTask = Task.Run(ProcessRequests);
+                t.Failure(e);
             }
-
         }
 
-        protected async Task ProcessRequests()
+        public async Task ProcessRequests(IXlsxSheetFilePromise file)
         {
+            _filePromise = file;
             try
             {
                 Cell cell = null;
@@ -143,7 +141,7 @@ namespace OpenXMLXLSXImporter.Processing
             }
             catch (InvalidOperationException ex)
             {
-                //queue is finished
+                this.Terminate(ex);
             }
         }
 
@@ -213,7 +211,7 @@ namespace OpenXMLXLSXImporter.Processing
             //We will add this deferredcell type to the IIndexers since we don't need them at the time
             if(deferedCells != null&&deferedCells.Any())
             {
-                await _importer.Instructions.AddDeferredCells(deferedCells.Select(x => new DeferredCell(desiredRowIndex.Value, x.Key, x.Value)));
+                await _instructionManager.AddDeferredCells(deferedCells.Select(x => new DeferredCell(desiredRowIndex.Value, x.Key, x.Value)));
             }
         }
 

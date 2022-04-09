@@ -16,8 +16,10 @@ namespace OpenXMLXLSXImporter.CellData
         private  ICellData _result;
         private IFutureUpdate _updater;
         private AsyncManualResetEvent _mre;
+        private Exception _fail;
         public FutureCell(uint cellRowIndex, string cellColumnIndex, IFutureUpdate updater)
         {
+            _fail = null;
             CellRowIndex = cellRowIndex;
             CellColumnIndex = cellColumnIndex;
             _mre = new AsyncManualResetEvent(false);
@@ -27,9 +29,19 @@ namespace OpenXMLXLSXImporter.CellData
 
         public uint CellRowIndex { get; set; }
 
+        public void Failure(Exception e)
+        {
+            _fail = e;
+            _mre.Set();
+        }
+
         public async Task<ICellData> GetData()
         {
             await _mre.WaitAsync();
+            if(_fail != null )
+            {
+                throw _fail;
+            }
             return _result;
         }
 

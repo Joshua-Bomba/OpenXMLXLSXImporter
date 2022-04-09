@@ -32,18 +32,57 @@ namespace OpenXMLXLSXImporter.Processing
         IQueueAccess Queue { get; }//Did it like this so that way I can possbily replace IQueueAccess with another implementation
     }
 
-    public class SpreadSheetInstructionManager : IQueueAccess, ISpreadSheetInstructionManager
-    {       
+    public class SpreadSheetInstructionManager : IQueueAccess, ISpreadSheetInstructionManager, IDisposable
+    {
         private ConcurrentDataStore _dataStore;
 
+        private SpreadSheetDequeManager dequeManager;
         private ChunkableBlockingCollection<ICellProcessingTask> _loadQueueManager;
 
+        private AsyncManualResetEvent _queueInit;
+        private Task _instructionProcessor;
         public IQueueAccess Queue => this;
 
-        public SpreadSheetInstructionManager(SpreadSheetDequeManager dequeManager)
+        public SpreadSheetInstructionManager(Task<IXlsxSheetFilePromise> sheetFilePromise)
         {
-            _loadQueueManager = new ChunkableBlockingCollection<ICellProcessingTask>(dequeManager);
             _dataStore = new ConcurrentDataStore(this);
+            _queueInit = new AsyncManualResetEvent(false);
+            ProcessSheet(sheetFilePromise);
+        }
+
+        private void ProcessSheet(Task<IXlsxSheetFilePromise> sheetFilePromise)
+        {
+            _instructionProcessor = Task.Run(async () =>
+            {
+                dequeManager = new SpreadSheetDequeManager(this);
+                _loadQueueManager = new ChunkableBlockingCollection<ICellProcessingTask>(dequeManager);
+                _queueInit.Set();
+                IXlsxSheetFilePromise g = await sheetFilePromise;
+                if(g != null)
+                {
+                    await dequeManager.ProcessRequests(g);
+                }
+                else
+                {
+                    dequeManager.Terminate(new Exception("Sheet Not Found Exception"));
+                }
+            });
+        }
+        public void Dispose()
+        {
+            _queueInit.Wait();
+            dequeManager.Finish();
+            _instructionProcessor.Wait();
+        }
+
+        public async Task ProcessInstructionBundle(IEnumerable<ISpreadSheetInstruction> bundle)
+        {
+            ISpreadSheetInstruction[] instructions = bundle.ToArray();
+            foreach(ISpreadSheetInstruction instruction in instructions)
+            {
+                instruction.AttachSpreadSheetInstructionManager(this);
+            }
+            await _dataStore.ProcessInstructions(instructions);
         }
 
         public async Task ProcessInstruction(ISpreadSheetInstruction spreadSheetInstruction)
@@ -65,7 +104,8 @@ namespace OpenXMLXLSXImporter.Processing
 
         public async Task QueueNonIndexedCell(ICellProcessingTask t)
         {
-            using(await _loadQueueManager.Mutex.LockAsync())
+            await _queueInit.WaitAsync();
+            using (await _loadQueueManager.Mutex.LockAsync())
             {
                 _loadQueueManager.Enque(t);
             }
@@ -73,7 +113,8 @@ namespace OpenXMLXLSXImporter.Processing
 
         public async Task LockQueue(Action<IChunkableBlockingCollection<ICellProcessingTask>> lockedQueue)
         {
-            using(await _loadQueueManager.Mutex.LockAsync())
+            await _queueInit.WaitAsync();
+            using (await _loadQueueManager.Mutex.LockAsync())
             {
                 lockedQueue(_loadQueueManager);
             }

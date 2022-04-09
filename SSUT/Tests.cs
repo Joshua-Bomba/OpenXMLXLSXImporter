@@ -1,7 +1,6 @@
 using NUnit.Framework;
 using OpenXMLXLSXImporter;
 using OpenXMLXLSXImporter.Builders;
-using OpenXMLXLSXImporter.Builders.Managers;
 using OpenXMLXLSXImporter.CellData;
 using System;
 using System.Collections.Generic;
@@ -40,165 +39,101 @@ namespace SSUT
             stream?.Close();
             stream?.Dispose();
         }
-
-        private class TitleColumnTest : ISpreadSheetInstructionBuilderManager
+        [Test]
+        public void LoadTitleCellTestUsingRunner()
         {
-            private ISpreadSheetInstructionKey title;
-
-            public string Sheet => SHEET1;
-
-            public void LoadConfig(ISpreadSheetInstructionBuilder builder)
-            {
-                title = builder.LoadSingleCell(1, "A");
-            }
-
-            public async Task ResultsProcessed(ISpreadSheetQueryResults query)
-            {
-                ICellData d = await query.GetProcessedResults(title).FirstOrDefaultAsync();
-
-                Assert.IsTrue(d.Content() == "A Header");
-            }
+            ISpreadSheetInstructionBuilder builder = importer.GetSheetBuilder(SHEET1).GetAwaiter().GetResult();
+            ICellData result = builder.Runner.LoadSingleCell(1, "A").GetAwaiter().GetResult();
+            Assert.IsTrue(result.Content() == "A Header");
+        }
+        [Test]
+        public void LoadTitleCellTestUsingBundler()
+        {
+            ISpreadSheetInstructionBuilder builder = importer.GetSheetBuilder(SHEET1).GetAwaiter().GetResult();
+            ISpreadSheetInstruction instruction = builder.Bundler.LoadSingleCell(1, "A");
+            builder.Bundler.BundleRequeset(new List<ISpreadSheetInstruction> { instruction }).GetAwaiter().GetResult();
+            ICellData result = instruction.GetResults().FirstAsync().GetAwaiter().GetResult();
+            Assert.IsTrue(result.Content() == "A Header");
         }
 
         [Test]
-        public void LoadTitleCellTest()
+        public void LoadTitleCellTestUsingBundlerResults()
         {
-            TitleColumnTest titleColumnTest = new TitleColumnTest();
-            importer.Process(titleColumnTest).GetAwaiter().GetResult();
+            ISpreadSheetInstructionBuilder builder = importer.GetSheetBuilder(SHEET1).GetAwaiter().GetResult();
+            ISpreadSheetInstruction instruction = builder.Bundler.LoadSingleCell(1, "A");
+            IAsyncEnumerable<ICellData> results = builder.Bundler.GetBundledResults(new List<ISpreadSheetInstruction> { instruction});
+            ICellData result = results.FirstAsync().GetAwaiter().GetResult();
+            Assert.IsTrue(result.Content() == "A Header");
         }
-
-        //[Test]
-        //public void LoadTitleCellWithoutImplementAInterface()
-        //{
-        //    ICellData c = null;
-        //    var f = async () =>
-        //    {
-
-        //        // IAsyncEnumerable<IEnumerable<Task<ICellData>>> ret = importer.ProcessAndGetAsyncCollection(SHEET1, x => x.LoadSingleCell(1, "A"));
-        //        //c = await (await ret.FirstAsync()).First();
-
-        //    };
-
-        //    f().GetAwaiter().GetResult();
-        //    Assert.IsTrue(c.Content() == "A Header");
-            
-        //}
-        //[Test]
-        //public void LoadTitleCellWithoutImplementAInterfaceList()
-        //{
-        //    ICellData c;
-        //    //List<List<ICellData>> ret =  importer.ProcessAndGetListAsync(SHEET1, x => x.LoadSingleCell(1, "A")).GetAwaiter().GetResult();
-        //    c = ret.First().First();
-        //    Assert.IsTrue(c.Content() == "A Header");
-        //}
-        //[Test]
-        //public void SecondCell()
-        //{
-        //    ICellData c;
-        //    //List<List<ICellData>> ret = importer.ProcessAndGetListAsync(SHEET1, x => x.LoadSingleCell(2, "B").LoadSingleCell(2,"A")).GetAwaiter().GetResult();
-        //    //c = ret.First().First();
-        //   // Assert.IsTrue(c.Content() == "Data in another cell");
-        //}
-        private class OnlySecondCell : ISpreadSheetInstructionBuilderManager
-        {
-            private ISpreadSheetInstructionKey secondCell;
-            public OnlySecondCell()
-            {
-
-            }
-            public string Sheet => SHEET1;
-
-            public void LoadConfig(ISpreadSheetInstructionBuilder builder)
-            {
-                secondCell = builder.LoadSingleCell(2, "B");
-                //we will wait till we select the second cell before we select the first one. it should queue it in the defered area given enought time
-                
-            }
-
-            public async Task ResultsProcessed(ISpreadSheetQueryResults query)
-            {
-                ICellData cell = await query.GetProcessedResults(secondCell).FirstOrDefaultAsync();
-
-            }
-        }
-
-        private class PostFirstCell : ISpreadSheetInstructionBuilderManager
-        {
-            private ISpreadSheetInstructionKey firstCell;
-            public string Sheet => SHEET1;
-
-            public void LoadConfig(ISpreadSheetInstructionBuilder builder)
-            {
-                firstCell = builder.LoadSingleCell(2, "A");
-            }
-
-            public async Task ResultsProcessed(ISpreadSheetQueryResults query)
-            {
-                ICellData d = await query.GetProcessedResults(firstCell).FirstOrDefaultAsync();
-            }
-        }
-
         [Test]
-        public void OnlySecondCellTest()
+        public void NonExistingSheet()
         {
-            OnlySecondCell osc = new OnlySecondCell();
-            importer.Process(osc).GetAwaiter().GetResult();
-            System.Threading.Thread.Sleep(10000);
-            importer.Process(osc).GetAwaiter().GetResult();
+            try
+            {
+                ISpreadSheetInstructionBuilder builder = importer.GetSheetBuilder("not a real sheet").GetAwaiter().GetResult();
+                ICellData result = builder.Runner.LoadSingleCell(1, "A").GetAwaiter().GetResult();
+                Assert.Fail();
+            }
+            catch (Exception ex)
+            {
+
+            }
+
         }
-
-        private class RangeCellsTest : ISpreadSheetInstructionBuilderManager
+        [Test]
+        public void TwoCells()
         {
-            public string Sheet => SHEET1;
-            ISpreadSheetInstructionKey _columnRangek;
-            ISpreadSheetInstructionKey _rowRangek;
+            ISpreadSheetInstructionBuilder builder = importer.GetSheetBuilder(SHEET1).GetAwaiter().GetResult();
+            ISpreadSheetInstruction[] bundle = new ISpreadSheetInstruction[] {
+                builder.Bundler.LoadSingleCell(2, "B"),
+                builder.Bundler.LoadSingleCell(2, "A")
+            };
 
-            public List<ICellData> columnRanges;
-            public List<ICellData> rowRanges;
-
-            public void LoadConfig(ISpreadSheetInstructionBuilder builder)
+            ICellData c = builder.Bundler.GetBundledResults(bundle).FirstAsync().GetAwaiter().GetResult();
+             Assert.IsTrue(c.Content() == "Data in another cell");
+        }
+        [Test]
+        public void ConcurrenyTest()
+        {
+            Task t = new Task(() =>
             {
-                _columnRangek = builder.LoadColumnRange(4, "A", "P");
-                _rowRangek = builder.LoadRowRange("G", 1, 7);
-            }
+                ISpreadSheetInstructionBuilder builder = importer.GetSheetBuilder(SHEET1).GetAwaiter().GetResult();
+                ICellData result = builder.Runner.LoadSingleCell(1, "A").GetAwaiter().GetResult();
+                Assert.IsTrue(result.Content() == "A Header");
+            });
 
-            public async Task ResultsProcessed(ISpreadSheetQueryResults query)
+            Task t2 = new Task(() =>
             {
-                IAsyncEnumerable<ICellData> columnRange = query.GetProcessedResults(_columnRangek);
-                IAsyncEnumerable<ICellData> rowRange = query.GetProcessedResults(_rowRangek);
 
-                columnRanges = new List<ICellData>();
-                rowRanges = new List<ICellData>();
+                ISpreadSheetInstructionBuilder builder = importer.GetSheetBuilder(SHEET1).GetAwaiter().GetResult();
+                ICellData result = builder.Runner.LoadSingleCell(1, "A").GetAwaiter().GetResult();
+                Assert.IsTrue(result.Content() == "A Header");
+            });
 
-                IAsyncEnumerator<ICellData> columnEnumerator = columnRange.GetAsyncEnumerator();
+            t.Start();
+            t2.Start();
 
-                while(await columnEnumerator.MoveNextAsync())
-                {
-                    ICellData d = columnEnumerator.Current;
-                    columnRanges.Add(d);
-                }
-
-                IAsyncEnumerator<ICellData> RowEnumerator = rowRange.GetAsyncEnumerator();
-
-                while(await RowEnumerator.MoveNextAsync())
-                {
-                    rowRanges.Add(RowEnumerator.Current);
-                }
-
-            }
+            t.Wait();
+            t2.Wait();
         }
         [Test]
         public void RangeCellTest()
         {
-            RangeCellsTest rct = new RangeCellsTest();
-            importer.Process(rct).GetAwaiter().GetResult();
-            CheckResults(rct.columnRanges, rct.rowRanges);
+            ISpreadSheetInstructionBuilder builder = importer.GetSheetBuilder(SHEET1).GetAwaiter().GetResult();
+            ValueTask<ICellData[]> columnRange = builder.Runner.LoadColumnRange(4, "A", "P").ToArrayAsync();
+            ValueTask<ICellData[]> rowRange = builder.Runner.LoadRowRange("G", 1, 7).ToArrayAsync();
+            CheckResultsAsync(columnRange, rowRange).GetAwaiter().GetResult();
         }
 
-        public static void CheckResults(List<ICellData> columnRanges, List<ICellData> rowRanges)
+        public static async Task CheckResultsAsync(ValueTask<ICellData[]> columnRanges, ValueTask<ICellData[]> rowRanges)
         {
-            Assert.IsTrue(EXPECTED_COLUMNS.Length == columnRanges.Count);
-            Assert.IsTrue(EXPECTED_ROWS.Length == rowRanges.Count);
+            CheckResults(await columnRanges, await rowRanges);
+        }
+
+        public static void CheckResults(ICellData[] columnRanges, ICellData[] rowRanges)
+        {
+            Assert.IsTrue(EXPECTED_COLUMNS.Length == columnRanges.Length);
+            Assert.IsTrue(EXPECTED_ROWS.Length == rowRanges.Length);
             for (int i = 0; i < EXPECTED_COLUMNS.Length; i++)
             {
                 Assert.AreEqual(EXPECTED_COLUMNS[i], columnRanges[i].Content());
@@ -210,61 +145,13 @@ namespace SSUT
             }
         }
 
-        private class FullRangeCellsTest: ISpreadSheetInstructionBuilderManager
-        {
-            public string Sheet => SHEET1;
-            ISpreadSheetInstructionKey _columnRange;
-            ISpreadSheetInstructionKey _rowRange;
-
-            public List<ICellData> columnRanges;
-            public List<ICellData> rowRanges;
-            public FullRangeCellsTest()
-            {
-                columnRanges = null;
-                rowRanges = null;
-            }
-
-            public void LoadConfig(ISpreadSheetInstructionBuilder builder)
-            {
-                _columnRange = builder.LoadFullColumnRange(4);
-                _rowRange = builder.LoadFullRowRange("G");
-            }
-
-            public void CompareResults()
-            {
-
-            }
-
-            public async Task ResultsProcessed(ISpreadSheetQueryResults query)
-            {
-                IAsyncEnumerable<ICellData> columnRange = query.GetProcessedResults(_columnRange);
-                IAsyncEnumerable<ICellData> rowRange = query.GetProcessedResults(_rowRange);
-                columnRanges = new List<ICellData>();
-                rowRanges = new List<ICellData>();
-
-                IAsyncEnumerator<ICellData> columnEnumerator = columnRange.GetAsyncEnumerator();
-
-                while (await columnEnumerator.MoveNextAsync())
-                {
-                    ICellData d = columnEnumerator.Current;
-                    columnRanges.Add(d);
-                }
-
-                IAsyncEnumerator<ICellData> RowEnumerator = rowRange.GetAsyncEnumerator();
-
-                while (await RowEnumerator.MoveNextAsync())
-                {
-                    rowRanges.Add(RowEnumerator.Current);
-                }
-            }
-        }
-
         [Test]
         public void FullRangeCellTest()
         {
-            FullRangeCellsTest rc = new FullRangeCellsTest();
-            importer.Process(rc).GetAwaiter().GetResult();
-            CheckResults(rc.columnRanges, rc.rowRanges);
+            ISpreadSheetInstructionBuilder builder = importer.GetSheetBuilder(SHEET1).GetAwaiter().GetResult();
+            ValueTask<ICellData[]> columnRange = builder.Runner.LoadFullColumnRange(4).ToArrayAsync();
+            ValueTask<ICellData[]> rowRange = builder.Runner.LoadFullRowRange("G").ToArrayAsync();
+            CheckResultsAsync(columnRange, rowRange).GetAwaiter().GetResult();
         }
 
         //internal class testThing<T>
@@ -302,13 +189,30 @@ namespace SSUT
         //        });
         //    }
         //}
+        [Test]
+        public void FullRangeCellTestLoadTheSameDataAgain()
+        {
+            Parallel.For(0, 100000, new ParallelOptions { }, (i) =>
+            {
+                    try
+                    {
+                        ISpreadSheetInstructionBuilder builder = importer.GetSheetBuilder(SHEET1).GetAwaiter().GetResult();
+                        ValueTask<ICellData[]> columnRange = builder.Runner.LoadFullColumnRange(4).ToArrayAsync();
+                        ValueTask<ICellData[]> rowRange = builder.Runner.LoadFullRowRange("G").ToArrayAsync();
+                        CheckResultsAsync(columnRange, rowRange).GetAwaiter().GetResult();
+                    }
+                    catch
+                    {
 
+                    }
+            });
+        }
 
         [Test]
         public void FullRangeCellTestBurnInTest()
         {
             byte[] data;
-            using(MemoryStream baseStream = new MemoryStream())
+            using (MemoryStream baseStream = new MemoryStream())
             {
                 using (FileStream fs = File.OpenRead(TEST_FILE))
                 {
@@ -317,17 +221,18 @@ namespace SSUT
                 data = baseStream.ToArray();
             }
 
-            Parallel.For(0, 100000,new ParallelOptions { MaxDegreeOfParallelism = 2 } , (i) =>
+            Parallel.For(0, 100000, new ParallelOptions { MaxDegreeOfParallelism = 2 }, (i) =>
             {
-                using (MemoryStream ms = new MemoryStream(data,false))
+                using (MemoryStream ms = new MemoryStream(data, false))
                 {
                     using (IExcelImporter importer = new ExcelImporter(ms))
                     {
                         try
                         {
-                            FullRangeCellsTest rc = new FullRangeCellsTest();
-                            importer.Process(rc).GetAwaiter().GetResult();
-                            CheckResults(rc.columnRanges, rc.rowRanges);
+                            ISpreadSheetInstructionBuilder builder = importer.GetSheetBuilder(SHEET1).GetAwaiter().GetResult();
+                            ValueTask<ICellData[]> columnRange = builder.Runner.LoadFullColumnRange(4).ToArrayAsync();
+                            ValueTask<ICellData[]> rowRange = builder.Runner.LoadFullRowRange("G").ToArrayAsync();
+                            CheckResultsAsync(columnRange, rowRange).GetAwaiter().GetResult();
                         }
                         catch
                         {
@@ -339,5 +244,13 @@ namespace SSUT
             });
 
         }
+
+
+
+        //[Test]
+        //public void CloseConnectionToEarly()
+        //{
+        //    ISpreadSheetInstructionBuilder builder = importer.GetSheetBuilder(SHEET1).GetAwaiter().GetResult();
+        //}
     }
 }
