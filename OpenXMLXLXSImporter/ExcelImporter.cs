@@ -10,7 +10,6 @@ using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using Nito.AsyncEx;
 using OpenXMLXLSXImporter.Builders;
-using OpenXMLXLSXImporter.Builders.Managers;
 using OpenXMLXLSXImporter.CellData;
 using OpenXMLXLSXImporter.FileAccess;
 using OpenXMLXLSXImporter.Processing;
