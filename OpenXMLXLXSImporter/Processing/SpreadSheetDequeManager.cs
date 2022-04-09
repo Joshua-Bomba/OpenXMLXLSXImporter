@@ -19,7 +19,7 @@ namespace OpenXMLXLSXImporter.Processing
 
         private ChunkableBlockingCollection<ICellProcessingTask> _queue;
 
-        private uint desiredRowIndex;
+        private uint? desiredRowIndex;
         private string desiredColumnIndex;
         private Dictionary<string,Cell> deferedCells = null;
         private IXlsxSheetFilePromise _filePromise;
@@ -68,6 +68,7 @@ namespace OpenXMLXLSXImporter.Processing
                     ICellProcessingTask dequed = await _queue.Take();
                     index = null;
                     cell = null;
+                    desiredRowIndex = null;
                     try
                     {
                         if (dequed is ICellIndex t)
@@ -92,7 +93,11 @@ namespace OpenXMLXLSXImporter.Processing
                             
                             continue;
                         }
-                        if (sheetAccess.TryGetRow(desiredRowIndex, out cellEnumerator))
+                        if(desiredRowIndex == null)
+                        {
+                            continue;
+                        }
+                        if (sheetAccess.TryGetRow(desiredRowIndex.Value, out cellEnumerator))
                         {
                             bool cellsLoadedIn = false;
                             string currentIndex = null;
@@ -114,12 +119,16 @@ namespace OpenXMLXLSXImporter.Processing
                                 {
                                     if (index == null)
                                     {
-                                        index = new FutureIndex { CellColumnIndex = currentIndex, CellRowIndex = desiredRowIndex };
+                                        index = new FutureIndex { CellColumnIndex = currentIndex, CellRowIndex = desiredRowIndex.Value };
                                     }
                                     currentIndex = null;
                                     cellsLoadedIn = true;
                                 }
                             } while (!cellsLoadedIn && currentIndex != desiredColumnIndex);
+                            if(currentIndex != desiredColumnIndex)
+                            {
+                                cell = null;
+                            }
                         }
                     }
                     catch (Exception ex)
@@ -163,7 +172,7 @@ namespace OpenXMLXLSXImporter.Processing
                 tasks[i] = null;
                 if (task is ICellIndex item)
                 {
-                    if (deferedCells != null&&item.CellRowIndex == desiredRowIndex&&deferedCells.ContainsKey(item.CellColumnIndex))
+                    if (deferedCells != null&&desiredRowIndex.HasValue&&item.CellRowIndex == desiredRowIndex.Value&&deferedCells.ContainsKey(item.CellColumnIndex))
                     {
                         fufil.Add(deferedCells[item.CellColumnIndex], task);
                         deferedCells.Remove(item.CellColumnIndex);
@@ -204,7 +213,7 @@ namespace OpenXMLXLSXImporter.Processing
             //We will add this deferredcell type to the IIndexers since we don't need them at the time
             if(deferedCells != null&&deferedCells.Any())
             {
-                await _importer.Instructions.AddDeferredCells(deferedCells.Select(x => new DeferredCell(desiredRowIndex, x.Key, x.Value)));
+                await _importer.Instructions.AddDeferredCells(deferedCells.Select(x => new DeferredCell(desiredRowIndex.Value, x.Key, x.Value)));
             }
         }
 
