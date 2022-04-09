@@ -189,43 +189,61 @@ namespace SSUT
         //        });
         //    }
         //}
+        [Test]
+        public void FullRangeCellTestLoadTheSameDataAgain()
+        {
+            Parallel.For(0, 100000, new ParallelOptions { }, (i) =>
+            {
+                    try
+                    {
+                        ISpreadSheetInstructionBuilder builder = importer.GetSheetBuilder(SHEET1).GetAwaiter().GetResult();
+                        ValueTask<ICellData[]> columnRange = builder.Runner.LoadFullColumnRange(4).ToArrayAsync();
+                        ValueTask<ICellData[]> rowRange = builder.Runner.LoadFullRowRange("G").ToArrayAsync();
+                        CheckResultsAsync(columnRange, rowRange).GetAwaiter().GetResult();
+                    }
+                    catch
+                    {
 
+                    }
+            });
+        }
 
-        //[Test]
-        //public void FullRangeCellTestBurnInTest()
-        //{
-        //    byte[] data;
-        //    using(MemoryStream baseStream = new MemoryStream())
-        //    {
-        //        using (FileStream fs = File.OpenRead(TEST_FILE))
-        //        {
-        //            fs.CopyTo(baseStream);
-        //        }
-        //        data = baseStream.ToArray();
-        //    }
+        [Test]
+        public void FullRangeCellTestBurnInTest()
+        {
+            byte[] data;
+            using (MemoryStream baseStream = new MemoryStream())
+            {
+                using (FileStream fs = File.OpenRead(TEST_FILE))
+                {
+                    fs.CopyTo(baseStream);
+                }
+                data = baseStream.ToArray();
+            }
 
-        //    Parallel.For(0, 100000,new ParallelOptions { MaxDegreeOfParallelism = 2 } , (i) =>
-        //    {
-        //        using (MemoryStream ms = new MemoryStream(data,false))
-        //        {
-        //            using (IExcelImporter importer = new ExcelImporter(ms))
-        //            {
-        //                try
-        //                {
-        //                    FullRangeCellsTest rc = new FullRangeCellsTest();
-        //                    importer.Process(rc).GetAwaiter().GetResult();
-        //                    CheckResults(rc.columnRanges, rc.rowRanges);
-        //                }
-        //                catch
-        //                {
+            Parallel.For(0, 100000, new ParallelOptions { MaxDegreeOfParallelism = 2 }, (i) =>
+            {
+                using (MemoryStream ms = new MemoryStream(data, false))
+                {
+                    using (IExcelImporter importer = new ExcelImporter(ms))
+                    {
+                        try
+                        {
+                            ISpreadSheetInstructionBuilder builder = importer.GetSheetBuilder(SHEET1).GetAwaiter().GetResult();
+                            ValueTask<ICellData[]> columnRange = builder.Runner.LoadFullColumnRange(4).ToArrayAsync();
+                            ValueTask<ICellData[]> rowRange = builder.Runner.LoadFullRowRange("G").ToArrayAsync();
+                            CheckResultsAsync(columnRange, rowRange).GetAwaiter().GetResult();
+                        }
+                        catch
+                        {
 
-        //                }
+                        }
 
-        //            }
-        //        }
-        //    });
+                    }
+                }
+            });
 
-        //}
+        }
 
 
 
