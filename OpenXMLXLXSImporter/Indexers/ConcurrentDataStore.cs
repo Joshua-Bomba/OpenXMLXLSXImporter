@@ -64,7 +64,7 @@ namespace OpenXMLXLSXImporter.Indexers
                 LimitedAccessDataStore limitedLife = new LimitedAccessDataStore(_rowIndexer);
                 try
                 {
-                    await instruction.EnqueCell(limitedLife);
+                    instruction.EnqueCell(limitedLife);
                 }
                 finally
                 {
@@ -83,7 +83,7 @@ namespace OpenXMLXLSXImporter.Indexers
                 {
                     foreach (ISpreadSheetInstruction instruction in instructions)
                     {
-                        await instruction.EnqueCell(this);
+                        instruction.EnqueCell(this);
                     }
                 }
                 finally
