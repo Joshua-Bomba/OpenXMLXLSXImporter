@@ -28,6 +28,7 @@ namespace OpenXMLXLSXImporter
         private XlsxDocumentFile _streamSheetFile;
 
         private Dictionary<string, SpreadSheetInstructionManager> _instructionBuilders;
+        private AsyncLock _sheetAccessorLock = new AsyncLock();
 
         public ExcelImporter(Stream stream)
         {
@@ -35,13 +36,17 @@ namespace OpenXMLXLSXImporter
             _instructionBuilders = new Dictionary<string, SpreadSheetInstructionManager>();
         }
 
-        public ISpreadSheetInstructionBuilder GetSheetBuilder(string sheetName)
+        public async Task<ISpreadSheetInstructionBuilder> GetSheetBuilder(string sheetName)
         {
-            if (_instructionBuilders == null)
-                return null;
             if(!_instructionBuilders.ContainsKey(sheetName))
             {
-                _instructionBuilders[sheetName] = new SpreadSheetInstructionManager(_streamSheetFile.LoadSpreadSheetData(sheetName));
+                using(await _sheetAccessorLock.LockAsync())
+                {
+                    if (!_instructionBuilders.ContainsKey(sheetName))
+                    {
+                        _instructionBuilders[sheetName] = new SpreadSheetInstructionManager(_streamSheetFile.LoadSpreadSheetData(sheetName));
+                    }
+                }
             }
             return new SpreadSheetInstructionBuilder(_instructionBuilders[sheetName]);
         }

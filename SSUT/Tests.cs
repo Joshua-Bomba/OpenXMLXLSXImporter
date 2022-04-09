@@ -42,14 +42,14 @@ namespace SSUT
         [Test]
         public void LoadTitleCellTestUsingRunner()
         {
-            ISpreadSheetInstructionBuilder builder = importer.GetSheetBuilder(SHEET1);
+            ISpreadSheetInstructionBuilder builder = importer.GetSheetBuilder(SHEET1).GetAwaiter().GetResult();
             ICellData result = builder.Runner.LoadSingleCell(1, "A").GetAwaiter().GetResult();
             Assert.IsTrue(result.Content() == "A Header");
         }
         [Test]
         public void LoadTitleCellTestUsingBundler()
         {
-            ISpreadSheetInstructionBuilder builder = importer.GetSheetBuilder(SHEET1);
+            ISpreadSheetInstructionBuilder builder = importer.GetSheetBuilder(SHEET1).GetAwaiter().GetResult();
             ISpreadSheetInstruction instruction = builder.Bundler.LoadSingleCell(1, "A");
             builder.Bundler.BundleRequeset(new List<ISpreadSheetInstruction> { instruction }).GetAwaiter().GetResult();
             ICellData result = instruction.GetResults().FirstAsync().GetAwaiter().GetResult();
@@ -59,7 +59,7 @@ namespace SSUT
         [Test]
         public void LoadTitleCellTestUsingBundlerResults()
         {
-            ISpreadSheetInstructionBuilder builder = importer.GetSheetBuilder(SHEET1);
+            ISpreadSheetInstructionBuilder builder = importer.GetSheetBuilder(SHEET1).GetAwaiter().GetResult();
             ISpreadSheetInstruction instruction = builder.Bundler.LoadSingleCell(1, "A");
             IAsyncEnumerable<ICellData> results = builder.Bundler.GetBundledResults(new List<ISpreadSheetInstruction> { instruction});
             ICellData result = results.FirstAsync().GetAwaiter().GetResult();
@@ -70,7 +70,7 @@ namespace SSUT
         {
             try
             {
-                ISpreadSheetInstructionBuilder builder = importer.GetSheetBuilder("not a real sheet");
+                ISpreadSheetInstructionBuilder builder = importer.GetSheetBuilder("not a real sheet").GetAwaiter().GetResult();
                 ICellData result = builder.Runner.LoadSingleCell(1, "A").GetAwaiter().GetResult();
                 Assert.Fail();
             }
@@ -80,39 +80,39 @@ namespace SSUT
             }
 
         }
+        [Test]
+        public void TwoCells()
+        {
+            ISpreadSheetInstructionBuilder builder = importer.GetSheetBuilder(SHEET1).GetAwaiter().GetResult();
+            ISpreadSheetInstruction[] bundle = new ISpreadSheetInstruction[] {
+                builder.Bundler.LoadSingleCell(2, "B"),
+                builder.Bundler.LoadSingleCell(2, "A")
+            };
 
-        //[Test]
-        //public void LoadTitleCellWithoutImplementAInterface()
-        //{
-        //    ICellData c = null;
-        //    var f = async () =>
-        //    {
+            ICellData c = builder.Bundler.GetBundledResults(bundle).FirstAsync().GetAwaiter().GetResult();
+             Assert.IsTrue(c.Content() == "Data in another cell");
+        }
+        [Test]
+        public void ConcurrenyTest()
+        {
+            Task t = new Task(() =>
+            {
+                ISpreadSheetInstructionBuilder builder = importer.GetSheetBuilder(SHEET1).GetAwaiter().GetResult();
+                ICellData result = builder.Runner.LoadSingleCell(1, "A").GetAwaiter().GetResult();
+                Assert.IsTrue(result.Content() == "A Header");
+            });
 
-        //        // IAsyncEnumerable<IEnumerable<Task<ICellData>>> ret = importer.ProcessAndGetAsyncCollection(SHEET1, x => x.LoadSingleCell(1, "A"));
-        //        //c = await (await ret.FirstAsync()).First();
+            Task t2 = new Task(() =>
+            {
 
-        //    };
+                ISpreadSheetInstructionBuilder builder = importer.GetSheetBuilder(SHEET1).GetAwaiter().GetResult();
+                ICellData result = builder.Runner.LoadSingleCell(1, "A").GetAwaiter().GetResult();
+                Assert.IsTrue(result.Content() == "A Header");
+            });
 
-        //    f().GetAwaiter().GetResult();
-        //    Assert.IsTrue(c.Content() == "A Header");
-            
-        //}
-        //[Test]
-        //public void LoadTitleCellWithoutImplementAInterfaceList()
-        //{
-        //    ICellData c;
-        //    //List<List<ICellData>> ret =  importer.ProcessAndGetListAsync(SHEET1, x => x.LoadSingleCell(1, "A")).GetAwaiter().GetResult();
-        //    c = ret.First().First();
-        //    Assert.IsTrue(c.Content() == "A Header");
-        //}
-        //[Test]
-        //public void SecondCell()
-        //{
-        //    ICellData c;
-        //    //List<List<ICellData>> ret = importer.ProcessAndGetListAsync(SHEET1, x => x.LoadSingleCell(2, "B").LoadSingleCell(2,"A")).GetAwaiter().GetResult();
-        //    //c = ret.First().First();
-        //   // Assert.IsTrue(c.Content() == "Data in another cell");
-        //}
+            t.Start();
+            t2.Start();
+        }
         //private class OnlySecondCell : ISpreadSheetInstructionBuilderManager
         //{
         //    private ISpreadSheetInstructionKey secondCell;
@@ -126,7 +126,7 @@ namespace SSUT
         //    {
         //        secondCell = builder.LoadSingleCell(2, "B");
         //        //we will wait till we select the second cell before we select the first one. it should queue it in the defered area given enought time
-                
+
         //    }
 
         //    public async Task ResultsProcessed(ISpreadSheetQueryResults query)

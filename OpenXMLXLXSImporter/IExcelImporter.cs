@@ -10,6 +10,6 @@ namespace OpenXMLXLSXImporter
 {
     public interface IExcelImporter : IDisposable
     {
-        ISpreadSheetInstructionBuilder GetSheetBuilder(string sheetName);
+        Task<ISpreadSheetInstructionBuilder> GetSheetBuilder(string sheetName);
     }
 }
