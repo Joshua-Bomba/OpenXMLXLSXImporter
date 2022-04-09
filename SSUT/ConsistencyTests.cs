@@ -15,43 +15,31 @@ namespace SSUT
     public  class ConsistencyTests : BaseTest
     {
         public const int LOOPS = 100000;
-        public const int THRADS = 8;
+        public const int THREADS = 8;
 
 
         public static void TestConsistency(Action a)
         {
-            //this method is alot easier to track when things freeze the the ParallerFor
-            Task[] pool = new Task[THRADS];
-            int poolOffset = 0;
-            for (int i = 0; i < LOOPS; i++)
+            Task[] pool = new Task[THREADS];
+            for(int j =0;j < pool.Length;j++)
             {
-                Task t = Task.Run(a);
-                if (i < pool.Length)
+                pool[j] = Task.Run(() =>
                 {
-                    pool[i] = t;
-                }
-                else
-                {
-                    if (poolOffset >= pool.Length)
+                    for (int i = 0; i < LOOPS / THREADS; i++)
                     {
-                        poolOffset = 0;
+                        a();
                     }
-                    pool[poolOffset].Wait();
-                    pool[poolOffset] = t;
-                    poolOffset++;
-                }
+                });
             }
-            for(int i =0;i < pool.Length;i++)
+
+            for(int i = 0; i < pool.Length; i++)
             {
-                if(pool[i] != null)
-                {
-                    pool[i].Wait();
-                }
+                pool[i].Wait();
             }
         }
 
 
-        private void LoopUsingSameDataSet(BaseTest context,Action r)
+        public void LoopUsingSameDataSet(BaseTest context,Action r)
         {
             context.importer = this.importer;
             TestConsistency(() =>
@@ -61,7 +49,7 @@ namespace SSUT
         }
 
 
-        private void LoopUsingNewDataSet<TProp>(Action<TProp> r) where TProp : BaseTest, new()
+        public void LoopUsingNewDataSet<TProp>(Action<TProp> r) where TProp : BaseTest, new()
         {
             byte[] data;
             using (MemoryStream baseStream = new MemoryStream())
