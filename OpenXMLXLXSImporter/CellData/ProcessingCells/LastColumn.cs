@@ -15,15 +15,26 @@ namespace OpenXMLXLSXImporter.CellData
         public uint _row;
         private ICellIndex _result;
         private AsyncManualResetEvent _mre;
+        private Exception _fail;
         public LastColumn(uint row)
         {
             _mre = new AsyncManualResetEvent(false);
             _row = row;
         }
 
+        public void Failure(Exception e)
+        {
+            _fail = e;
+            _mre.Set();
+        }
+
         public async Task<ICellIndex> GetIndex()
         {
             await _mre.WaitAsync();
+            if(_fail != null)
+            {
+                throw _fail;
+            }
             return _result;
         }
 

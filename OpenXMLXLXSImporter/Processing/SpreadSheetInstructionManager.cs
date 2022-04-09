@@ -58,7 +58,14 @@ namespace OpenXMLXLSXImporter.Processing
                 _loadQueueManager = new ChunkableBlockingCollection<ICellProcessingTask>(dequeManager);
                 _queueInit.Set();
                 IXlsxSheetFilePromise g = await sheetFilePromise;
-                await dequeManager.ProcessRequests(g);
+                if(g != null)
+                {
+                    await dequeManager.ProcessRequests(g);
+                }
+                else
+                {
+                    dequeManager.Terminate(new Exception("Sheet Not Found Exception"));
+                }
             });
         }
         public void Dispose()

@@ -42,6 +42,15 @@ namespace OpenXMLXLSXImporter.Processing
             _queue = collection;
         }
 
+        public void Terminate(Exception e)
+        {
+           ICellProcessingTask[] tasks= _queue.Finish().ToArray();
+            foreach(ICellProcessingTask t in tasks)
+            {
+                t.Failure(e);
+            }
+        }
+
         public async Task ProcessRequests(IXlsxSheetFilePromise file)
         {
             _filePromise = file;

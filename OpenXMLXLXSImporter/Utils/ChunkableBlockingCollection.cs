@@ -48,7 +48,18 @@ namespace OpenXMLXLSXImporter.Utils
 
         public AsyncLock Mutex => _mutext;
 
-        public void Enque(T item) => _queue.Add(item);
+        public void Enque(T item)
+        {
+            if(!_queue.IsAddingCompleted)
+            {
+                _queue.Add(item);
+            }
+            else
+            {
+                throw new Exception("No More requests are being accepted");
+            }
+
+        } 
 
         private async Task Chunk()
         {
@@ -77,7 +88,11 @@ namespace OpenXMLXLSXImporter.Utils
             
         }
 
-        public void Finish() => _queue.CompleteAdding();
+        public BlockingCollection<T> Finish()
+        {
+            _queue.CompleteAdding();
+            return _queue;
+        }
 
         public async Task<T> Take()
         {

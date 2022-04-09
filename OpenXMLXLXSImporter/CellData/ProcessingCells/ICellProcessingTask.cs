@@ -11,5 +11,6 @@ namespace OpenXMLXLSXImporter.CellData
     public interface ICellProcessingTask
     {
         void Resolve(IXlsxSheetFile file, Cell cellElement,ICellIndex index);
+        void Failure(Exception e);
     }
 }
