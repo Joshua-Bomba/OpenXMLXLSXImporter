@@ -11,8 +11,8 @@ namespace SSUT
 {
     public abstract class BaseTest
     {
-        protected Stream stream = null;
-        protected IExcelImporter importer = null;
+        public Stream stream = null;
+        public IExcelImporter importer = null;
 
         [SetUp]
         public void Setup()

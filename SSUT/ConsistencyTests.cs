@@ -18,14 +18,13 @@ namespace SSUT
         [Test]
         public void FullRangeCellTestLoadTheSameDataAgain()
         {
+            SpreadSheetInstructionBuilderTest b = new SpreadSheetInstructionBuilderTest();
+            b.importer = this.importer;
             Parallel.For(0, LOOPS, new ParallelOptions { }, (i) =>
             {
                 try
                 {
-                    ISpreadSheetInstructionBuilder builder = importer.GetSheetBuilder(Global.SHEET1).GetAwaiter().GetResult();
-                    ValueTask<ICellData[]> columnRange = builder.Runner.LoadFullColumnRange(4).ToArrayAsync();
-                    ValueTask<ICellData[]> rowRange = builder.Runner.LoadFullRowRange("G").ToArrayAsync();
-                    Global.CheckResultsAsync(columnRange, rowRange).GetAwaiter().GetResult();
+                    b.FullRangeCellTest();
                 }
                 catch
                 {
@@ -37,6 +36,7 @@ namespace SSUT
         [Test]
         public void FullRangeCellTestBurnInTest()
         {
+            SpreadSheetInstructionBuilderTest b = new SpreadSheetInstructionBuilderTest();
             byte[] data;
             using (MemoryStream baseStream = new MemoryStream())
             {
@@ -55,10 +55,8 @@ namespace SSUT
                     {
                         try
                         {
-                            ISpreadSheetInstructionBuilder builder = importer.GetSheetBuilder(Global.SHEET1).GetAwaiter().GetResult();
-                            ValueTask<ICellData[]> columnRange = builder.Runner.LoadFullColumnRange(4).ToArrayAsync();
-                            ValueTask<ICellData[]> rowRange = builder.Runner.LoadFullRowRange("G").ToArrayAsync();
-                            Global.CheckResultsAsync(columnRange, rowRange).GetAwaiter().GetResult();
+                            b.importer = importer;
+                            b.FullRangeCellTest();
                         }
                         catch
                         {
