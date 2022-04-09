@@ -1,4 +1,5 @@
-﻿using OpenXMLXLSXImporter.Builders.Managers;
+﻿using OpenXMLXLSXImporter.Builders;
+using OpenXMLXLSXImporter.Builders.Managers;
 using OpenXMLXLSXImporter.CellData;
 using System;
 using System.Collections.Generic;
@@ -10,7 +11,6 @@ namespace OpenXMLXLSXImporter
 {
     public interface IExcelImporter : IDisposable
     {
-        Task Process(ISpreadSheetInstructionBuilderManager prop);
-
+        ISpreadSheetInstructionBuilder GetSheetBuilder(string sheetName);
     }
 }

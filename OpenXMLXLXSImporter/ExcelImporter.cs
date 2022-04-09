@@ -27,46 +27,34 @@ namespace OpenXMLXLSXImporter
     public class ExcelImporter : IExcelImporter
     {
         private XlsxDocumentFile _streamSheetFile;
-        private SpreadSheetDequeManager dequeManager;
-        private SpreadSheetInstructionManager ssim;
+
+        private Dictionary<string, SpreadSheetInstructionManager> _instructionBuilders;
 
         public ExcelImporter(Stream stream)
         {
             _streamSheetFile = new XlsxDocumentFile(stream);
+            _instructionBuilders = new Dictionary<string, SpreadSheetInstructionManager>();
         }
 
-        public ISpreadSheetInstructionManager Instructions => ssim;
-
-        public Task Process(ISpreadSheetInstructionBuilderManager sheet)
+        public ISpreadSheetInstructionBuilder GetSheetBuilder(string sheetName)
         {
-            return Task.Run(async() =>
+            if (_instructionBuilders == null)
+                return null;
+            if(!_instructionBuilders.ContainsKey(sheetName))
             {
-                try
-                {
-                    SpreadSheetInstructionBuilder ssib = new SpreadSheetInstructionBuilder();
-                    Task<IXlsxSheetFilePromise> gt = _streamSheetFile.LoadSpreadSheetData(sheet);
-                    sheet.LoadConfig(ssib);
-                    IXlsxSheetFilePromise g = await gt;
-                    dequeManager = new SpreadSheetDequeManager(this);
-                    ssim = new SpreadSheetInstructionManager(dequeManager);
-                    dequeManager.StartRequestProcessor(g);
-                    await ssib.ProcessInstructions(ssim);
-                    Task r = ssib.ProcessResults();
-                    await sheet.ResultsProcessed(ssib);
-                    await r;
-                }
-                catch(Exception ex)
-                {
-                    ExceptionDispatchInfo.Capture(ex).Throw();
-                }
-
-            });
-
+                _instructionBuilders[sheetName] = new SpreadSheetInstructionManager(_streamSheetFile.LoadSpreadSheetData(sheetName));
+            }
+            return new SpreadSheetInstructionBuilder(_instructionBuilders[sheetName]);
         }
 
         public void Dispose()
         {
-            dequeManager?.Finish();//we have all of our results processed we are finished adding
+            Dictionary<string, SpreadSheetInstructionManager> end = _instructionBuilders;
+            _instructionBuilders = null;
+            foreach (KeyValuePair<string, SpreadSheetInstructionManager> ssib in end)
+            {
+                ssib.Value.Dispose();
+            }
         }
 
         //public async IAsyncEnumerable<IEnumerable<Task<ICellData>>> ProcessAndGetAsyncCollection(string sheetName, Action<ISpreadSheetInstructionBuilderManagerInstructionBuilder> builder)

@@ -1,18 +1,23 @@
 ﻿using OpenXMLXLSXImporter.CellData;
+using OpenXMLXLSXImporter.FileAccess;
 using OpenXMLXLSXImporter.Processing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Nito.AsyncEx;
 
 namespace OpenXMLXLSXImporter.Builders
 {
     public class SpreadSheetInstructionBuilder : ISpreadSheetInstructionBuilder, ISpreadSheetQueryResults
     {
         private Dictionary<ISpreadSheetInstructionKey, ISpreadSheetInstruction> _instructions;
-        public SpreadSheetInstructionBuilder()
+
+        private SpreadSheetInstructionManager ssim;
+        public SpreadSheetInstructionBuilder(SpreadSheetInstructionManager spreadSheetInstructionManager)
         {
+            ssim = spreadSheetInstructionManager;
             _instructions = new Dictionary<ISpreadSheetInstructionKey, ISpreadSheetInstruction>();
         }
 

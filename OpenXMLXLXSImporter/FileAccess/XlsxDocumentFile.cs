@@ -77,17 +77,17 @@ namespace OpenXMLXLSXImporter.FileAccess
 
        
 
-        public async Task<IXlsxSheetFilePromise> LoadSpreadSheetData(ISpreadSheetInstructionBuilderManager sheet)
+        public async Task<IXlsxSheetFilePromise> LoadSpreadSheetData(string sheet)
         {
             await _loadSpreadSheetData;
-            if (_sheetRef.ContainsKey(sheet.Sheet))
+            if (_sheetRef.ContainsKey(sheet))
             {
-                if (!_loadedSheets.ContainsKey(sheet.Sheet))
+                if (!_loadedSheets.ContainsKey(sheet))
                 {
                     //this is the first time we use this sheet
-                    _loadedSheets[sheet.Sheet] = new XlsxSheetFile(this, sheet.Sheet);
+                    _loadedSheets[sheet] = new XlsxSheetFile(this, sheet);
                 }
-                return _loadedSheets[sheet.Sheet];
+                return _loadedSheets[sheet];
             }
             return null;
         }

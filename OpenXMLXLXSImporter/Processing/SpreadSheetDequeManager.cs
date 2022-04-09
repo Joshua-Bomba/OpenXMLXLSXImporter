@@ -1,5 +1,6 @@
 ﻿using DocumentFormat.OpenXml.Spreadsheet;
 using Nito.AsyncEx;
+using OpenXMLXLSXImporter.Builders;
 using OpenXMLXLSXImporter.CellData;
 using OpenXMLXLSXImporter.FileAccess;
 using OpenXMLXLSXImporter.Utils;
@@ -15,7 +16,7 @@ namespace OpenXMLXLSXImporter.Processing
 {
     public class SpreadSheetDequeManager : IChunckBlock<ICellProcessingTask>
     {
-        private ExcelImporter _importer;
+        private ISpreadSheetInstructionManager _instructionManager;
 
         private ChunkableBlockingCollection<ICellProcessingTask> _queue;
 
@@ -30,9 +31,9 @@ namespace OpenXMLXLSXImporter.Processing
 
 
         private Task _processRequestTask;
-        public SpreadSheetDequeManager(ExcelImporter importer)
+        public SpreadSheetDequeManager(ISpreadSheetInstructionManager instructionManager)
         {
-            _importer = importer;
+            _instructionManager = instructionManager;
             _filePromise = null;
             _processRequestTask = null;
         }
@@ -213,7 +214,7 @@ namespace OpenXMLXLSXImporter.Processing
             //We will add this deferredcell type to the IIndexers since we don't need them at the time
             if(deferedCells != null&&deferedCells.Any())
             {
-                await _importer.Instructions.AddDeferredCells(deferedCells.Select(x => new DeferredCell(desiredRowIndex.Value, x.Key, x.Value)));
+                await _instructionManager.AddDeferredCells(deferedCells.Select(x => new DeferredCell(desiredRowIndex.Value, x.Key, x.Value)));
             }
         }
 
