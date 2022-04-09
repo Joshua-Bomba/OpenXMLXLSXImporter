@@ -112,6 +112,9 @@ namespace SSUT
 
             t.Start();
             t2.Start();
+
+            t.Wait();
+            t2.Wait();
         }
         //private class OnlySecondCell : ISpreadSheetInstructionBuilderManager
         //{
