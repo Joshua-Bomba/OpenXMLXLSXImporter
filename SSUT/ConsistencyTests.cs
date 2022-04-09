@@ -14,7 +14,7 @@ namespace SSUT
     [TestFixture]
     public  class ConsistencyTests : BaseTest
     {
-        public const int LOOPS = 10000;
+        public const int LOOPS = 100000;
 
         private void LoopUsingSameDataSet(BaseTest context,Action r)
         {
