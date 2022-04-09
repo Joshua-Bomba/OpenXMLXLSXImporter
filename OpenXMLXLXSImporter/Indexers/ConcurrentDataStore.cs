@@ -66,6 +66,14 @@ namespace OpenXMLXLSXImporter.Indexers
             }
         }
 
+        public virtual async Task ProcessInstructions(IEnumerable<ISpreadSheetInstruction> instructions)
+        {
+            using(await _accessorLock.LockAsync())
+            {
+                await this._rowIndexer.ProcessInstructions(instructions);
+            }
+        }
+
         public async Task SetCell(ICellIndex index)
         {
             using (await _accessorLock.LockAsync())

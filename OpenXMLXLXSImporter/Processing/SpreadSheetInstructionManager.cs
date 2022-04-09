@@ -70,6 +70,16 @@ namespace OpenXMLXLSXImporter.Processing
             _sheetProcess.Wait();
         }
 
+        public async Task ProcessInstructionBundle(IEnumerable<ISpreadSheetInstruction> bundle)
+        {
+            ISpreadSheetInstruction[] instructions = bundle.ToArray();
+            foreach(ISpreadSheetInstruction instruction in instructions)
+            {
+                instruction.AttachSpreadSheetInstructionManager(this);
+            }
+            await _dataStore.ProcessInstructions(instructions);
+        }
+
         public async Task ProcessInstruction(ISpreadSheetInstruction spreadSheetInstruction)
         {
             spreadSheetInstruction.AttachSpreadSheetInstructionManager(this);

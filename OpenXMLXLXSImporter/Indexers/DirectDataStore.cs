@@ -57,6 +57,14 @@ namespace OpenXMLXLSXImporter.Indexers
             await instruction.EnqueCell(this);
         }
 
+        public async Task ProcessInstructions(IEnumerable<ISpreadSheetInstruction> instructions)
+        {
+            foreach(ISpreadSheetInstruction instruction in instructions)
+            {
+                await instruction.EnqueCell(this);
+            }
+        }
+
         public async Task<ICellIndex> GetCell(uint rowIndex, string cellIndex)
         {
             ICellIndex r = this.Get(rowIndex, cellIndex);
