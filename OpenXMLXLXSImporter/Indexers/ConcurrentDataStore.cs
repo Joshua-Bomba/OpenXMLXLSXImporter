@@ -84,7 +84,5 @@ namespace OpenXMLXLSXImporter.Indexers
 
         //we don't want to wait for this, we will update it when we get around to it
         void IFutureUpdate.Update(ICellIndex cell) => Task.Run(async () => await SetCell(cell));
-
-        void IFutureUpdate.Update(IEnumerable<ICellIndex> cells) => Task.Run(async() => await SetCells(cells));
     }
 }

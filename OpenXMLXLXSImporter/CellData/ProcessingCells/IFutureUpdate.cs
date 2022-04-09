@@ -9,6 +9,5 @@ namespace OpenXMLXLSXImporter.CellData
     public interface IFutureUpdate
     {
         void Update(ICellIndex cell);
-        void Update(IEnumerable<ICellIndex> cells);
     }
 }

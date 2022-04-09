@@ -10,8 +10,47 @@ using System.Threading.Tasks;
 
 namespace OpenXMLXLSXImporter.CellData
 {
+    internal class ResolveTracker<T>
+    {
+        public HashSet<T> set;
+        private object l;
+
+        public ResolveTracker()
+        {
+            set = new HashSet<T>();
+            l = new object();
+        }
+        public void LogEnque(T c)
+        {
+            Task.Run(() =>
+            {
+                lock (l)
+                {
+                    set.Add(c);
+                }
+            });
+        }
+
+        public void LogDeque(T c)
+        {
+            Task.Run(() =>
+            {
+                lock (l)
+                {
+                    if(set.Contains(c))
+                    {
+                        set.Remove(c);
+                    }
+                }
+            });
+        }
+    }
+
+
     public class FutureCell : IFutureCell, ICellProcessingTask, ICellIndex
     {
+        internal static ResolveTracker<ICellProcessingTask> Tracker = new ResolveTracker<ICellProcessingTask>();
+
         private  ICellData _result;
         private IFutureUpdate _updater;
         private AsyncManualResetEvent _mre;
@@ -21,7 +60,7 @@ namespace OpenXMLXLSXImporter.CellData
             CellColumnIndex = cellColumnIndex;
             _mre = new AsyncManualResetEvent(false);
             _updater = updater;
-
+            Tracker.LogEnque(this);
         }
         public string CellColumnIndex { get; set; }
 
@@ -35,9 +74,17 @@ namespace OpenXMLXLSXImporter.CellData
 
         public void Resolve(IXlsxSheetFile file, Cell cellElement, ICellIndex index)
         {
-            _result = file.ProcessedCell(cellElement, index);
-            _updater?.Update(_result);
-            _mre.Set();
+            try
+            {
+                Tracker.LogDeque(this);
+                _result = file.ProcessedCell(cellElement, index);
+                _updater?.Update(_result);
+            }
+            finally
+            {
+                _mre.Set();
+            }
+
         }
     }
 }
