@@ -120,8 +120,8 @@ namespace SSUT
         public void RangeCellTest()
         {
             ISpreadSheetInstructionBuilder builder = importer.GetSheetBuilder(SHEET1).GetAwaiter().GetResult();
-            ValueTask<ICellData[]> rowRange = builder.Runner.LoadColumnRange(4, "A", "P").ToArrayAsync();
-            ValueTask<ICellData[]> columnRange = builder.Runner.LoadRowRange("G", 1, 7).ToArrayAsync();
+            ValueTask<ICellData[]> columnRange = builder.Runner.LoadColumnRange(4, "A", "P").ToArrayAsync();
+            ValueTask<ICellData[]> rowRange = builder.Runner.LoadRowRange("G", 1, 7).ToArrayAsync();
             CheckResultsAsync(columnRange, rowRange).GetAwaiter().GetResult();
         }
 
@@ -149,8 +149,8 @@ namespace SSUT
         public void FullRangeCellTest()
         {
             ISpreadSheetInstructionBuilder builder = importer.GetSheetBuilder(SHEET1).GetAwaiter().GetResult();
-            ValueTask<ICellData[]> rowRange = builder.Runner.LoadFullColumnRange(4).ToArrayAsync();
-            ValueTask<ICellData[]> columnRange = builder.Runner.LoadFullRowRange("G").ToArrayAsync();
+            ValueTask<ICellData[]> columnRange = builder.Runner.LoadFullColumnRange(4).ToArrayAsync();
+            ValueTask<ICellData[]> rowRange = builder.Runner.LoadFullRowRange("G").ToArrayAsync();
             CheckResultsAsync(columnRange, rowRange).GetAwaiter().GetResult();
         }
 
