@@ -141,7 +141,7 @@ namespace OpenXMLXLSXImporter.Processing
             }
             catch (InvalidOperationException ex)
             {
-                //queue is finished
+                this.Terminate(ex);
             }
         }
 

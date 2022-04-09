@@ -65,6 +65,21 @@ namespace SSUT
             ICellData result = results.FirstAsync().GetAwaiter().GetResult();
             Assert.IsTrue(result.Content() == "A Header");
         }
+        [Test]
+        public void NonExistingSheet()
+        {
+            try
+            {
+                ISpreadSheetInstructionBuilder builder = importer.GetSheetBuilder("not a real sheet");
+                ICellData result = builder.Runner.LoadSingleCell(1, "A").GetAwaiter().GetResult();
+                Assert.Fail();
+            }
+            catch (Exception ex)
+            {
+
+            }
+
+        }
 
         //[Test]
         //public void LoadTitleCellWithoutImplementAInterface()
