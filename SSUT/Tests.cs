@@ -39,31 +39,31 @@ namespace SSUT
             stream?.Close();
             stream?.Dispose();
         }
-
-        //private class TitleColumnTest : ISpreadSheetInstructionBuilderManager
-        //{
-        //    private ISpreadSheetInstructionKey title;
-
-        //    public string Sheet => SHEET1;
-
-        //    public void LoadConfig(ISpreadSheetInstructionBuilder builder)
-        //    {
-        //        title = builder.LoadSingleCell(1, "A");
-        //    }
-
-        //    public async Task ResultsProcessed(ISpreadSheetQueryResults query)
-        //    {
-        //        ICellData d = await query.GetProcessedResults(title).FirstOrDefaultAsync();
-
-        //        Assert.IsTrue(d.Content() == "A Header");
-        //    }
-        //}
+        [Test]
+        public void LoadTitleCellTestUsingRunner()
+        {
+            ISpreadSheetInstructionBuilder builder = importer.GetSheetBuilder(SHEET1);
+            ICellData result = builder.Runner.LoadSingleCell(1, "A").GetAwaiter().GetResult();
+            Assert.IsTrue(result.Content() == "A Header");
+        }
+        [Test]
+        public void LoadTitleCellTestUsingBundler()
+        {
+            ISpreadSheetInstructionBuilder builder = importer.GetSheetBuilder(SHEET1);
+            ISpreadSheetInstruction instruction = builder.Bundler.LoadSingleCell(1, "A");
+            builder.Bundler.BundleRequeset(new List<ISpreadSheetInstruction> { instruction }).GetAwaiter().GetResult();
+            ICellData result = instruction.GetResults().FirstAsync().GetAwaiter().GetResult();
+            Assert.IsTrue(result.Content() == "A Header");
+        }
 
         [Test]
-        public void LoadTitleCellTest()
+        public void LoadTitleCellTestUsingBundlerResults()
         {
-            //TitleColumnTest titleColumnTest = new TitleColumnTest();
-            //importer.Process(titleColumnTest).GetAwaiter().GetResult();
+            ISpreadSheetInstructionBuilder builder = importer.GetSheetBuilder(SHEET1);
+            ISpreadSheetInstruction instruction = builder.Bundler.LoadSingleCell(1, "A");
+            IAsyncEnumerable<ICellData> results = builder.Bundler.GetBundledResults(new List<ISpreadSheetInstruction> { instruction});
+            ICellData result = results.FirstAsync().GetAwaiter().GetResult();
+            Assert.IsTrue(result.Content() == "A Header");
         }
 
         //[Test]
