@@ -57,12 +57,20 @@ namespace OpenXMLXLSXImporter.Indexers
             return result;
         }
 
-
         public virtual async Task ProcessInstruction(ISpreadSheetInstruction instruction)
         {
             using (await _accessorLock.LockAsync())
             {
-                await this._rowIndexer.ProcessInstruction(instruction);
+                LimitedAccessDataStore limitedLife = new LimitedAccessDataStore(_rowIndexer);
+                try
+                {
+                    await instruction.EnqueCell(limitedLife);
+                }
+                finally
+                {
+                    limitedLife.Delete();
+                }
+
             }
         }
 
@@ -70,7 +78,18 @@ namespace OpenXMLXLSXImporter.Indexers
         {
             using(await _accessorLock.LockAsync())
             {
-                await this._rowIndexer.ProcessInstructions(instructions);
+                LimitedAccessDataStore limitedLife = new LimitedAccessDataStore(_rowIndexer);
+                try
+                {
+                    foreach (ISpreadSheetInstruction instruction in instructions)
+                    {
+                        await instruction.EnqueCell(this);
+                    }
+                }
+                finally
+                {
+                    limitedLife.Delete();
+                }
             }
         }
 
