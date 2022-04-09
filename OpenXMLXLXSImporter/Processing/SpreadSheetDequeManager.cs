@@ -29,13 +29,10 @@ namespace OpenXMLXLSXImporter.Processing
         private Queue<ICellProcessingTask> ss;
         private Dictionary<Cell, ICellProcessingTask> fufil;
 
-
-        private Task _processRequestTask;
         public SpreadSheetDequeManager(ISpreadSheetInstructionManager instructionManager)
         {
             _instructionManager = instructionManager;
             _filePromise = null;
-            _processRequestTask = null;
         }
 
         public void Finish() => _queue.Finish();
@@ -45,18 +42,9 @@ namespace OpenXMLXLSXImporter.Processing
             _queue = collection;
         }
 
-        public void StartRequestProcessor(IXlsxSheetFilePromise file)
+        public async Task ProcessRequests(IXlsxSheetFilePromise file)
         {
-            if (_processRequestTask == null)
-            {
-                _filePromise = file;
-                _processRequestTask = Task.Run(ProcessRequests);
-            }
-
-        }
-
-        protected async Task ProcessRequests()
-        {
+            _filePromise = file;
             try
             {
                 Cell cell = null;
