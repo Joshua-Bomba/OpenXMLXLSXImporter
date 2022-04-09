@@ -1,6 +1,7 @@
 ﻿using Nito.AsyncEx;
 using OpenXMLXLSXImporter.CellData;
 using OpenXMLXLSXImporter.Indexers;
+using OpenXMLXLSXImporter.Processing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,43 +13,46 @@ namespace OpenXMLXLSXImporter.Builders
     public abstract class BaseSpreadSheetInstruction : ISpreadSheetInstruction
     {
         protected AsyncManualResetEvent _mre;
+        protected ISpreadSheetInstructionManager _manager;
         public BaseSpreadSheetInstruction() {
             _mre = new AsyncManualResetEvent(false);
         }
 
-        public virtual bool ByColumn => false;
+        public void AttachSpreadSheetInstructionManager(ISpreadSheetInstructionManager spreadSheetInstructionManager)
+        {
+            _manager = spreadSheetInstructionManager;
+        }
 
-        async Task<IEnumerable<Task<ICellData>>> ISpreadSheetInstruction.GetResults()
+        async IAsyncEnumerable<ICellData> ISpreadSheetInstruction.GetResults()
         {
             await _mre.WaitAsync();
-            IEnumerable<ICellIndex> cells = GetResults();
-            return cells.Select(GetCellData).ToArray();//iterate through the entire collection
-          
+            IAsyncEnumerator<ICellIndex> cells = GetResults().GetAsyncEnumerator();
+            ICellIndex i;
+            while(await cells.MoveNextAsync())
+            {
+                i = cells.Current;
+                if (i is IFutureCell fs)
+                {
+                    yield return await fs.GetData();
+                }
+                else if (i is ICellData cd)
+                {
+                    yield return cd;
+                }
+            }
         }
 
-        private static async Task<ICellData> GetCellData(ICellIndex i)
+
+        protected abstract IAsyncEnumerable<ICellIndex> GetResults();
+
+        async Task  ISpreadSheetInstruction.EnqueCell(IDataStore indexer)
         {
-            if (i is IFutureCell fs)
-            {
-                return await fs.GetData();
-            }
-            else if(i is ICellData cd)
-            {
-                return cd;
-            }
-            throw new InvalidOperationException();
-        }
-
-
-        protected abstract IEnumerable<ICellIndex> GetResults();
-
-        void  ISpreadSheetInstruction.EnqueCell(IIndexer indexer)
-        {
+            await EnqueCell(indexer);
             _mre.Set();
-            EnqueCell(indexer);
         }
 
 
-        protected abstract void EnqueCell(IIndexer indexer);
+        protected abstract Task EnqueCell(IDataStore indexer);
+
     }
 }

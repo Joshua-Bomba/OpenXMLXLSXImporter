@@ -33,12 +33,9 @@ namespace OpenXMLXLSXImporter.Builders
                 if(exists)
                 {
                     ISpreadSheetInstructionKey.SpreadSheetAction el = ac.Current;
-                    IEnumerable<Task<ICellData>> cd = await instruction.GetResults();
+
+                    IAsyncEnumerable<ICellData> cd = instruction.GetResults();
                     exists = ac.MoveNext();
-                    if(exists&&!cd.TryGetNonEnumeratedCount(out int count))//sillyness, so we check to see if we have access to the count if we don't then it's probably still in defered execution state
-                    {//so will convert it to an array
-                        cd = cd.ToArray();
-                    }
                     el?.Invoke(cd);
                     if(exists)
                     {

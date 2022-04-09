@@ -1,5 +1,4 @@
-﻿using OpenXMLXLSXImporter.Indexers;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,8 +6,8 @@ using System.Threading.Tasks;
 
 namespace OpenXMLXLSXImporter.CellData
 {
-    public  interface IFutureCell
+    public interface IFutureUpdate
     {
-        Task<ICellData> GetData();
+        void Update(ICellIndex cell);
     }
 }

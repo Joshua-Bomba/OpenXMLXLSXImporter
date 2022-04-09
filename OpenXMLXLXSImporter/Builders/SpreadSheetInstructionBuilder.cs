@@ -26,6 +26,17 @@ namespace OpenXMLXLSXImporter.Builders
 
         public ISpreadSheetInstructionKey LoadSingleCell(uint row, string cell)
             => Add(new SingleCell(row, cell));
+        public ISpreadSheetInstructionKey LoadColumnRange(uint row, string startColumn, string endColumn)
+            => Add(new ColumnRange(row, startColumn, endColumn));
+
+        public ISpreadSheetInstructionKey LoadRowRange(string column, uint startRow, uint endRow)
+            => Add(new RowRange(column, startRow, endRow));
+
+        public ISpreadSheetInstructionKey LoadFullColumnRange(uint row, string startColumn = "A")
+            => Add(new FullColumnRange(row, startColumn));
+
+        public ISpreadSheetInstructionKey LoadFullRowRange(string column, uint startRow)
+            => Add(new FullRowRange(column, startRow));
 
         public async Task ProcessInstructions(SpreadSheetInstructionManager grid)
         {
@@ -33,21 +44,28 @@ namespace OpenXMLXLSXImporter.Builders
                 await grid.ProcessInstruction(instruction.Value);
         }
 
-        protected static async Task ProcessResult(KeyValuePair<ISpreadSheetInstructionKey, ISpreadSheetInstruction> x)
-        {
-            if(x.Key is SpreadSheetActionManager ssam)
-            {
-                await ssam.TriggerEvent(x.Value);
-            }
-        }
-
         public async Task ProcessResults()
         {
-            foreach (Task t in _instructions.Select(ProcessResult).ToArray())
-                await t;
+            foreach (KeyValuePair<ISpreadSheetInstructionKey,ISpreadSheetInstruction> kv in _instructions)
+            {
+                if (kv.Key is SpreadSheetActionManager ssam)
+                {
+                    await ssam.TriggerEvent(kv.Value);
+                }
+            }
+
         }
 
-        public async Task<IEnumerable<Task<ICellData>>> GetResults(ISpreadSheetInstructionKey key)
-            =>await _instructions[key].GetResults();
+        public async IAsyncEnumerable<ICellData> GetProcessedResults(ISpreadSheetInstructionKey key)
+        {
+            IAsyncEnumerable<ICellData>  cellDatas = _instructions[key].GetResults();
+
+            IAsyncEnumerator<ICellData> cdEnum = cellDatas.GetAsyncEnumerator();
+
+            while(await cdEnum.MoveNextAsync())
+            {
+                yield return cdEnum.Current;
+            }
+        }
     }
 }

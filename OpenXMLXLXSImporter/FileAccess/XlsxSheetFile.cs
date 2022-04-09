@@ -66,7 +66,12 @@ namespace OpenXMLXLSXImporter.FileAccess
             //this will only load in up to the row we need
             //if we try loading in a row that does not exist then we will load all of them in
             //I'm assuming that data from here might still be in the file and we don't want to read things we don't need
-            while (!_rowsLoadedIn && !_rows.ContainsKey(desiredRowIndex))
+            if(_rows.ContainsKey(desiredRowIndex))
+            {
+                cellEnumerator = _rows[desiredRowIndex];
+                return true;
+            }
+            while (!_rowsLoadedIn)
             {
                 if (_rowEnumerator.MoveNext())
                 {
@@ -88,26 +93,61 @@ namespace OpenXMLXLSXImporter.FileAccess
                     break;
                 }
             }
+
             cellEnumerator = null;
             return false;
         }
 
-        void IXlsxSheetFile.ProcessedCell(Cell cellElement, ICellProcessingTask cellPromise)
+        public uint GetAllRows()
+        {
+            IEnumerator<Cell> cellEnumerator;
+            while (!_rowsLoadedIn)
+            {
+                if (_rowEnumerator.MoveNext())
+                {
+                    _row = _rowEnumerator.Current;
+                    _rowIndexNullable = _row.RowIndex;
+                    if (_rowIndexNullable.HasValue)
+                    {
+                        _rowIndex = _rowIndexNullable.Value;
+                        _cellEnumerable = _row.Elements<Cell>();
+                        cellEnumerator = _cellEnumerable.GetEnumerator();
+                        _rows.Add(_rowIndex, cellEnumerator);
+                    }
+                }
+                else
+                {
+                    _rowsLoadedIn = true;
+                    break;
+                }
+            }
+            return _rowIndex;
+        }
+
+        ICellData IXlsxSheetFile.ProcessedCell(Cell cellElement, ICellIndex index)
         {
             ICellData cellData;
-            bool hasBeenProcessed = ProcessCustomCell(cellElement, out cellData);
-            if (!hasBeenProcessed)//if there is no custom cell then we will use add a simple CellDataContent
+            if(cellElement != null)
             {
-                cellData = new CellDataContent { Text = cellElement.CellValue.Text };
+                bool hasBeenProcessed = ProcessCustomCell(cellElement, out cellData);
+                if (!hasBeenProcessed)//if there is no custom cell then we will use add a simple CellDataContent
+                {
+                    cellData = new CellDataContent { Text = cellElement.CellValue.Text };
+                }
+            }
+            else
+            {
+                cellData = new EmptyCell();
             }
 
-            if (cellData != null)
+            if (cellData != null && index != null)
             {
                 //use the same value from the promise
-                cellData.CellColumnIndex = cellPromise.CellColumnIndex;
-                cellData.CellRowIndex = cellPromise.CellRowIndex;
+                cellData.CellColumnIndex = index.CellColumnIndex;
+                cellData.CellRowIndex = index.CellRowIndex;
             }
-            cellPromise.Resolve(cellData);
+
+            return cellData;
         }
 
 

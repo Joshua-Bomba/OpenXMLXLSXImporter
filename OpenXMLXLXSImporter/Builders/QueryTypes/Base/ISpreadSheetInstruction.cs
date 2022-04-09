@@ -1,5 +1,6 @@
 ﻿using OpenXMLXLSXImporter.CellData;
 using OpenXMLXLSXImporter.Indexers;
+using OpenXMLXLSXImporter.Processing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,10 +11,10 @@ namespace OpenXMLXLSXImporter.Builders
 {
     public interface ISpreadSheetInstruction
     {
-        bool ByColumn { get; }
+        void AttachSpreadSheetInstructionManager(ISpreadSheetInstructionManager spreadSheetInstructionManager);
 
-        void EnqueCell(IIndexer indexer);
+        Task EnqueCell(IDataStore indexer);
 
-        Task<IEnumerable<Task<ICellData>>> GetResults();
+        IAsyncEnumerable<ICellData> GetResults();
     }
 }

@@ -9,6 +9,6 @@ namespace OpenXMLXLSXImporter.Builders
 {
     public interface ISpreadSheetQueryResults
     {
-        Task<IEnumerable<Task<ICellData>>> GetResults(ISpreadSheetInstructionKey key);
+        IAsyncEnumerable<ICellData> GetProcessedResults(ISpreadSheetInstructionKey key);
     }
 }

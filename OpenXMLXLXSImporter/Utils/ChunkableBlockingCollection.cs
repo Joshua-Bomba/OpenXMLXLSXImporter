@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Nito.AsyncEx;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,68 +15,81 @@ namespace OpenXMLXLSXImporter.Utils
 
         bool ShouldPullAndChunk { get; }
 
-        bool KeepQueueLockedForDump();
+        Task PreQueueProcessing();
+        void ProcessQueue(ref Queue<T> items);
+        Task PostQueueProcessing();
 
-        void QueueDumpped(ref List<T> items);
+        Task PostLockProcessing();
 
-        void PostProcessing();
-
-        void PreProcessing();
+        Task PreLockProcessing();
     }
 
-
-    public class ChunkableBlockingCollection<T>
+    public interface IChunkableBlockingCollection<T>
     {
-        private ManualResetEventSlim _mre;
+        AsyncLock Mutex { get; }
+        void Enque(T item);
+
+    }
+
+    public class ChunkableBlockingCollection<T> : IChunkableBlockingCollection<T>
+    {
+        private AsyncLock _mutext;
         private BlockingCollection<T> _queue;
-        private IEnumerator<T> _chunkedItems;
+        private Queue<T> _chunkedItems;
         private IChunckBlock<T> _chunkBlock;
         public ChunkableBlockingCollection(IChunckBlock<T> chunkBlock)
         {
             _chunkBlock = chunkBlock;
-            _mre = new ManualResetEventSlim(true);//we will make the mre's inital state as true
+            _mutext = new AsyncLock();//we will make the mre's inital state as true
             _queue = new BlockingCollection<T>();
             _chunkedItems = null;
             chunkBlock.Init(this);
         }
 
-        public void Enque(T item)
-        {
-            _mre.Wait();
-            _queue.Add(item);
-        }
+        public AsyncLock Mutex => _mutext;
 
-        private void SetupChunk()
+        public void Enque(T item) => _queue.Add(item);
+
+        private async Task Chunk()
         {
-            _chunkBlock.PreProcessing();
-            _mre.Reset();
-            BlockingCollection<T> dumpCollection = _queue;
-            _queue = new BlockingCollection<T>();
-            bool keepLocked = _chunkBlock.KeepQueueLockedForDump();
-            if (!keepLocked)
+            await _chunkBlock.PreLockProcessing();
+            using(await _mutext.LockAsync())
             {
-                _mre.Set();
+                await _chunkBlock.PreQueueProcessing();
+                BlockingCollection<T> dumpCollection = _queue;
+                _queue = new BlockingCollection<T>();
+                dumpCollection.CompleteAdding();
+                if (_chunkedItems == null)
+                {
+                    _chunkedItems = new Queue<T>(dumpCollection);
+                }
+                else
+                {
+                    foreach (T item in dumpCollection)
+                    {
+                        _chunkedItems.Enqueue(item);
+                    }
+                }
+                _chunkBlock.ProcessQueue(ref _chunkedItems);
+                await _chunkBlock.PostQueueProcessing();
             }
-            dumpCollection.CompleteAdding();
-            List<T> queueOutput = dumpCollection.ToList();
-            _chunkBlock.QueueDumpped(ref queueOutput);
-            if (keepLocked)
-            {
-                _mre.Set();
-            }
-            _chunkBlock.PostProcessing();
-            _chunkedItems = queueOutput.GetEnumerator();
+            await _chunkBlock.PostLockProcessing();
+            
         }
 
         public void Finish() => _queue.CompleteAdding();
 
-        public T Take()
+        public async Task<T> Take()
         {
             if (_chunkedItems != null)
             {
-                if (_chunkedItems.MoveNext())
+                if (_chunkedItems.TryDequeue(out T item))
                 {
-                    return _chunkedItems.Current;
+                    if(_chunkBlock.ShouldPullAndChunk)
+                    {
+                        await Chunk();
+                    }
+                    return item;
                 }
                 else
                 {
@@ -84,10 +98,10 @@ namespace OpenXMLXLSXImporter.Utils
             }
             if (_chunkBlock.ShouldPullAndChunk)
             {
-                SetupChunk();
-                if (_chunkedItems.MoveNext())
+                await Chunk();
+                if(_chunkedItems.TryDequeue(out T item))
                 {
-                    return _chunkedItems.Current;
+                    return item;
                 }
                 else
                 {

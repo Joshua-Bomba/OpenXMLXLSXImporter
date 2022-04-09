@@ -12,7 +12,8 @@ namespace OpenXMLXLSXImporter.Builders
     {
         private uint _row;
         private string _cell;
-        private ICellIndex _cellItem;
+        private Task<ICellIndex> _cellItem;
+
         public SingleCell(uint row, string cellIndex) : base()
         {
             _row = row;
@@ -20,23 +21,14 @@ namespace OpenXMLXLSXImporter.Builders
             _cellItem = null;
         }
 
-        protected override IEnumerable<ICellIndex> GetResults() => new ICellIndex[] { _cellItem };
-
-        protected override void EnqueCell(IIndexer indexer)
+        protected async override IAsyncEnumerable<ICellIndex> GetResults()
         {
-            if(! indexer.HasCell(_row, _cell))
-            {
-                FutureCell item = new FutureCell(_row, _cell);
-                indexer.Add(item);
-                _cellItem = item;
-            }
-            else
-            {
-                _cellItem = indexer.GetCell(_row, _cell);
-            }
-            
+            yield return await _cellItem;
         }
 
-
+        protected override async Task EnqueCell(IDataStore indexer)
+        {
+            _cellItem = indexer.GetCell(_row, _cell);
+        }
     }
 }
