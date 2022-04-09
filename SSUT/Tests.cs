@@ -27,7 +27,10 @@ namespace SSUT
         [SetUp]
         public void Setup()
         {
-            stream = File.OpenRead(TEST_FILE);
+            stream = new MemoryStream();
+            using(FileStream fs = File.OpenRead(TEST_FILE)) {
+                fs.CopyTo(stream);
+            }
             importer = new ExcelImporter(stream);
         }
         [TearDown]
@@ -254,12 +257,36 @@ namespace SSUT
         [Test]
         public void FullRangeCellTest()
         {
-            for(int i = 0; i < 10000;i++)
+            byte[] data;
+            using(MemoryStream baseStream = new MemoryStream())
             {
-                FullRangeCellsTest rc = new FullRangeCellsTest();
-                importer.Process(rc).GetAwaiter().GetResult();
-                CheckResults(rc.columnRanges, rc.rowRanges);
+                using (FileStream fs = File.OpenRead(TEST_FILE))
+                {
+                    fs.CopyTo(baseStream);
+                }
+                data = baseStream.ToArray();
             }
+
+            Parallel.For(0, 100000,new ParallelOptions { MaxDegreeOfParallelism = 1 }, (i) =>
+            {
+                using (MemoryStream ms = new MemoryStream(data))
+                {
+                    using (IExcelImporter importer = new ExcelImporter(ms))
+                    {
+                        try
+                        {
+                            FullRangeCellsTest rc = new FullRangeCellsTest();
+                            importer.Process(rc).GetAwaiter().GetResult();
+                            CheckResults(rc.columnRanges, rc.rowRanges);
+                        }
+                        catch (Exception ex)
+                        {
+
+                        }
+                    }
+                }
+            });
+
         }
     }
 }
