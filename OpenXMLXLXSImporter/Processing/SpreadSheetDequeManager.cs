@@ -14,11 +14,11 @@ using System.Threading.Tasks;
 
 namespace OpenXMLXLSXImporter.Processing
 {
-    public class SpreadSheetDequeManager : IChunckBlock<ICellProcessingTask>
+    public class SpreadSheetDequeManager
     {
         private IDeferredUpdater _deferredUpdater;
 
-        private ChunkableBlockingCollection<ICellProcessingTask> _queue;
+        private AsyncProducerConsumerQueue<ICellProcessingTask> _queue;
 
         private uint? desiredRowIndex;
         private string desiredColumnIndex;
@@ -26,25 +26,25 @@ namespace OpenXMLXLSXImporter.Processing
         private IXlsxSheetFilePromise _filePromise;
         private IXlsxSheetFile sheetAccess;
 
-        private Queue<ICellProcessingTask> ss;
-        private Dictionary<Cell, ICellProcessingTask> fufil;
 
         public SpreadSheetDequeManager(IDeferredUpdater deferredUpdater)
         {
             _deferredUpdater = deferredUpdater;
             _filePromise = null;
+            _queue = new AsyncProducerConsumerQueue<ICellProcessingTask>();
         }
 
-        public void Finish() => _queue.Finish();
+        public void Finish() => _queue.CompleteAdding();
 
-        public void Init(ChunkableBlockingCollection<ICellProcessingTask> collection)
+        public async Task QueueAsync(ICellProcessingTask queue)
         {
-            _queue = collection;
+            await _queue.EnqueueAsync(queue);
         }
 
         public void Terminate(Exception e)
         {
-           ICellProcessingTask[] tasks= _queue.Finish().ToArray();
+            _queue.CompleteAdding();
+            ICellProcessingTask[] tasks = _queue.GetConsumingEnumerable().ToArray();
             foreach(ICellProcessingTask t in tasks)
             {
                 t.Failure(e);
@@ -63,7 +63,8 @@ namespace OpenXMLXLSXImporter.Processing
                 ICellIndex index;
                 while (true)
                 {
-                    ICellProcessingTask dequed = await _queue.Take();
+                    await ProcessDeferredCells();
+                    ICellProcessingTask dequed = await _queue.DequeueAsync();
                     if(!dequed.Processed)
                     {
                         index = null;
@@ -148,72 +149,7 @@ namespace OpenXMLXLSXImporter.Processing
             }
         }
 
-        public bool ShouldPullAndChunk => deferedCells?.Any() ?? false;
-
-        public async Task PreLockProcessing()
-        {
-            ss = new Queue<ICellProcessingTask>();
-            fufil = new Dictionary<Cell, ICellProcessingTask>();
-        }
-
-        public async Task PreQueueProcessing()
-        {
-            
-        }
-
-        public void ProcessQueue(ref Queue<ICellProcessingTask> items)
-        {
-            ICellProcessingTask[] tasks = items.ToArray();
-            List<ICellIndex> indexes = new List<ICellIndex>(tasks.Length);
-            int reuse = 0;
-            ICellProcessingTask task;
-            for (int i = 0; i < tasks.Length; i++)
-            {
-                task = tasks[i];
-                tasks[i] = null;
-                if (task is ICellIndex item)
-                {
-                    if (deferedCells != null&&desiredRowIndex.HasValue&&item.CellRowIndex == desiredRowIndex.Value&&deferedCells.ContainsKey(item.CellColumnIndex))
-                    {
-                        fufil.Add(deferedCells[item.CellColumnIndex], task);
-                        deferedCells.Remove(item.CellColumnIndex);
-                    }
-                    else
-                    {
-                        indexes.Add(item);
-                    }
-                }
-                else
-                {
-                    tasks[reuse] = task;
-                    reuse++;
-                }
-            }
-
-            IOrderedEnumerable<IGrouping<uint, ICellIndex>> g = indexes.GroupBy(x => x.CellRowIndex).OrderBy(x => x.Key);
-            foreach (IGrouping<uint, ICellIndex> row in g)
-            {
-                IOrderedEnumerable<ICellIndex> currentRow = row.OrderBy(x => ExcelColumnHelper.GetColumnStringAsIndex(x.CellColumnIndex));
-                foreach (ICellIndex item in currentRow)
-                {
-                    ss.Enqueue(item as ICellProcessingTask);
-                }
-            }
-
-            for (int i = 0; i < reuse; i++)
-            {
-                ss.Enqueue(tasks[i]);
-            }
-
-            items = ss;
-           
-        }
-
-        public async Task PostQueueProcessing()
-        {
-        }
-
-        public async Task PostLockProcessing()
+        public async Task ProcessDeferredCells()
         {
             //We will add this deferredcell type to the IIndexers since we don't need them at the time
             Task<Dictionary<DeferredCell,ICellProcessingTask>> setDeferedCells = null;
@@ -221,14 +157,6 @@ namespace OpenXMLXLSXImporter.Processing
             if (deferedCells != null && deferedCells.Any())
             {
                 setDeferedCells = _deferredUpdater.AddDeferredCells(deferedCells.Select(x => new DeferredCell(desiredRowIndex.Value, x.Key, x.Value)).ToArray());
-            }
-            //fufill any cells that were enqued during the processing of the last add
-            foreach (KeyValuePair<Cell, ICellProcessingTask> kv in fufil)
-            {
-                if(!kv.Value.Processed)
-                {
-                    kv.Value.Resolve(sheetAccess, kv.Key, kv.Value as ICellIndex);
-                }
             }
 
             if(setDeferedCells != null)
@@ -243,9 +171,6 @@ namespace OpenXMLXLSXImporter.Processing
                 }
                 deferedCells = null;
             }
-
-            ss = null;
-            fufil = null;
         }
     }
 }
