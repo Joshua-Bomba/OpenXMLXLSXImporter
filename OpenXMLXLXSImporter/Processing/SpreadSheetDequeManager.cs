@@ -64,78 +64,81 @@ namespace OpenXMLXLSXImporter.Processing
                 while (true)
                 {
                     ICellProcessingTask dequed = await _queue.Take();
-                    index = null;
-                    cell = null;
-                    desiredRowIndex = null;
-                    try
+                    if(!dequed.Processed)
                     {
-                        if (dequed is ICellIndex t)
+                        index = null;
+                        cell = null;
+                        desiredRowIndex = null;
+                        try
                         {
-                            index = t;
-                            desiredRowIndex = t.CellRowIndex;
-                            desiredColumnIndex = t.CellColumnIndex;
-                        }
-                        else if (dequed is LastRow m)
-                        {
-                            index = new FutureIndex { CellRowIndex = sheetAccess.GetAllRows() };
-                            continue;
-                        }
-                        else if (dequed is LastColumn mc)
-                        {
-                            index = null;
-                            desiredRowIndex = mc._row;
-                            desiredColumnIndex = null;
-                        }
-                        else
-                        {
-                            
-                            continue;
-                        }
-                        if(desiredRowIndex == null)
-                        {
-                            continue;
-                        }
-                        if (sheetAccess.TryGetRow(desiredRowIndex.Value, out cellEnumerator))
-                        {
-                            bool cellsLoadedIn = false;
-                            string currentIndex = null;
-                            do
+                            if (dequed is ICellIndex t)
                             {
-                                if (cellEnumerator.MoveNext())
-                                {
-                                    cell = cellEnumerator.Current;
-                                    currentIndex = XlsxSheetFile.GetColumnIndexByColumnReference(cell.CellReference);
-                                    if (currentIndex != desiredColumnIndex)
-                                    {
-                                        if (deferedCells == null)
-                                            deferedCells = new Dictionary<string, Cell>();
-                                        deferedCells.Add(currentIndex, cell);//this does not actually do anything since everything we need is loaded in at this point in our current version of the code. that's the first thing we should update
-                                                                             //also we should make the enque and fetch steps occur at the same time
-                                    }
-                                }
-                                else
-                                {
-                                    if (index == null)
-                                    {
-                                        index = new FutureIndex { CellColumnIndex = currentIndex, CellRowIndex = desiredRowIndex.Value };
-                                    }
-                                    currentIndex = null;
-                                    cellsLoadedIn = true;
-                                }
-                            } while (!cellsLoadedIn && currentIndex != desiredColumnIndex);
-                            if(currentIndex != desiredColumnIndex)
+                                index = t;
+                                desiredRowIndex = t.CellRowIndex;
+                                desiredColumnIndex = t.CellColumnIndex;
+                            }
+                            else if (dequed is LastRow m)
                             {
-                                cell = null;
+                                index = new FutureIndex { CellRowIndex = sheetAccess.GetAllRows() };
+                                continue;
+                            }
+                            else if (dequed is LastColumn mc)
+                            {
+                                index = null;
+                                desiredRowIndex = mc._row;
+                                desiredColumnIndex = null;
+                            }
+                            else
+                            {
+
+                                continue;
+                            }
+                            if (desiredRowIndex == null)
+                            {
+                                continue;
+                            }
+                            if (sheetAccess.TryGetRow(desiredRowIndex.Value, out cellEnumerator))
+                            {
+                                bool cellsLoadedIn = false;
+                                string currentIndex = null;
+                                do
+                                {
+                                    if (cellEnumerator.MoveNext())
+                                    {
+                                        cell = cellEnumerator.Current;
+                                        currentIndex = XlsxSheetFile.GetColumnIndexByColumnReference(cell.CellReference);
+                                        if (currentIndex != desiredColumnIndex)
+                                        {
+                                            if (deferedCells == null)
+                                                deferedCells = new Dictionary<string, Cell>();
+                                            deferedCells.Add(currentIndex, cell);//this does not actually do anything since everything we need is loaded in at this point in our current version of the code. that's the first thing we should update
+                                                                                 //also we should make the enque and fetch steps occur at the same time
+                                        }
+                                    }
+                                    else
+                                    {
+                                        if (index == null)
+                                        {
+                                            index = new FutureIndex { CellColumnIndex = currentIndex, CellRowIndex = desiredRowIndex.Value };
+                                        }
+                                        currentIndex = null;
+                                        cellsLoadedIn = true;
+                                    }
+                                } while (!cellsLoadedIn && currentIndex != desiredColumnIndex);
+                                if (currentIndex != desiredColumnIndex)
+                                {
+                                    cell = null;
+                                }
                             }
                         }
-                    }
-                    catch (Exception ex)
-                    {
+                        catch (Exception ex)
+                        {
 
-                    }
-                    finally
-                    {
-                        dequed.Resolve(sheetAccess, cell, index);
+                        }
+                        finally
+                        {
+                            dequed.Resolve(sheetAccess, cell, index);
+                        }
                     }
                 }
             }
@@ -213,17 +216,36 @@ namespace OpenXMLXLSXImporter.Processing
         public async Task PostLockProcessing()
         {
             //We will add this deferredcell type to the IIndexers since we don't need them at the time
+            Task<Dictionary<DeferredCell,ICellProcessingTask>> setDeferedCells = null;
+
             if (deferedCells != null && deferedCells.Any())
             {
-                await _deferredUpdater.AddDeferredCells(sheetAccess, deferedCells.Select(x => new DeferredCell(desiredRowIndex.Value, x.Key, x.Value)));
-                deferedCells = null;
+                setDeferedCells = _deferredUpdater.AddDeferredCells(deferedCells.Select(x => new DeferredCell(desiredRowIndex.Value, x.Key, x.Value)).ToArray());
             }
-            ss = null;
             //fufill any cells that were enqued during the processing of the last add
             foreach (KeyValuePair<Cell, ICellProcessingTask> kv in fufil)
             {
-                kv.Value.Resolve(sheetAccess, kv.Key, kv.Value as ICellIndex);
+                if(!kv.Value.Processed)
+                {
+                    kv.Value.Resolve(sheetAccess, kv.Key, kv.Value as ICellIndex);
+                }
             }
+
+            if(setDeferedCells != null)
+            {
+                Dictionary<DeferredCell, ICellProcessingTask> cells = await setDeferedCells;
+                foreach(KeyValuePair<DeferredCell,ICellProcessingTask> kv in cells)
+                {
+                    if (!kv.Value.Processed)
+                    {
+                        kv.Value.Resolve(sheetAccess, kv.Key.Cell, kv.Key);
+                    }
+
+                }
+                deferedCells = null;
+            }
+
+            ss = null;
             fufil = null;
         }
     }

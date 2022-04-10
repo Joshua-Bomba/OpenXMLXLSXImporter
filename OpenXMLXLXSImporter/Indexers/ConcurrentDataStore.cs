@@ -93,11 +93,11 @@ namespace OpenXMLXLSXImporter.Indexers
                 }
             }
         }
-        async Task IDeferredUpdater.AddDeferredCells(IXlsxSheetFile file, IEnumerable<DeferredCell> dc)
+        async Task<Dictionary<DeferredCell, ICellProcessingTask>> IDeferredUpdater.AddDeferredCells( IEnumerable<DeferredCell> dc)
         {
             using (await _accessorLock.LockAsync())
             {
-                
+                return this._rowIndexer.AddDeferredCells(dc);
             }
         }
 

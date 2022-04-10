@@ -1,6 +1,7 @@
 ﻿using Nito.AsyncEx;
 using OpenXMLXLSXImporter.Builders;
 using OpenXMLXLSXImporter.CellData;
+using OpenXMLXLSXImporter.FileAccess;
 using OpenXMLXLSXImporter.Processing;
 using OpenXMLXLSXImporter.Utils;
 using System;
@@ -80,6 +81,32 @@ namespace OpenXMLXLSXImporter.Indexers
                 this._queueAccess.QueueCellProcessingTask(this.LastRow);
             }
             return this.LastRow;
+        }
+
+        public Dictionary<DeferredCell,ICellProcessingTask> AddDeferredCells(IEnumerable<DeferredCell> dc)
+        {
+            Dictionary<DeferredCell, ICellProcessingTask> existing = new Dictionary<DeferredCell, ICellProcessingTask>();
+            foreach (DeferredCell c in dc)
+            {
+                ICellIndex i = this.GetCell(c.CellRowIndex, c.CellColumnIndex);
+                if (i != null)
+                {
+                    if (i is ICellProcessingTask task && !task.Processed)
+                    {
+                        existing.Add(c, task);
+                    }
+                    //if i is not ICellProcessingTask it means it's already resolved in which case we will just dump the deferredcell
+                    //I don't think this is possible but with the rube goldberg machine this is anything is possible
+                    //maybe is was manually set
+                }
+                else
+                {
+                    c.Updater = _futureUpdate;
+                    c.QueueAccess = _queueAccess;
+                    this.Set(c);
+                }
+            }
+            return existing;
         }
     }
 }

@@ -9,6 +9,6 @@ namespace OpenXMLXLSXImporter.CellData
 {
     public  interface IDeferredUpdater
     {
-        Task AddDeferredCells(IXlsxSheetFile file, IEnumerable<DeferredCell> dc);
+        Task<Dictionary<DeferredCell, ICellProcessingTask>> AddDeferredCells(IEnumerable<DeferredCell> dc);
     }
 }
