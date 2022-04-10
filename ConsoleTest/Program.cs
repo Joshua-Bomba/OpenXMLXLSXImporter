@@ -9,40 +9,50 @@ ConsistencyTests cs = new ConsistencyTests();
 object l = new object();
 
 Console.WriteLine("Started ConsoleTest");
-uint loop = 0;
+
+TimeSpan[] storedDurations = new TimeSpan[ConsistencyTests.LOOPS];
+
+
+
 
 cs.LoopUsingNewDataSet<SpreadSheetInstructionBuilderTest>((i,r) =>
 {
     var timer = new Stopwatch();
     timer.Start();
+    string fail = null;
     try
     {
         r.FullRangeCellTest();
-        //TimeSpan timeTaken = timer.Elapsed;
-        //string duration = "Time taken: " + timeTaken.ToString(@"m\:ss\.fff");
-        lock (l)
-        {
-            loop++;
-            if(loop % 10000 == 0)
-            {
-                Console.WriteLine($"Passed {loop} Records");
-            }
-        }
     }
     catch(Exception ex)
     {
-        TimeSpan timeTaken = timer.Elapsed;
+        fail = ex.ToString();
+    }
+
+    timer.Stop();
+    TimeSpan timeTaken = timer.Elapsed;
+    storedDurations[i] = timeTaken;
+    if (fail != null)
+    {
         string duration = "Test Failed After: " + timeTaken.ToString(@"m\:ss\.fff");
         lock (l)
         {
+            if (i % 10000 == 0)
+            {
+                Console.WriteLine($"Passed {i} Records");
+            }
             Console.WriteLine(duration);
-            Console.WriteLine(ex.ToString());
+            Console.WriteLine(fail);
         }
-
     }
-
-
-
+    else if (i % 10000 == 0)
+    {
+        lock (l)
+        {
+            Console.WriteLine($"Passed {i} Records");
+            Console.WriteLine($"last test took {timeTaken.ToString(@"m\:ss\.fff")}");
+        }
+    }
 });
 
 Console.WriteLine("end of ConsoleTest");
