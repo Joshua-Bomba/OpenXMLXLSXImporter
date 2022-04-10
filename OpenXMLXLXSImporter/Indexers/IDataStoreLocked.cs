@@ -10,7 +10,7 @@ namespace OpenXMLXLSXImporter.Indexers
 {
     public interface IDataStoreLocked
     {
-        Task<ICellIndex> GetCell(uint rowIndex, string cellIndex);
+        ICellIndex GetCell(uint rowIndex, string cellIndex);
         LastColumn GetLastColumn(uint rowIndex);
         LastRow GetLastRow();
     }

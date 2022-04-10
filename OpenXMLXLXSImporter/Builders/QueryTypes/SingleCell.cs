@@ -12,7 +12,7 @@ namespace OpenXMLXLSXImporter.Builders
     {
         private uint _row;
         private string _cell;
-        private Task<ICellIndex> _cellItem;
+        private ICellIndex _cellItem;
 
         public SingleCell(uint row, string cellIndex) : base()
         {
@@ -21,9 +21,9 @@ namespace OpenXMLXLSXImporter.Builders
             _cellItem = null;
         }
 
-        protected async override IAsyncEnumerable<ICellIndex> GetResults()
+        protected override IEnumerable<ICellIndex> GetResults()
         {
-            yield return await _cellItem;
+            yield return _cellItem;
         }
 
         protected override void EnqueCell(IDataStoreLocked indexer)

@@ -19,7 +19,7 @@ namespace OpenXMLXLSXImporter.Indexers
             _d = null;
         }
 
-        public Task<ICellIndex> GetCell(uint rowIndex, string cellIndex) => _d.GetCell(rowIndex, cellIndex);
+        public ICellIndex GetCell(uint rowIndex, string cellIndex) => _d.GetCell(rowIndex, cellIndex);
 
         public LastColumn GetLastColumn(uint rowIndex) => _d.GetLastColumn(rowIndex);
 

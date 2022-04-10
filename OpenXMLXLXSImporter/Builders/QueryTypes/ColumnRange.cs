@@ -16,7 +16,7 @@ namespace OpenXMLXLSXImporter.Builders
         private uint _startColumnInt;
         private uint _endColumnInt;
 
-        private Task<ICellIndex>[] _cellItems;
+        private ICellIndex[] _cellItems;
 
 
         public ColumnRange(uint row, string startColumn, string endColumn)
@@ -25,7 +25,7 @@ namespace OpenXMLXLSXImporter.Builders
             _startColumnInt = ExcelColumnHelper.GetColumnStringAsIndex(startColumn);
             _endColumnInt = ExcelColumnHelper.GetColumnStringAsIndex(endColumn);
             ValidateRange();
-            _cellItems = new Task<ICellIndex>[(_endColumnInt - _startColumnInt) + 1];
+            _cellItems = new ICellIndex[(_endColumnInt - _startColumnInt) + 1];
         }
 
         public ColumnRange(uint row, uint startColumn, uint endcolumn)
@@ -34,7 +34,7 @@ namespace OpenXMLXLSXImporter.Builders
             _startColumnInt = startColumn;
             _endColumnInt = endcolumn;
             ValidateRange();
-            _cellItems = new Task<ICellIndex>[(_endColumnInt - _startColumnInt) + 1];
+            _cellItems = new ICellIndex[(_endColumnInt - _startColumnInt) + 1];
         }
 
         private void ValidateRange()
@@ -56,11 +56,11 @@ namespace OpenXMLXLSXImporter.Builders
             }
         }
 
-        protected override async IAsyncEnumerable<ICellIndex> GetResults()
+        protected override IEnumerable<ICellIndex> GetResults()
         {
-            foreach(Task<ICellIndex> el in _cellItems)
+            foreach(ICellIndex el in _cellItems)
             {
-                yield return await el;
+                yield return el;
             }
         }
     }

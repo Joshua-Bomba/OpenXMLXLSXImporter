@@ -28,6 +28,7 @@ namespace OpenXMLXLSXImporter.CellData
         public string CellColumnIndex { get; set; }
 
         public uint CellRowIndex { get; set; }
+        public bool Processed => _mre.IsSet;
 
         public void Failure(Exception e)
         {

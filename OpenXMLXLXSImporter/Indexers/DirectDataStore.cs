@@ -1,6 +1,7 @@
 ﻿using Nito.AsyncEx;
 using OpenXMLXLSXImporter.Builders;
 using OpenXMLXLSXImporter.CellData;
+using OpenXMLXLSXImporter.FileAccess;
 using OpenXMLXLSXImporter.Processing;
 using OpenXMLXLSXImporter.Utils;
 using System;
@@ -42,28 +43,18 @@ namespace OpenXMLXLSXImporter.Indexers
             base[cellData.CellRowIndex][cellData.CellColumnIndex] = cellData;
         }
 
-        public async Task<ICellIndex> GetCell(uint rowIndex, string cellIndex)
+        public ICellIndex GetCell(uint rowIndex, string cellIndex)
         {
             ICellIndex r = this.Get(rowIndex, cellIndex);
             if (r == null)
             {
-                await _queueAccess.LockQueue(x =>
+                FutureCell fc = new FutureCell(rowIndex, cellIndex,_futureUpdate);
+                if (fc != null)
                 {
-                    r = this.Get(rowIndex, cellIndex);
-                    if (r == null)
-                    {
-                        ICellProcessingTask t = new FutureCell(rowIndex, cellIndex,_futureUpdate);
-                        if (t != null)
-                        {
-                            x.Enque(t);
-                            if (t is ICellIndex index)
-                            {
-                                r = index;
-                                this.Set(index);
-                            }
-                        }
-                    }
-                });
+                    r = fc;
+                    this.Set(fc);
+                    _queueAccess.QueueCellProcessingTask(fc);
+                }
             }
             return r;
         }
@@ -77,7 +68,7 @@ namespace OpenXMLXLSXImporter.Indexers
             if (this[rowIndex].LastColumn == null)
             {
                 this[rowIndex].LastColumn = new LastColumn(rowIndex);
-                this._queueAccess.QueueNonIndexedCell(this[rowIndex].LastColumn);
+                this._queueAccess.QueueCellProcessingTask(this[rowIndex].LastColumn);
             }
             return this[rowIndex].LastColumn;
         }
@@ -87,22 +78,35 @@ namespace OpenXMLXLSXImporter.Indexers
             if (this.LastRow == null)
             {
                 this.LastRow = new LastRow();
-                this._queueAccess.QueueNonIndexedCell(this.LastRow);
+                this._queueAccess.QueueCellProcessingTask(this.LastRow);
             }
             return this.LastRow;
         }
 
-        public void SetCell(ICellIndex index)
+        public Dictionary<DeferredCell,ICellProcessingTask> AddDeferredCells(IEnumerable<DeferredCell> dc)
         {
-            this.Set(index);
-        }
-
-        public void SetCells(IEnumerable<ICellIndex> cells)
-        {
-            foreach (ICellIndex cell in cells)
+            Dictionary<DeferredCell, ICellProcessingTask> existing = new Dictionary<DeferredCell, ICellProcessingTask>();
+            foreach (DeferredCell c in dc)
             {
-                this.Set(cell);
+                ICellIndex i = this.GetCell(c.CellRowIndex, c.CellColumnIndex);
+                if (i != null)
+                {
+                    if (i is ICellProcessingTask task && !task.Processed)
+                    {
+                        existing.Add(c, task);
+                    }
+                    //if i is not ICellProcessingTask it means it's already resolved in which case we will just dump the deferredcell
+                    //I don't think this is possible but with the rube goldberg machine this is anything is possible
+                    //maybe is was manually set
+                }
+                else
+                {
+                    c.Updater = _futureUpdate;
+                    c.QueueAccess = _queueAccess;
+                    this.Set(c);
+                }
             }
+            return existing;
         }
     }
 }

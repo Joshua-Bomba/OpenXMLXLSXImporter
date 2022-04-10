@@ -20,14 +20,11 @@ namespace OpenXMLXLSXImporter.Processing
 {
     public interface IQueueAccess
     {
-        void QueueNonIndexedCell(ICellProcessingTask t);
-
-        Task LockQueue(Action<IChunkableBlockingCollection<ICellProcessingTask>> lockedQueue);
+        void QueueCellProcessingTask(ICellProcessingTask t);
     }
 
     public interface ISpreadSheetInstructionManager
     {
-        Task AddDeferredCells(IEnumerable<DeferredCell> deferredCells);
         Task ProcessInstruction(ISpreadSheetInstruction spreadSheetInstruction);
         IQueueAccess Queue { get; }//Did it like this so that way I can possbily replace IQueueAccess with another implementation
     }
@@ -54,7 +51,7 @@ namespace OpenXMLXLSXImporter.Processing
         {
             _instructionProcessor = Task.Run(async () =>
             {
-                dequeManager = new SpreadSheetDequeManager(this);
+                dequeManager = new SpreadSheetDequeManager(_dataStore);
                 _loadQueueManager = new ChunkableBlockingCollection<ICellProcessingTask>(dequeManager);
                 _queueInit.Set();
                 IXlsxSheetFilePromise g = await sheetFilePromise;
@@ -91,18 +88,7 @@ namespace OpenXMLXLSXImporter.Processing
             await _dataStore.ProcessInstruction(spreadSheetInstruction);
         }
 
-        public  async Task AddDeferredCells(IEnumerable<DeferredCell> deferredCells)
-        {
-            DeferredCell[] cells = deferredCells.ToArray();
-            for(int i =0;i < cells.Length;i++)
-            {
-                cells[i].InstructionManager = this;
-                cells[i].Updater = _dataStore;
-            }
-            await _dataStore.SetCells(cells);         
-        }
-
-        public void QueueNonIndexedCell(ICellProcessingTask t)
+        public void QueueCellProcessingTask(ICellProcessingTask t)
         {
             Task.Run(async() =>
             {
@@ -112,15 +98,6 @@ namespace OpenXMLXLSXImporter.Processing
                     _loadQueueManager.Enque(t);
                 }
             });
-        }
-
-        public async Task LockQueue(Action<IChunkableBlockingCollection<ICellProcessingTask>> lockedQueue)
-        {
-            await _queueInit.WaitAsync();
-            using (await _loadQueueManager.Mutex.LockAsync())
-            {
-                lockedQueue(_loadQueueManager);
-            }
         }
     }
 }

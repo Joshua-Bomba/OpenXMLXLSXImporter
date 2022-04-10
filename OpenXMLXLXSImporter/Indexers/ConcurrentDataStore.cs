@@ -1,6 +1,7 @@
 ﻿using Nito.AsyncEx;
 using OpenXMLXLSXImporter.Builders;
 using OpenXMLXLSXImporter.CellData;
+using OpenXMLXLSXImporter.FileAccess;
 using OpenXMLXLSXImporter.Processing;
 using OpenXMLXLSXImporter.Utils;
 using System;
@@ -11,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace OpenXMLXLSXImporter.Indexers
 {
-    public class ConcurrentDataStore : IFutureUpdate
+    public class ConcurrentDataStore : IFutureUpdate, IDeferredUpdater
     {
         protected DirectDataStore _rowIndexer;
         private AsyncLock _accessorLock = new AsyncLock();
@@ -51,7 +52,7 @@ namespace OpenXMLXLSXImporter.Indexers
             {
                 using (await this._accessorLock.LockAsync())
                 {
-                    return await this._rowIndexer.GetCell(rowIndex, cellIndex);
+                    return this._rowIndexer.GetCell(rowIndex, cellIndex);
                 }
             }
             return result;
@@ -92,24 +93,23 @@ namespace OpenXMLXLSXImporter.Indexers
                 }
             }
         }
-
-        public async Task SetCell(ICellIndex index)
+        async Task<Dictionary<DeferredCell, ICellProcessingTask>> IDeferredUpdater.AddDeferredCells( IEnumerable<DeferredCell> dc)
         {
             using (await _accessorLock.LockAsync())
             {
-                this._rowIndexer.SetCell(index);
-            }
-        }
-
-        public async Task SetCells(IEnumerable<ICellIndex> cells)
-        {
-            using (await _accessorLock.LockAsync())
-            {
-                this._rowIndexer.SetCells(cells);
+                return this._rowIndexer.AddDeferredCells(dc);
             }
         }
 
         //we don't want to wait for this, we will update it when we get around to it
-        void IFutureUpdate.Update(ICellIndex cell) => Task.Run(async () => await SetCell(cell));
+        void IFutureUpdate.Update(ICellIndex cell) => Task.Run(async () =>
+        {
+            using (await _accessorLock.LockAsync())
+            {
+                this._rowIndexer.Set(cell);
+            }
+        });
+
+
     }
 }

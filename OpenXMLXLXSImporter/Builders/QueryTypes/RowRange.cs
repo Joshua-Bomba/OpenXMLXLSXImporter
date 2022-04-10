@@ -13,7 +13,7 @@ namespace OpenXMLXLSXImporter.Builders
         private uint _startRow;
         private uint _endRow;
         private string _column;
-        private Task<ICellIndex>[] _cellItems;
+        private ICellIndex[] _cellItems;
 
         public RowRange(string column,uint startRow,uint endRow)
         {
@@ -22,7 +22,7 @@ namespace OpenXMLXLSXImporter.Builders
             _column = column;
             _cellItems = null;
             ValidateRange();
-            _cellItems = new Task<ICellIndex>[(_endRow - _startRow) + 1];
+            _cellItems = new ICellIndex[(_endRow - _startRow) + 1];
         }
 
         private void ValidateRange()
@@ -41,11 +41,11 @@ namespace OpenXMLXLSXImporter.Builders
             }
         }
 
-        protected override async IAsyncEnumerable<ICellIndex> GetResults()
+        protected override IEnumerable<ICellIndex> GetResults()
         {
-            foreach(Task<ICellIndex> el in _cellItems)
+            foreach(ICellIndex el in _cellItems)
             {
-                yield return await el;
+                yield return el;
             }
         }
     }

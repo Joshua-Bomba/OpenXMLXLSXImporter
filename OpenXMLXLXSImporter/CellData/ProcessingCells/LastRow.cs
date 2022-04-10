@@ -21,6 +21,8 @@ namespace OpenXMLXLSXImporter.CellData
             _mre = new AsyncManualResetEvent(false);
         }
 
+        public bool Processed => _mre.IsSet;
+
         public void Failure(Exception e)
         {
             _fail = e;

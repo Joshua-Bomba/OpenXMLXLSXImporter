@@ -22,6 +22,8 @@ namespace OpenXMLXLSXImporter.CellData
             _row = row;
         }
 
+        public bool Processed => _mre.IsSet;
+
         public void Failure(Exception e)
         {
             _fail = e;

@@ -14,7 +14,6 @@ namespace OpenXMLXLSXImporter.CellData
 {
     public class DeferredCell : IFutureCell, ICellIndex
     {
-        private Cell _deferredCell;
         private AsyncLock _lock;
         private DeferredCellExecution _deferredCellExecution;
         public DeferredCell(uint cellRowIndex, string cellColumnIndex, Cell cell)
@@ -22,13 +21,15 @@ namespace OpenXMLXLSXImporter.CellData
             CellRowIndex = cellRowIndex;
             CellColumnIndex = cellColumnIndex;
             _lock = new AsyncLock();
-            _deferredCell = cell;
+            Cell = cell;
             _deferredCellExecution = null;
         }
 
-        public ISpreadSheetInstructionManager InstructionManager { get; set; }
+        public Cell Cell { get; set; }
 
         public IFutureUpdate Updater { get; set; }
+
+        public IQueueAccess QueueAccess { get; set; }
 
         private class DeferredCellExecution : ICellProcessingTask, IFutureCell
         {
@@ -37,6 +38,7 @@ namespace OpenXMLXLSXImporter.CellData
             private AsyncManualResetEvent _mre;
             private IFutureUpdate _updater;
             private Exception _fail;
+            private bool _procesed;
             public DeferredCellExecution(DeferredCell deferredCell, IFutureUpdate updater)
             {
                 _fail = null;
@@ -44,6 +46,8 @@ namespace OpenXMLXLSXImporter.CellData
                 _deferredCell = deferredCell;
                 _updater = updater;
             }
+
+            public bool Processed => _mre.IsSet;
 
             public void Failure(Exception e)
             {
@@ -63,7 +67,7 @@ namespace OpenXMLXLSXImporter.CellData
 
             public void Resolve(IXlsxSheetFile file, Cell cellElement, ICellIndex index)
             {
-                _result = file.ProcessedCell(_deferredCell._deferredCell, _deferredCell);
+                _result = file.ProcessedCell(_deferredCell.Cell, _deferredCell);
                 _updater.Update(_result);
                 _mre.Set();
             }
@@ -81,7 +85,7 @@ namespace OpenXMLXLSXImporter.CellData
                     if (_deferredCellExecution == null)
                     {
                         _deferredCellExecution = new DeferredCellExecution(this,Updater);
-                        InstructionManager.Queue.QueueNonIndexedCell(_deferredCellExecution);
+                        QueueAccess.QueueCellProcessingTask(_deferredCellExecution);
                     }
                 }
             }
