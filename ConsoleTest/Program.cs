@@ -8,7 +8,8 @@ const uint LOG_FREQUENCY = 10000;
 
 
 //await Test<SpreadSheetInstructionBuilderTest>(r => r.FullRangeCellTest());
-await Test<ConcurrencyTests>(x => x.MultipleSheetsBundlerTest());
+//await Test<ConcurrencyTests>(x => x.MultipleSheetsBundlerTest());
+await Test<ConcurrencyTests>(x => x.MultipleSheetInterwined());
 
 static async Task Test<TProp>(Action<TProp> testAction) where TProp : BaseTest, new()
 {
