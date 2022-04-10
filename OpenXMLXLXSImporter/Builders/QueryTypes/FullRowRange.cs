@@ -27,9 +27,9 @@ namespace OpenXMLXLSXImporter.Builders
             _manager = spreadSheetInstructionManager;
         }
 
-        async Task ISpreadSheetInstruction.EnqueCell(IDataStore indexer)
+        void ISpreadSheetInstruction.EnqueCell(IDataStoreLocked indexer)
         {
-            _lastRow = await indexer.GetLastRow();
+            _lastRow = indexer.GetLastRow();
         }
 
         async IAsyncEnumerable<ICellData> ISpreadSheetInstruction.GetResults()

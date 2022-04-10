@@ -13,7 +13,7 @@ namespace OpenXMLXLSXImporter.Builders
     {
         void AttachSpreadSheetInstructionManager(ISpreadSheetInstructionManager spreadSheetInstructionManager);
 
-        Task EnqueCell(IDataStore indexer);
+        void EnqueCell(IDataStoreLocked indexer);
 
         IAsyncEnumerable<ICellData> GetResults();
     }

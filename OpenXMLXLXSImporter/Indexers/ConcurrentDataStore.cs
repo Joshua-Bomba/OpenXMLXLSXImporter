@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace OpenXMLXLSXImporter.Indexers
 {
-    public class ConcurrentDataStore : IDataStore, IFutureUpdate
+    public class ConcurrentDataStore : IFutureUpdate
     {
         protected DirectDataStore _rowIndexer;
         private AsyncLock _accessorLock = new AsyncLock();
@@ -25,7 +25,7 @@ namespace OpenXMLXLSXImporter.Indexers
             {
                 using (await _accessorLock.LockAsync())
                 {
-                   return await _rowIndexer.GetLastColumn(rowIndex);
+                   return _rowIndexer.GetLastColumn(rowIndex);
                 }
             }
             return _rowIndexer[rowIndex].LastColumn;
@@ -37,7 +37,7 @@ namespace OpenXMLXLSXImporter.Indexers
             {
                 using (await _accessorLock.LockAsync())
                 {
-                    await _rowIndexer.GetLastRow();
+                    _rowIndexer.GetLastRow();
                 }
             }
             return _rowIndexer.LastRow;
@@ -57,12 +57,20 @@ namespace OpenXMLXLSXImporter.Indexers
             return result;
         }
 
-
         public virtual async Task ProcessInstruction(ISpreadSheetInstruction instruction)
         {
             using (await _accessorLock.LockAsync())
             {
-                await this._rowIndexer.ProcessInstruction(instruction);
+                LimitedAccessDataStore limitedLife = new LimitedAccessDataStore(_rowIndexer);
+                try
+                {
+                    instruction.EnqueCell(limitedLife);
+                }
+                finally
+                {
+                    limitedLife.Delete();
+                }
+
             }
         }
 
@@ -70,7 +78,18 @@ namespace OpenXMLXLSXImporter.Indexers
         {
             using(await _accessorLock.LockAsync())
             {
-                await this._rowIndexer.ProcessInstructions(instructions);
+                LimitedAccessDataStore limitedLife = new LimitedAccessDataStore(_rowIndexer);
+                try
+                {
+                    foreach (ISpreadSheetInstruction instruction in instructions)
+                    {
+                        instruction.EnqueCell(limitedLife);
+                    }
+                }
+                finally
+                {
+                    limitedLife.Delete();
+                }
             }
         }
 
@@ -78,7 +97,7 @@ namespace OpenXMLXLSXImporter.Indexers
         {
             using (await _accessorLock.LockAsync())
             {
-                await this._rowIndexer.SetCell(index);
+                this._rowIndexer.SetCell(index);
             }
         }
 
@@ -86,7 +105,7 @@ namespace OpenXMLXLSXImporter.Indexers
         {
             using (await _accessorLock.LockAsync())
             {
-                await this._rowIndexer.SetCells(cells);
+                this._rowIndexer.SetCells(cells);
             }
         }
 

@@ -26,7 +26,7 @@ namespace OpenXMLXLSXImporter.Builders
             yield return await _cellItem;
         }
 
-        protected override async Task EnqueCell(IDataStore indexer)
+        protected override void EnqueCell(IDataStoreLocked indexer)
         {
             _cellItem = indexer.GetCell(_row, _cell);
         }

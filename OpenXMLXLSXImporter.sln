@@ -5,7 +5,9 @@ VisualStudioVersion = 17.0.32126.317
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenXMLXLSXImporter", "OpenXMLXLXSImporter\OpenXMLXLSXImporter.csproj", "{242DB905-A68A-4BD7-851F-6EEDB1E996E1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SSUT", "SSUT\SSUT.csproj", "{28BADA53-F6E8-4AAB-8F0F-D44EA40E4A11}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SSUT", "SSUT\SSUT.csproj", "{28BADA53-F6E8-4AAB-8F0F-D44EA40E4A11}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleTest", "ConsoleTest\ConsoleTest.csproj", "{AF295890-9D15-4761-A932-8DE046BDD513}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{28BADA53-F6E8-4AAB-8F0F-D44EA40E4A11}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{28BADA53-F6E8-4AAB-8F0F-D44EA40E4A11}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{28BADA53-F6E8-4AAB-8F0F-D44EA40E4A11}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AF295890-9D15-4761-A932-8DE046BDD513}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AF295890-9D15-4761-A932-8DE046BDD513}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AF295890-9D15-4761-A932-8DE046BDD513}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AF295890-9D15-4761-A932-8DE046BDD513}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
