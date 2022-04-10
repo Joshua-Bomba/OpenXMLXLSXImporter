@@ -9,6 +9,7 @@ ConsistencyTests cs = new ConsistencyTests();
 object l = new object();
 
 Console.WriteLine("Started ConsoleTest");
+uint loop = 0;
 
 cs.LoopUsingNewDataSet<SpreadSheetInstructionBuilderTest>(r =>
 {
@@ -17,11 +18,15 @@ cs.LoopUsingNewDataSet<SpreadSheetInstructionBuilderTest>(r =>
     try
     {
         r.FullRangeCellTest();
-        TimeSpan timeTaken = timer.Elapsed;
-        string duration = "Time taken: " + timeTaken.ToString(@"m\:ss\.fff");
+        //TimeSpan timeTaken = timer.Elapsed;
+        //string duration = "Time taken: " + timeTaken.ToString(@"m\:ss\.fff");
         lock (l)
         {
-            Console.WriteLine(duration);
+            loop++;
+            if(loop % 10000 == 0)
+            {
+                Console.WriteLine($"Passed {loop} Records");
+            }
         }
     }
     catch(Exception ex)
