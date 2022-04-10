@@ -6,9 +6,9 @@ using System.Timers;
 
 //await Test<SpreadSheetInstructionBuilderTest>(r => r.FullRangeCellTest());
 await Test<ConcurrencyTests>(x => x.MultipleSheetsBundlerTest());
-await Test<ConcurrencyTests>(x => x.MultipleSheetInterwined());
+//await Test<ConcurrencyTests>(x => x.MultipleSheetInterwined());
 
-static async Task Test<TProp>(Action<TProp> testAction) where TProp : BaseTest, new()
+static async Task Test<TProp>(Action<TProp> testAction,bool sameDataSet = false) where TProp : BaseTest, new()
 {
     ConsistencyTests cs = new ConsistencyTests();
 
@@ -52,9 +52,8 @@ static async Task Test<TProp>(Action<TProp> testAction) where TProp : BaseTest, 
         }
     });
 
-    var wholeTest = new Stopwatch();
-    wholeTest.Start();
-    cs.LoopUsingNewDataSet<TProp>((i, r) =>
+
+    Action<int, TProp> act = (i, r) =>
     {
         var timer = new Stopwatch();
         timer.Start();
@@ -82,7 +81,27 @@ static async Task Test<TProp>(Action<TProp> testAction) where TProp : BaseTest, 
                 Console.WriteLine(fail);
             }
         }
-    });
+    };
+
+    var wholeTest = new Stopwatch();
+    wholeTest.Start();
+    if(sameDataSet)
+    {
+        using (MemoryStream ms = new MemoryStream(ConsistencyTests.GetData(), false))
+        {
+            using (IExcelImporter importer = new ExcelImporter(ms))
+            {
+                cs.importer = importer;
+                TProp p = new TProp();
+                cs.LoopUsingSameDataSet(p, act);
+            }  
+        }
+    }
+    else
+    {
+        cs.LoopUsingNewDataSet<TProp>(act);
+    }
+
     wholeTest.Stop();
     cts.Cancel();
     Console.WriteLine("end of ConsoleTest");
