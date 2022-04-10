@@ -240,7 +240,6 @@ namespace OpenXMLXLSXImporter.Processing
                     {
                         kv.Value.Resolve(sheetAccess, kv.Key.Cell, kv.Key);
                     }
-
                 }
                 deferedCells = null;
             }
