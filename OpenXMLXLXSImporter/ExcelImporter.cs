@@ -60,6 +60,7 @@ namespace OpenXMLXLSXImporter
             {
                 ssib.Value.Dispose();
             }
+            _streamSheetFile.Dispose();
         }
 
         //public async IAsyncEnumerable<IEnumerable<Task<ICellData>>> ProcessAndGetAsyncCollection(string sheetName, Action<ISpreadSheetInstructionBuilderManagerInstructionBuilder> builder)

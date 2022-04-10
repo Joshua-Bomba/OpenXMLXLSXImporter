@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace OpenXMLXLSXImporter.FileAccess
 {
-    public class XlsxDocumentFile : IXlsxDocumentFilePromise, IXlsxDocumentFile
+    public class XlsxDocumentFile : IXlsxDocumentFilePromise, IXlsxDocumentFile, IDisposable
     {
         private Stream _stream;
         //The Sheet
@@ -98,6 +98,7 @@ namespace OpenXMLXLSXImporter.FileAccess
             //    foreach(Task t in _loadedSheets)
             //        t?.Wait();
             //}
+            _loadSpreadSheetData.Wait();
             _spreadsheet.Dispose();
         }
 
