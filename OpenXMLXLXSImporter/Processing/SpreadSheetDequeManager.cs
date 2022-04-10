@@ -51,99 +51,102 @@ namespace OpenXMLXLSXImporter.Processing
 
         public async Task ProcessRequests(IXlsxSheetFile file)
         {
-            try
+            Cell cell = null;
+            bool rowsLoadedIn = false;
+            IEnumerator<Cell> cellEnumerator;
+            sheetAccess = file;
+            ICellIndex index;
+            ICellProcessingTask dequed = null;
+            while (true)
             {
-                Cell cell = null;
-                bool rowsLoadedIn = false;
-                IEnumerator<Cell> cellEnumerator;
-                sheetAccess = file;
-                ICellIndex index;
-                while (true)
+                dequed = null;
+                await ProcessDeferredCells();
+                try
                 {
-                    await ProcessDeferredCells();
-                    ICellProcessingTask dequed = await _queue.DequeueAsync();
-                    if(!dequed.Processed)
+                    dequed = await _queue.DequeueAsync();
+                }
+                catch (Exception e)
+                {
+                    break;
+                }
+
+                if(!dequed.Processed)
+                {
+                    index = null;
+                    cell = null;
+                    desiredRowIndex = null;
+                    try
                     {
-                        index = null;
-                        cell = null;
-                        desiredRowIndex = null;
-                        try
+                        if (dequed is ICellIndex t)
                         {
-                            if (dequed is ICellIndex t)
-                            {
-                                index = t;
-                                desiredRowIndex = t.CellRowIndex;
-                                desiredColumnIndex = t.CellColumnIndex;
-                            }
-                            else if (dequed is LastRow m)
-                            {
-                                index = new FutureIndex { CellRowIndex = await sheetAccess.GetAllRows() };
-                                continue;
-                            }
-                            else if (dequed is LastColumn mc)
-                            {
-                                index = null;
-                                desiredRowIndex = mc._row;
-                                desiredColumnIndex = null;
-                            }
-                            else
-                            {
+                            index = t;
+                            desiredRowIndex = t.CellRowIndex;
+                            desiredColumnIndex = t.CellColumnIndex;
+                        }
+                        else if (dequed is LastRow m)
+                        {
+                            index = new FutureIndex { CellRowIndex = await sheetAccess.GetAllRows() };
+                            continue;
+                        }
+                        else if (dequed is LastColumn mc)
+                        {
+                            index = null;
+                            desiredRowIndex = mc._row;
+                            desiredColumnIndex = null;
+                        }
+                        else
+                        {
 
-                                continue;
-                            }
-                            if (desiredRowIndex == null)
+                            continue;
+                        }
+                        if (desiredRowIndex == null)
+                        {
+                            continue;
+                        }
+                        cellEnumerator = await sheetAccess.GetRow(desiredRowIndex.Value);
+                        if (cellEnumerator != null)
+                        {
+                            bool cellsLoadedIn = false;
+                            string currentIndex = null;
+                            do
                             {
-                                continue;
-                            }
-                            cellEnumerator = await sheetAccess.GetRow(desiredRowIndex.Value);
-                            if (cellEnumerator != null)
-                            {
-                                bool cellsLoadedIn = false;
-                                string currentIndex = null;
-                                do
+                                if (cellEnumerator.MoveNext())
                                 {
-                                    if (cellEnumerator.MoveNext())
+                                    cell = cellEnumerator.Current;
+                                    currentIndex = XlsxSheetFile.GetColumnIndexByColumnReference(cell.CellReference);
+                                    if (currentIndex != desiredColumnIndex)
                                     {
-                                        cell = cellEnumerator.Current;
-                                        currentIndex = XlsxSheetFile.GetColumnIndexByColumnReference(cell.CellReference);
-                                        if (currentIndex != desiredColumnIndex)
-                                        {
-                                            if (deferedCells == null)
-                                                deferedCells = new Dictionary<string, Cell>();
-                                            deferedCells.Add(currentIndex, cell);//this does not actually do anything since everything we need is loaded in at this point in our current version of the code. that's the first thing we should update
-                                                                                 //also we should make the enque and fetch steps occur at the same time
-                                        }
+                                        if (deferedCells == null)
+                                            deferedCells = new Dictionary<string, Cell>();
+                                        deferedCells.Add(currentIndex, cell);//this does not actually do anything since everything we need is loaded in at this point in our current version of the code. that's the first thing we should update
+                                                                                //also we should make the enque and fetch steps occur at the same time
                                     }
-                                    else
-                                    {
-                                        if (index == null)
-                                        {
-                                            index = new FutureIndex { CellColumnIndex = currentIndex, CellRowIndex = desiredRowIndex.Value };
-                                        }
-                                        currentIndex = null;
-                                        cellsLoadedIn = true;
-                                    }
-                                } while (!cellsLoadedIn && currentIndex != desiredColumnIndex);
-                                if (currentIndex != desiredColumnIndex)
-                                {
-                                    cell = null;
                                 }
+                                else
+                                {
+                                    if (index == null)
+                                    {
+                                        index = new FutureIndex { CellColumnIndex = currentIndex, CellRowIndex = desiredRowIndex.Value };
+                                    }
+                                    currentIndex = null;
+                                    cellsLoadedIn = true;
+                                }
+                            } while (!cellsLoadedIn && currentIndex != desiredColumnIndex);
+                            if (currentIndex != desiredColumnIndex)
+                            {
+                                cell = null;
                             }
-                        }
-                        catch (Exception ex)
-                        {
-
-                        }
-                        finally
-                        {
-                            dequed.Resolve(sheetAccess, cell, index);
                         }
                     }
+                    catch
+                    {
+
+                    }
+                    finally
+                    {
+                        dequed.Resolve(sheetAccess, cell, index);
+                    }
                 }
-            }
-            catch (InvalidOperationException ex)
-            {
-                this.Terminate(ex);
             }
         }
 
