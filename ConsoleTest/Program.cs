@@ -21,30 +21,34 @@ static async Task Test<TProp>(Action<TProp> testAction) where TProp : BaseTest, 
     TimeSpan?[] storedDurations = new TimeSpan?[ConsistencyTests.LOOPS];
 
     int lastElement = 0;
-    System.Timers.Timer freezeCheck = new System.Timers.Timer();
-
-    freezeCheck.Interval = 10000;
-    freezeCheck.Elapsed += (object? sender, ElapsedEventArgs e) =>
+    CancellationTokenSource cts = new CancellationTokenSource();
+    CancellationToken token = cts.Token;
+    Task freezeCheck = Task.Run(async () =>
     {
-        for (int i = 0; i < storedDurations.Length; i++)
+        while(true)
         {
-            if (storedDurations[i] == null)
+            await Task.Delay(10000, token);
+            token.ThrowIfCancellationRequested();
+            for (int i = 0; i < storedDurations.Length; i++)
             {
-                if (i == lastElement)
+                if (storedDurations[i] == null)
                 {
-                    lock (l)
+                    if (i == lastElement)
                     {
-                        Console.WriteLine($"The Program Might Be Struck since {i} was null 10 seconds ago");
+                        lock (l)
+                        {
+                            Console.WriteLine($"The Program Might Be Struck since {i} was null 10 seconds ago");
+                        }
                     }
-                }
-                else
-                {
-                    lastElement = i;
+                    else
+                    {
+                        lastElement = i;
+                    }
                 }
             }
         }
-    };
-    freezeCheck.Enabled = true;
+    });
+
     var wholeTest = new Stopwatch();
     wholeTest.Start();
     cs.LoopUsingNewDataSet<TProp>((i, r) =>
@@ -89,7 +93,7 @@ static async Task Test<TProp>(Action<TProp> testAction) where TProp : BaseTest, 
         }
     });
     wholeTest.Stop();
-    freezeCheck.Enabled = false;
+    cts.Cancel();
     Console.WriteLine("end of ConsoleTest");
     await LogResults(storedDurations, wholeTest.Elapsed);
 }
