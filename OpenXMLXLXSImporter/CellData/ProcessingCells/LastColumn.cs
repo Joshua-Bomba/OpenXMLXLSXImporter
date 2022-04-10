@@ -22,6 +22,8 @@ namespace OpenXMLXLSXImporter.CellData
             _row = row;
         }
 
+        public bool Processed => _mre.IsSet;
+
         public void Failure(Exception e)
         {
             _fail = e;
@@ -42,6 +44,11 @@ namespace OpenXMLXLSXImporter.CellData
         {
             _result = index;
             _mre.Set();
+        }
+
+        public void Resolve(ICellData data)
+        {
+            throw new NotImplementedException();
         }
     }
 }

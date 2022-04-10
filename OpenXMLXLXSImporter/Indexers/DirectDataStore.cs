@@ -82,15 +82,15 @@ namespace OpenXMLXLSXImporter.Indexers
             return this.LastRow;
         }
 
-        public void SetCell(ICellIndex index)
-        {
-            this.Set(index);
-        }
-
-        public void SetCells(IEnumerable<ICellIndex> cells)
+        public void AddDeferredCells(IEnumerable<DeferredCell> cells)
         {
             foreach (ICellIndex cell in cells)
             {
+                ICellIndex current = this.Get(cell.CellRowIndex, cell.CellColumnIndex);
+                if(current != null)
+                {
+                    
+                }
                 this.Set(cell);
             }
         }

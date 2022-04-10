@@ -37,6 +37,7 @@ namespace OpenXMLXLSXImporter.CellData
             private AsyncManualResetEvent _mre;
             private IFutureUpdate _updater;
             private Exception _fail;
+            private bool _procesed;
             public DeferredCellExecution(DeferredCell deferredCell, IFutureUpdate updater)
             {
                 _fail = null;
@@ -44,6 +45,8 @@ namespace OpenXMLXLSXImporter.CellData
                 _deferredCell = deferredCell;
                 _updater = updater;
             }
+
+            public bool Processed => _mre.IsSet;
 
             public void Failure(Exception e)
             {
@@ -63,7 +66,13 @@ namespace OpenXMLXLSXImporter.CellData
 
             public void Resolve(IXlsxSheetFile file, Cell cellElement, ICellIndex index)
             {
-                _result = file.ProcessedCell(_deferredCell._deferredCell, _deferredCell);
+                ICellData d = file.ProcessedCell(_deferredCell._deferredCell, _deferredCell);
+                Resolve(d);
+            }
+
+            public void Resolve(ICellData data)
+            {
+                _result = data;
                 _updater.Update(_result);
                 _mre.Set();
             }

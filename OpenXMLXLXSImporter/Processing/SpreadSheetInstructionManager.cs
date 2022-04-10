@@ -97,7 +97,7 @@ namespace OpenXMLXLSXImporter.Processing
                 cells[i].InstructionManager = this;
                 cells[i].Updater = _dataStore;
             }
-            await _dataStore.SetCells(cells);         
+            await _dataStore.AddDeferredCells(cells);         
         }
 
         public void QueueCellProcessingTask(ICellProcessingTask t)

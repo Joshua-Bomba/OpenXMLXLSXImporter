@@ -10,6 +10,8 @@ namespace OpenXMLXLSXImporter.CellData
 {
     public interface ICellProcessingTask
     {
+        bool Processed { get; }
+        void Resolve(ICellData data);
         void Resolve(IXlsxSheetFile file, Cell cellElement,ICellIndex index);
         void Failure(Exception e);
     }

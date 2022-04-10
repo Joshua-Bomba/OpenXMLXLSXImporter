@@ -93,23 +93,21 @@ namespace OpenXMLXLSXImporter.Indexers
             }
         }
 
-        public async Task SetCell(ICellIndex index)
+        public async Task AddDeferredCells(IEnumerable<DeferredCell> cells)
         {
             using (await _accessorLock.LockAsync())
             {
-                this._rowIndexer.SetCell(index);
-            }
-        }
-
-        public async Task SetCells(IEnumerable<ICellIndex> cells)
-        {
-            using (await _accessorLock.LockAsync())
-            {
-                this._rowIndexer.SetCells(cells);
+                this._rowIndexer.AddDeferredCells(cells);
             }
         }
 
         //we don't want to wait for this, we will update it when we get around to it
-        void IFutureUpdate.Update(ICellIndex cell) => Task.Run(async () => await SetCell(cell));
+        void IFutureUpdate.Update(ICellIndex cell) => Task.Run(async () =>
+        {
+            using (await _accessorLock.LockAsync())
+            {
+                this._rowIndexer.Set(cell);
+            }
+        });
     }
 }

@@ -28,6 +28,7 @@ namespace OpenXMLXLSXImporter.CellData
         public string CellColumnIndex { get; set; }
 
         public uint CellRowIndex { get; set; }
+        public bool Processed { get; set; }
 
         public void Failure(Exception e)
         {
@@ -47,16 +48,29 @@ namespace OpenXMLXLSXImporter.CellData
 
         public void Resolve(IXlsxSheetFile file, Cell cellElement, ICellIndex index)
         {
+            ICellData data = null;
             try
             {
-                _result = file.ProcessedCell(cellElement, index);
+                data = file.ProcessedCell(cellElement, index);
+            }
+            finally
+            {
+                Resolve(data);
+            }
+
+        }
+
+        public void Resolve(ICellData data)
+        {
+            try
+            {
+                _result = data;
                 _updater?.Update(_result);
             }
             finally
             {
                 _mre.Set();
             }
-
         }
     }
 }
