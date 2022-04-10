@@ -11,7 +11,7 @@ object l = new object();
 Console.WriteLine("Started ConsoleTest");
 uint loop = 0;
 
-cs.LoopUsingNewDataSet<SpreadSheetInstructionBuilderTest>(r =>
+cs.LoopUsingNewDataSet<SpreadSheetInstructionBuilderTest>((i,r) =>
 {
     var timer = new Stopwatch();
     timer.Start();

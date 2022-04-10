@@ -18,16 +18,16 @@ namespace SSUT
         public const int THREADS = 4;
 
 
-        public static void TestConsistency(Action a)
+        public static void TestConsistency(Action<int> a)
         {
             Task[] pool = new Task[THREADS];
             for(int j =0;j < pool.Length;j++)
             {
                 pool[j] = Task.Run(() =>
                 {
-                    for (int i = 0; i < LOOPS / THREADS; i++)
+                    for (int i = j; i < LOOPS; i+= THREADS)
                     {
-                        a();
+                        a(i);
                     }
                 });
             }
@@ -42,14 +42,14 @@ namespace SSUT
         public void LoopUsingSameDataSet(BaseTest context,Action r)
         {
             context.importer = this.importer;
-            TestConsistency(() =>
+            TestConsistency((int i) =>
             {
                 r();
             });
         }
 
 
-        public void LoopUsingNewDataSet<TProp>(Action<TProp> r) where TProp : BaseTest, new()
+        public void LoopUsingNewDataSet<TProp>(Action<int,TProp> r) where TProp : BaseTest, new()
         {
             byte[] data;
             using (MemoryStream baseStream = new MemoryStream())
@@ -60,7 +60,7 @@ namespace SSUT
                 }
                 data = baseStream.ToArray();
             }
-            TestConsistency(() =>
+            TestConsistency((int i) =>
             {
                 using (MemoryStream ms = new MemoryStream(data, false))
                 {
@@ -68,7 +68,7 @@ namespace SSUT
                     {
                         TProp context = new TProp();
                         context.importer = importer;
-                        r(context);
+                        r(i,context);
                     }
                 }
             });
@@ -87,12 +87,12 @@ namespace SSUT
         [Test]
         public void FullRangeCellTestBurnInTest()
         {
-            LoopUsingNewDataSet<SpreadSheetInstructionBuilderTest>(x => x.FullRangeCellTest());
+            LoopUsingNewDataSet<SpreadSheetInstructionBuilderTest>((i,x) => x.FullRangeCellTest());
         }
         [Test]
         public void MultipleSheetsBundlerTestBurnInTest()
         {
-            LoopUsingNewDataSet<ConcurrencyTests>(x => x.MultipleSheetsBundlerTest());
+            LoopUsingNewDataSet<ConcurrencyTests>((i,x) => x.MultipleSheetsBundlerTest());
         }
     }
 }
