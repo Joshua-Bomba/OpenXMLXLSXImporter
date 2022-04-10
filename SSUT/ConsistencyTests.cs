@@ -83,13 +83,14 @@ namespace SSUT
             SpreadSheetInstructionBuilderTest b = new SpreadSheetInstructionBuilderTest();
             LoopUsingSameDataSet(b, b.FullRangeCellTest);
         }
-            
 
+        [Category(SKIP_SETUP)]
         [Test]
         public void FullRangeCellTestBurnInTest()
         {
             LoopUsingNewDataSet<SpreadSheetInstructionBuilderTest>((i,x) => x.FullRangeCellTest());
         }
+        [Category(SKIP_SETUP)]
         [Test]
         public void MultipleSheetsBundlerTestBurnInTest()
         {

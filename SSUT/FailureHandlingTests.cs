@@ -1,8 +1,10 @@
 ﻿using NUnit.Framework;
+using OpenXMLXLSXImporter;
 using OpenXMLXLSXImporter.Builders;
 using OpenXMLXLSXImporter.CellData;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -26,6 +28,23 @@ namespace SSUT
 
             }
 
+        }
+        [Test]
+        [Category(SKIP_SETUP)]
+        public void SlowDataTest()
+        {
+            using (DelayedData d = new DelayedData())
+            {
+                using (FileStream fs = File.OpenRead(Global.TEST_FILE))
+                {
+                    fs.CopyTo(d);
+                }
+                using (IExcelImporter importer = new ExcelImporter(d))
+                {
+                    
+                }
+            }
+            
         }
 
         //[Test]

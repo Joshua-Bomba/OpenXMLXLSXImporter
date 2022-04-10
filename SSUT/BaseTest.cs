@@ -13,16 +13,22 @@ namespace SSUT
     {
         public Stream stream = null;
         public IExcelImporter importer = null;
+        public const string SKIP_SETUP = "SkipSetup";
 
         [SetUp]
         public void Setup()
         {
-            stream = new MemoryStream();
-            using (FileStream fs = File.OpenRead(Global.TEST_FILE))
+            bool skip = TestContext.CurrentContext.Test.Properties["Category"].Contains(SKIP_SETUP);
+            if (!skip)
             {
-                fs.CopyTo(stream);
+                stream = new MemoryStream();
+                using (FileStream fs = File.OpenRead(Global.TEST_FILE))
+                {
+                    fs.CopyTo(stream);
+                }
+                stream.Position = 0;
+                importer = new ExcelImporter(stream);
             }
-            importer = new ExcelImporter(stream);
         }
         [TearDown]
         public void TearDown()

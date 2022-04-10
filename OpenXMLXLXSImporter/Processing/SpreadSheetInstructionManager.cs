@@ -34,7 +34,6 @@ namespace OpenXMLXLSXImporter.Processing
         private ConcurrentDataStore _dataStore;
 
         private SpreadSheetDequeManager dequeManager;
-        private ChunkableBlockingCollection<ICellProcessingTask> _loadQueueManager;
 
         private AsyncManualResetEvent _queueInit;
         private Task _instructionProcessor;
@@ -52,7 +51,6 @@ namespace OpenXMLXLSXImporter.Processing
             _instructionProcessor = Task.Run(async () =>
             {
                 dequeManager = new SpreadSheetDequeManager(_dataStore);
-                _loadQueueManager = new ChunkableBlockingCollection<ICellProcessingTask>(dequeManager);
                 _queueInit.Set();
                 IXlsxSheetFilePromise g = await sheetFilePromise;
                 if(g != null)
@@ -88,16 +86,15 @@ namespace OpenXMLXLSXImporter.Processing
             await _dataStore.ProcessInstruction(spreadSheetInstruction);
         }
 
-        public void QueueCellProcessingTask(ICellProcessingTask t)
+        private async Task QueueCellProcessingTask(ICellProcessingTask t)
         {
-            Task.Run(async() =>
-            {
-                await _queueInit.WaitAsync();
-                using (await _loadQueueManager.Mutex.LockAsync())
-                {
-                    _loadQueueManager.Enque(t);
-                }
-            });
+            await _queueInit.WaitAsync();
+            await dequeManager.QueueAsync(t);
+        }
+
+        void IQueueAccess.QueueCellProcessingTask(ICellProcessingTask t)
+        {
+            Task promise = QueueCellProcessingTask(t);
         }
     }
 }
