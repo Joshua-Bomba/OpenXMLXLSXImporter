@@ -51,7 +51,7 @@ namespace OpenXMLXLSXImporter.Indexers
             {
                 using (await this._accessorLock.LockAsync())
                 {
-                    return await this._rowIndexer.GetCell(rowIndex, cellIndex);
+                    return this._rowIndexer.GetCell(rowIndex, cellIndex);
                 }
             }
             return result;

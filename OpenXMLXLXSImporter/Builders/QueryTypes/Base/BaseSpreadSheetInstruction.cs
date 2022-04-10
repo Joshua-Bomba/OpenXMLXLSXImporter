@@ -26,11 +26,8 @@ namespace OpenXMLXLSXImporter.Builders
         async IAsyncEnumerable<ICellData> ISpreadSheetInstruction.GetResults()
         {
             await _mre.WaitAsync();
-            IAsyncEnumerator<ICellIndex> cells = GetResults().GetAsyncEnumerator();
-            ICellIndex i;
-            while(await cells.MoveNextAsync())
+            foreach(ICellIndex i in GetResults())
             {
-                i = cells.Current;
                 if (i is IFutureCell fs)
                 {
                     yield return await fs.GetData();
@@ -43,7 +40,7 @@ namespace OpenXMLXLSXImporter.Builders
         }
 
 
-        protected abstract IAsyncEnumerable<ICellIndex> GetResults();
+        protected abstract IEnumerable<ICellIndex> GetResults();
 
         void  ISpreadSheetInstruction.EnqueCell(IDataStoreLocked indexer)
         {

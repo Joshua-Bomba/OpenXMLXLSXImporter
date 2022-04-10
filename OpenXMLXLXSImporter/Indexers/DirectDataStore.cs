@@ -42,28 +42,18 @@ namespace OpenXMLXLSXImporter.Indexers
             base[cellData.CellRowIndex][cellData.CellColumnIndex] = cellData;
         }
 
-        public async Task<ICellIndex> GetCell(uint rowIndex, string cellIndex)
+        public ICellIndex GetCell(uint rowIndex, string cellIndex)
         {
             ICellIndex r = this.Get(rowIndex, cellIndex);
             if (r == null)
             {
-                await _queueAccess.LockQueue(x =>
+                FutureCell fc = new FutureCell(rowIndex, cellIndex,_futureUpdate);
+                if (fc != null)
                 {
-                    r = this.Get(rowIndex, cellIndex);
-                    if (r == null)
-                    {
-                        ICellProcessingTask t = new FutureCell(rowIndex, cellIndex,_futureUpdate);
-                        if (t != null)
-                        {
-                            x.Enque(t);
-                            if (t is ICellIndex index)
-                            {
-                                r = index;
-                                this.Set(index);
-                            }
-                        }
-                    }
-                });
+                    r = fc;
+                    this.Set(fc);
+                    _queueAccess.QueueCellProcessingTask(fc);
+                }
             }
             return r;
         }
@@ -77,7 +67,7 @@ namespace OpenXMLXLSXImporter.Indexers
             if (this[rowIndex].LastColumn == null)
             {
                 this[rowIndex].LastColumn = new LastColumn(rowIndex);
-                this._queueAccess.QueueNonIndexedCell(this[rowIndex].LastColumn);
+                this._queueAccess.QueueCellProcessingTask(this[rowIndex].LastColumn);
             }
             return this[rowIndex].LastColumn;
         }
@@ -87,7 +77,7 @@ namespace OpenXMLXLSXImporter.Indexers
             if (this.LastRow == null)
             {
                 this.LastRow = new LastRow();
-                this._queueAccess.QueueNonIndexedCell(this.LastRow);
+                this._queueAccess.QueueCellProcessingTask(this.LastRow);
             }
             return this.LastRow;
         }
