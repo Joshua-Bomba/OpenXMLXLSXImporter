@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace OpenXMLXLSXImporter.FileAccess
 {
-    public class XlsxDocumentFile : IXlsxDocumentFilePromise, IXlsxDocumentFile, IDisposable
+    public class XlsxDocumentFile : IXlsxDocumentFile, IDisposable
     {
         private Stream _stream;
         //The Sheet
@@ -37,18 +37,34 @@ namespace OpenXMLXLSXImporter.FileAccess
             _loadedSheets = new Dictionary<string, IXlsxSheetFilePromise>();
         }
 
-        async Task<IXlsxDocumentFile> IXlsxDocumentFilePromise.GetLoadedFile()
+        //async Task<IXlsxDocumentFile> IXlsxDocumentFilePromise.GetLoadedFile()
+        //{
+        //    await _loadSpreadSheetData;//Ensure this is loaded first
+        //    return this;
+        //}
+
+        async Task<Sheet> IXlsxDocumentFile.GetSheet(string sheetName)
         {
-            await _loadSpreadSheetData;//Ensure this is loaded first
-            return this;
+            await _loadSpreadSheetData;
+            return _sheetRef[sheetName];
+        } 
+
+        async Task<CellFormat> IXlsxDocumentFile.GetCellFormat(int index)
+        {
+            await _loadSpreadSheetData;
+            return _cellFormats.ChildElements[index] as CellFormat;
+        } 
+
+        async Task<WorksheetPart> IXlsxDocumentFile.GetWorkSheetPartById(string sheetID)
+        {
+            await _loadSpreadSheetData;
+            return (_workbookPart.GetPartById(sheetID) as WorksheetPart);
         }
-
-        Sheet IXlsxDocumentFile.GetSheet(string sheetName) => _sheetRef[sheetName];
-
-        CellFormat IXlsxDocumentFile.GetCellFormat(int index) => _cellFormats.ChildElements[index] as CellFormat;
-
-        WorkbookPart IXlsxDocumentFile.WorkbookPart => _workbookPart;
-        OpenXmlElement IXlsxDocumentFile.GetSharedStringTableElement(int index) => _sharedStringTable.ElementAt(index);
+        async Task<OpenXmlElement> IXlsxDocumentFile.GetSharedStringTableElement(int index)
+        {
+            await _loadSpreadSheetData;
+            return _sharedStringTable.ElementAt(index);
+        } 
 
         /// <summary>
         /// Common Reusable Parts of the WorkSheet
@@ -101,6 +117,5 @@ namespace OpenXMLXLSXImporter.FileAccess
             _loadSpreadSheetData.Wait();
             _spreadsheet.Dispose();
         }
-
     }
 }

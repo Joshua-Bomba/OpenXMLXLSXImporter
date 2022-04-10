@@ -11,11 +11,11 @@ namespace OpenXMLXLSXImporter.FileAccess
 {
     public interface IXlsxDocumentFile
     {
-        Sheet GetSheet(string sheetName);
-        WorkbookPart WorkbookPart { get; }
+        Task<Sheet> GetSheet(string sheetName);
+        Task<WorksheetPart> GetWorkSheetPartById(string sheetID);
 
-        CellFormat GetCellFormat(int index);
+        Task<CellFormat> GetCellFormat(int index);
 
-        OpenXmlElement GetSharedStringTableElement(int index);
+        Task<OpenXmlElement> GetSharedStringTableElement(int index);
     }
 }

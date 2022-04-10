@@ -12,7 +12,6 @@ namespace OpenXMLXLSXImporter.FileAccess
 {
     public class XlsxSheetFile : IXlsxSheetFile, IXlsxSheetFilePromise
     {
-        private IXlsxDocumentFilePromise _fileAccessPromise;
         private IXlsxDocumentFile _fileAccess;
 
         private string _sheetName;
@@ -35,9 +34,9 @@ namespace OpenXMLXLSXImporter.FileAccess
 
         private IDictionary<uint, IEnumerator<Cell>> _rows;
 
-        public XlsxSheetFile(IXlsxDocumentFilePromise fileAccess, string sheetName)
+        public XlsxSheetFile(IXlsxDocumentFile fileAccess, string sheetName)
         {
-            _fileAccessPromise = fileAccess;
+            _fileAccess = fileAccess;
             _sheetName = sheetName;
             _rowsLoadedIn = false;
             _loadSpreadSheetData = Task.Run(LoadSpreadSheetData);
@@ -46,9 +45,8 @@ namespace OpenXMLXLSXImporter.FileAccess
         protected async Task LoadSpreadSheetData()
         {
             _rows = new Dictionary<uint, IEnumerator<Cell>>();
-            _fileAccess = await _fileAccessPromise.GetLoadedFile();
-            _sheet = _fileAccess.GetSheet(_sheetName);
-            _workbookPart = _fileAccess.WorkbookPart.GetPartById(_sheet.Id) as WorksheetPart;
+            _sheet = await _fileAccess.GetSheet(_sheetName);
+            _workbookPart = await _fileAccess.GetWorkSheetPartById(_sheet.Id);
             _worksheet = _workbookPart.Worksheet;
             _sheetData = _worksheet.Elements<SheetData>().First();
            _rowsEnumerable = _sheetData.Elements<Row>();
@@ -163,7 +161,7 @@ namespace OpenXMLXLSXImporter.FileAccess
             {
                 int index = int.Parse(c.StyleIndex.InnerText);
                 
-                CellFormat cellFormat = _fileAccess.GetCellFormat(index);
+                CellFormat cellFormat = _fileAccess.GetCellFormat(index).GetAwaiter().GetResult();
                 if (cellFormat != null)
                 {
                     if (ExcelStaticData.DATE_FROMAT_DICTIONARY.ContainsKey(cellFormat.NumberFormatId))
@@ -185,7 +183,7 @@ namespace OpenXMLXLSXImporter.FileAccess
             if (c.DataType?.Value != null && c.DataType?.Value == CellValues.SharedString)
             {
                 int index = int.Parse(c.CellValue.InnerText);
-                OpenXmlElement sharedStringElement = _fileAccess.GetSharedStringTableElement(index);
+                OpenXmlElement sharedStringElement = _fileAccess.GetSharedStringTableElement(index).GetAwaiter().GetResult();
                 cellData = new CellDataRelation(index, sharedStringElement);
                 return true;
             }
