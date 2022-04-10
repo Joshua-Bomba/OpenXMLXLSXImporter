@@ -2,7 +2,7 @@
 using SSUT;
 using System.Diagnostics;
 using System.Reflection;
-
+using System.Timers;
 
 ConsistencyTests cs = new ConsistencyTests();
 
@@ -13,6 +13,8 @@ Console.WriteLine("Started ConsoleTest");
 TimeSpan?[] storedDurations = new TimeSpan?[ConsistencyTests.LOOPS];
 
 const uint LOG_FREQUENCY = 10000;
+
+const uint lastElement = 0;
 
 static async Task LogResults(TimeSpan?[] storedDurations,TimeSpan totalDuration)
 {
@@ -39,6 +41,32 @@ static async Task LogResults(TimeSpan?[] storedDurations,TimeSpan totalDuration)
     TimeSpan average = await averageResult;
     Console.WriteLine($"Average Test Took {average.ToString(@"m\:ss\.ffff")}");
 }
+
+
+
+System.Timers.Timer freezeCheck = new System.Timers.Timer();
+
+freezeCheck.Interval = 10000;
+freezeCheck.Elapsed += (object? sender, ElapsedEventArgs e) =>
+{
+    for(int i = 0;i < storedDurations.Length;i++ )
+    {
+        if(storedDurations[i] == null)
+        {
+            if(i == lastElement)
+            {
+                lock(l)
+                {
+                    Console.WriteLine($"The Program Might Be Struck since {i} was null 10 seconds ago");
+                }
+            }
+        }
+    }
+
+
+};
+
+freezeCheck.Enabled = true;
 var wholeTest = new Stopwatch();
 wholeTest.Start();
 cs.LoopUsingNewDataSet<SpreadSheetInstructionBuilderTest>((i,r) =>
@@ -83,5 +111,6 @@ cs.LoopUsingNewDataSet<SpreadSheetInstructionBuilderTest>((i,r) =>
     }
 });
 wholeTest.Stop();
+freezeCheck.Enabled = false;
 Console.WriteLine("end of ConsoleTest");
 await LogResults(storedDurations,wholeTest.Elapsed);
