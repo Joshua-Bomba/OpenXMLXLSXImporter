@@ -55,7 +55,15 @@ namespace OpenXMLXLSXImporter.Processing
                 IXlsxSheetFilePromise g = await sheetFilePromise;
                 if(g != null)
                 {
-                    await dequeManager.ProcessRequests(g);
+                    try
+                    {
+                        await dequeManager.ProcessRequests(g);
+                    }
+                    catch (Exception ex)
+                    {
+                        dequeManager.Terminate(ex);
+                    }
+
                 }
                 else
                 {
