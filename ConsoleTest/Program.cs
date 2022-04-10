@@ -4,11 +4,8 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Timers;
 
-const uint LOG_FREQUENCY = 10000;
-
-
 //await Test<SpreadSheetInstructionBuilderTest>(r => r.FullRangeCellTest());
-//await Test<ConcurrencyTests>(x => x.MultipleSheetsBundlerTest());
+await Test<ConcurrencyTests>(x => x.MultipleSheetsBundlerTest());
 await Test<ConcurrencyTests>(x => x.MultipleSheetInterwined());
 
 static async Task Test<TProp>(Action<TProp> testAction) where TProp : BaseTest, new()
@@ -43,8 +40,13 @@ static async Task Test<TProp>(Action<TProp> testAction) where TProp : BaseTest, 
                     }
                     else
                     {
+                        lock (l)
+                        {
+                            Console.WriteLine($"{i} out of {ConsistencyTests.LOOPS}");
+                        }
                         lastElement = i;
                     }
+                    break;
                 }
             }
         }
@@ -76,20 +78,8 @@ static async Task Test<TProp>(Action<TProp> testAction) where TProp : BaseTest, 
             string duration = "Test Failed After: " + timeTaken.ToString(@"m\:ss\.fff");
             lock (l)
             {
-                if (i % LOG_FREQUENCY == 0)
-                {
-                    Console.WriteLine($"Passed {i} Records");
-                }
                 Console.WriteLine(duration);
                 Console.WriteLine(fail);
-            }
-        }
-        else if (i % LOG_FREQUENCY == 0)
-        {
-            lock (l)
-            {
-                Console.WriteLine($"Passed {i} Records");
-                Console.WriteLine($"last test took {timeTaken.ToString(@"m\:ss\.fff")}");
             }
         }
     });
