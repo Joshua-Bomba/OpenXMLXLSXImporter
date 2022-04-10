@@ -7,12 +7,8 @@ using System.Timers;
 const uint LOG_FREQUENCY = 10000;
 
 
-
-
-
-await Test<SpreadSheetInstructionBuilderTest>(r => r.FullRangeCellTest());
-
-
+//await Test<SpreadSheetInstructionBuilderTest>(r => r.FullRangeCellTest());
+await Test<ConcurrencyTests>(x => x.MultipleSheetsBundlerTest());
 
 static async Task Test<TProp>(Action<TProp> testAction) where TProp : BaseTest, new()
 {
@@ -24,7 +20,7 @@ static async Task Test<TProp>(Action<TProp> testAction) where TProp : BaseTest, 
 
     TimeSpan?[] storedDurations = new TimeSpan?[ConsistencyTests.LOOPS];
 
-    const uint lastElement = 0;
+    int lastElement = 0;
     System.Timers.Timer freezeCheck = new System.Timers.Timer();
 
     freezeCheck.Interval = 10000;
@@ -40,6 +36,10 @@ static async Task Test<TProp>(Action<TProp> testAction) where TProp : BaseTest, 
                     {
                         Console.WriteLine($"The Program Might Be Struck since {i} was null 10 seconds ago");
                     }
+                }
+                else
+                {
+                    lastElement = i;
                 }
             }
         }
