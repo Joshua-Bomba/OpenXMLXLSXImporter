@@ -69,6 +69,10 @@ namespace OpenXMLXLSXImporter.Utils
                 await _chunkBlock.PreQueueProcessing();
                 BlockingCollection<T> dumpCollection = _queue;
                 _queue = new BlockingCollection<T>();
+                if(dumpCollection.IsAddingCompleted)
+                {
+                    _queue.CompleteAdding();
+                }
                 dumpCollection.CompleteAdding();
                 if (_chunkedItems == null)
                 {
@@ -90,7 +94,10 @@ namespace OpenXMLXLSXImporter.Utils
 
         public BlockingCollection<T> Finish()
         {
-            _queue.CompleteAdding();
+            using(Mutex.Lock())
+            {
+                _queue.CompleteAdding();
+            }
             return _queue;
         }
 
