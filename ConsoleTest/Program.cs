@@ -12,7 +12,33 @@ Console.WriteLine("Started ConsoleTest");
 
 TimeSpan[] storedDurations = new TimeSpan[ConsistencyTests.LOOPS];
 
+const uint LOG_FREQUENCY = 10000;
 
+static async Task LogResults(TimeSpan[] storedDurations)
+{
+    Console.WriteLine("calculating statistics");
+    Task<TimeSpan> maxResult = Task.Run<TimeSpan>(() =>
+    {
+        return storedDurations.Max();
+    });
+
+    Task<TimeSpan> minResult = Task.Run<TimeSpan>(() =>
+    {
+        return storedDurations.Min();
+    });
+    Task<TimeSpan> averageResult = Task.Run<TimeSpan>(() =>
+    {
+        return TimeSpan.FromSeconds(storedDurations.Average(x => x.TotalSeconds));
+    });
+
+    TimeSpan max = await maxResult;
+    Console.WriteLine($"Slowest Test Took {max.ToString(@"m\:ss\.fff")}");
+    TimeSpan min = await minResult;
+    Console.WriteLine($"Fastest Test Tooken {min.ToString(@"m\:ss\.fff")}");
+    TimeSpan average = await averageResult;
+    Console.WriteLine($"Average Test Took {average}");
+}
+await LogResults(storedDurations);
 
 
 cs.LoopUsingNewDataSet<SpreadSheetInstructionBuilderTest>((i,r) =>
@@ -37,7 +63,7 @@ cs.LoopUsingNewDataSet<SpreadSheetInstructionBuilderTest>((i,r) =>
         string duration = "Test Failed After: " + timeTaken.ToString(@"m\:ss\.fff");
         lock (l)
         {
-            if (i % 10000 == 0)
+            if (i % LOG_FREQUENCY == 0)
             {
                 Console.WriteLine($"Passed {i} Records");
             }
@@ -45,7 +71,7 @@ cs.LoopUsingNewDataSet<SpreadSheetInstructionBuilderTest>((i,r) =>
             Console.WriteLine(fail);
         }
     }
-    else if (i % 10000 == 0)
+    else if (i % LOG_FREQUENCY == 0)
     {
         lock (l)
         {
@@ -56,3 +82,4 @@ cs.LoopUsingNewDataSet<SpreadSheetInstructionBuilderTest>((i,r) =>
 });
 
 Console.WriteLine("end of ConsoleTest");
+await LogResults(storedDurations);
