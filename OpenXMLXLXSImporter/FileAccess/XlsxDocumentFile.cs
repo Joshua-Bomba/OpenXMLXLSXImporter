@@ -27,14 +27,14 @@ namespace OpenXMLXLSXImporter.FileAccess
         //The Task that Loads in the SpreadSheetDocumentData
         private Task _loadSpreadSheetData;
 
-        private Dictionary<string, IXlsxSheetFilePromise> _loadedSheets;
+        private Dictionary<string, IXlsxSheetFile> _loadedSheets;
         private Dictionary<string, Sheet> _sheetRef;
 
         public XlsxDocumentFile(Stream stream)
         {
             _stream = stream;
             _loadSpreadSheetData = LoadSpreadSheetDocuemntData();
-            _loadedSheets = new Dictionary<string, IXlsxSheetFilePromise>();
+            _loadedSheets = new Dictionary<string, IXlsxSheetFile>();
         }
 
         //async Task<IXlsxDocumentFile> IXlsxDocumentFilePromise.GetLoadedFile()
@@ -43,11 +43,6 @@ namespace OpenXMLXLSXImporter.FileAccess
         //    return this;
         //}
 
-        async Task<Sheet> IXlsxDocumentFile.GetSheet(string sheetName)
-        {
-            await _loadSpreadSheetData;
-            return _sheetRef[sheetName];
-        } 
 
         async Task<CellFormat> IXlsxDocumentFile.GetCellFormat(int index)
         {
@@ -55,10 +50,17 @@ namespace OpenXMLXLSXImporter.FileAccess
             return _cellFormats.ChildElements[index] as CellFormat;
         } 
 
-        async Task<WorksheetPart> IXlsxDocumentFile.GetWorkSheetPartById(string sheetID)
+        async IAsyncEnumerable<Row> IXlsxDocumentFile.GetRows(string sheetName)
         {
             await _loadSpreadSheetData;
-            return (_workbookPart.GetPartById(sheetID) as WorksheetPart);
+            Sheet sheet = _sheetRef[sheetName];
+            WorksheetPart part = (_workbookPart.GetPartById(sheet.Id) as WorksheetPart);
+            SheetData d =  part.Worksheet.Elements<SheetData>().First();
+            IEnumerator<Row> r = d.Elements<Row>().GetEnumerator();
+            while (r.MoveNext())
+            {
+                yield return r.Current;
+            }
         }
         async Task<OpenXmlElement> IXlsxDocumentFile.GetSharedStringTableElement(int index)
         {
@@ -92,7 +94,7 @@ namespace OpenXMLXLSXImporter.FileAccess
 
        
 
-        public async Task<IXlsxSheetFilePromise> LoadSpreadSheetData(string sheet)
+        public async Task<IXlsxSheetFile> LoadSpreadSheetData(string sheet)
         {
             await _loadSpreadSheetData;
             if (_sheetRef.ContainsKey(sheet))

@@ -11,8 +11,7 @@ namespace OpenXMLXLSXImporter.FileAccess
 {
     public interface IXlsxDocumentFile
     {
-        Task<Sheet> GetSheet(string sheetName);
-        Task<WorksheetPart> GetWorkSheetPartById(string sheetID);
+        IAsyncEnumerable<Row> GetRows(string sheetName);
 
         Task<CellFormat> GetCellFormat(int index);
 

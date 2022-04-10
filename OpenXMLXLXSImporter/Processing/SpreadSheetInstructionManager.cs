@@ -39,20 +39,20 @@ namespace OpenXMLXLSXImporter.Processing
         private Task _instructionProcessor;
         public IQueueAccess Queue => this;
 
-        public SpreadSheetInstructionManager(Task<IXlsxSheetFilePromise> sheetFilePromise)
+        public SpreadSheetInstructionManager(Task<IXlsxSheetFile> sheetFile)
         {
             _dataStore = new ConcurrentDataStore(this);
             _queueInit = new AsyncManualResetEvent(false);
-            ProcessSheet(sheetFilePromise);
+            ProcessSheet(sheetFile);
         }
 
-        private void ProcessSheet(Task<IXlsxSheetFilePromise> sheetFilePromise)
+        private void ProcessSheet(Task<IXlsxSheetFile> sheeteFile)
         {
             _instructionProcessor = Task.Run(async () =>
             {
                 dequeManager = new SpreadSheetDequeManager(_dataStore);
                 _queueInit.Set();
-                IXlsxSheetFilePromise g = await sheetFilePromise;
+                IXlsxSheetFile g = await sheeteFile;
                 if(g != null)
                 {
                     try

@@ -23,14 +23,12 @@ namespace OpenXMLXLSXImporter.Processing
         private uint? desiredRowIndex;
         private string desiredColumnIndex;
         private Dictionary<string,Cell> deferedCells = null;
-        private IXlsxSheetFilePromise _filePromise;
         private IXlsxSheetFile sheetAccess;
 
 
         public SpreadSheetDequeManager(IDeferredUpdater deferredUpdater)
         {
             _deferredUpdater = deferredUpdater;
-            _filePromise = null;
             _queue = new AsyncProducerConsumerQueue<ICellProcessingTask>();
         }
 
@@ -51,15 +49,14 @@ namespace OpenXMLXLSXImporter.Processing
             }
         }
 
-        public async Task ProcessRequests(IXlsxSheetFilePromise file)
+        public async Task ProcessRequests(IXlsxSheetFile file)
         {
-            _filePromise = file;
             try
             {
                 Cell cell = null;
                 bool rowsLoadedIn = false;
                 IEnumerator<Cell> cellEnumerator;
-                sheetAccess = await _filePromise.GetLoadedFile();
+                sheetAccess = file;
                 ICellIndex index;
                 while (true)
                 {
@@ -80,7 +77,7 @@ namespace OpenXMLXLSXImporter.Processing
                             }
                             else if (dequed is LastRow m)
                             {
-                                index = new FutureIndex { CellRowIndex = sheetAccess.GetAllRows() };
+                                index = new FutureIndex { CellRowIndex = await sheetAccess.GetAllRows() };
                                 continue;
                             }
                             else if (dequed is LastColumn mc)
@@ -98,7 +95,8 @@ namespace OpenXMLXLSXImporter.Processing
                             {
                                 continue;
                             }
-                            if (sheetAccess.TryGetRow(desiredRowIndex.Value, out cellEnumerator))
+                            cellEnumerator = await sheetAccess.GetRow(desiredRowIndex.Value);
+                            if (cellEnumerator != null)
                             {
                                 bool cellsLoadedIn = false;
                                 string currentIndex = null;
