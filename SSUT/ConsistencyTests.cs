@@ -23,9 +23,10 @@ namespace SSUT
             Task[] pool = new Task[THREADS];
             for(int j =0;j < pool.Length;j++)
             {
+                int scoped = j;
                 pool[j] = Task.Run(() =>
                 {
-                    for (int i = j; i < LOOPS; i+= THREADS)
+                    for (int i = scoped; i < LOOPS; i+= THREADS)
                     {
                         a(i);
                     }

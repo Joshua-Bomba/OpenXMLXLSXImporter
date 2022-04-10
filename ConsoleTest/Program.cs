@@ -10,25 +10,25 @@ object l = new object();
 
 Console.WriteLine("Started ConsoleTest");
 
-TimeSpan[] storedDurations = new TimeSpan[ConsistencyTests.LOOPS];
+TimeSpan?[] storedDurations = new TimeSpan?[ConsistencyTests.LOOPS];
 
 const uint LOG_FREQUENCY = 10000;
 
-static async Task LogResults(TimeSpan[] storedDurations,TimeSpan totalDuration)
+static async Task LogResults(TimeSpan?[] storedDurations,TimeSpan totalDuration)
 {
     Console.WriteLine("calculating statistics");
     Task<TimeSpan> maxResult = Task.Run<TimeSpan>(() =>
     {
-        return storedDurations.Max();
+        return storedDurations.Max().Value;
     });
 
     Task<TimeSpan> minResult = Task.Run<TimeSpan>(() =>
     {
-        return storedDurations.Min();
+        return storedDurations.Min().Value;
     });
     Task<TimeSpan> averageResult = Task.Run<TimeSpan>(() =>
     {
-        return TimeSpan.FromSeconds(storedDurations.Average(x => x.TotalSeconds));
+        return TimeSpan.FromSeconds(storedDurations.Average(x => x.Value.TotalSeconds));
     });
 
     Console.WriteLine($"Whole Test Took {totalDuration.ToString(@"m\:ss\.ffff")}");
@@ -57,7 +57,9 @@ cs.LoopUsingNewDataSet<SpreadSheetInstructionBuilderTest>((i,r) =>
 
     timer.Stop();
     TimeSpan timeTaken = timer.Elapsed;
+
     storedDurations[i] = timeTaken;
+
     if (fail != null)
     {
         string duration = "Test Failed After: " + timeTaken.ToString(@"m\:ss\.fff");
