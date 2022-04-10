@@ -14,7 +14,7 @@ namespace OpenXMLXLSXImporter.Builders
     {
         private uint _row;
         private string _startingColumn;
-        private Task<LastColumn> _lastColumn;
+        private LastColumn _lastColumn;
         private ISpreadSheetInstructionManager _manger;
         public FullColumnRange(uint row,string startingColumn = "A")
         {
@@ -27,15 +27,14 @@ namespace OpenXMLXLSXImporter.Builders
             _manger = spreadSheetInstructionManager;
         }
 
-        void ISpreadSheetInstruction.EnqueCell(IDataStore indexer)
+        void ISpreadSheetInstruction.EnqueCell(IDataStoreLocked indexer)
         {
             _lastColumn = indexer.GetLastColumn(_row);
         }
 
         async IAsyncEnumerable<ICellData> ISpreadSheetInstruction.GetResults()
         {
-            LastColumn lc = await _lastColumn;
-            ICellIndex lastCell = await lc.GetIndex();
+            ICellIndex lastCell = await _lastColumn.GetIndex();
             if(lastCell != null)
             {
                 uint startingColumn = ExcelColumnHelper.GetColumnStringAsIndex(_startingColumn);

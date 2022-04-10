@@ -15,7 +15,7 @@ namespace SSUT
     public  class ConsistencyTests : BaseTest
     {
         public const int LOOPS = 100000;
-        public const int THREADS = 8;
+        public const int THREADS = 4;
 
 
         public static void TestConsistency(Action a)

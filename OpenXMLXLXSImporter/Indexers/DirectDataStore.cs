@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace OpenXMLXLSXImporter.Indexers
 {
-    public class DirectDataStore : Dictionary<uint,ColumnIndexer>, IDataStore
+    public class DirectDataStore : Dictionary<uint,ColumnIndexer>
     {
         private IQueueAccess _queueAccess;
         private IFutureUpdate _futureUpdate;
@@ -42,15 +42,6 @@ namespace OpenXMLXLSXImporter.Indexers
             base[cellData.CellRowIndex][cellData.CellColumnIndex] = cellData;
         }
 
-        public void Add(ICellIndex cellData)
-        {
-            if (!base.ContainsKey(cellData.CellRowIndex))
-            {
-                base.Add(cellData.CellRowIndex, new ColumnIndexer());
-            }
-            base[cellData.CellRowIndex].Add(cellData.CellColumnIndex, cellData);
-        }
-
         public async Task<ICellIndex> GetCell(uint rowIndex, string cellIndex)
         {
             ICellIndex r = this.Get(rowIndex, cellIndex);
@@ -77,7 +68,7 @@ namespace OpenXMLXLSXImporter.Indexers
             return r;
         }
 
-        public async Task<LastColumn> GetLastColumn(uint rowIndex)
+        public LastColumn GetLastColumn(uint rowIndex)
         {
             if (!this.ContainsKey(rowIndex))
             {
@@ -91,7 +82,7 @@ namespace OpenXMLXLSXImporter.Indexers
             return this[rowIndex].LastColumn;
         }
 
-        public async Task<LastRow> GetLastRow()
+        public LastRow GetLastRow()
         {
             if (this.LastRow == null)
             {
@@ -101,12 +92,12 @@ namespace OpenXMLXLSXImporter.Indexers
             return this.LastRow;
         }
 
-        public async Task SetCell(ICellIndex index)
+        public void SetCell(ICellIndex index)
         {
             this.Set(index);
         }
 
-        public async Task SetCells(IEnumerable<ICellIndex> cells)
+        public void SetCells(IEnumerable<ICellIndex> cells)
         {
             foreach (ICellIndex cell in cells)
             {

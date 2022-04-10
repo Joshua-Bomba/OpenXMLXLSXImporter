@@ -7,10 +7,10 @@ using System.Threading.Tasks;
 
 namespace OpenXMLXLSXImporter.Indexers
 {
-    public class LimitedAccessDataStore : IDataStore
+    public class LimitedAccessDataStore : IDataStoreLocked
     {
-        private IDataStore _d;
-        public LimitedAccessDataStore(IDataStore d)
+        private DirectDataStore _d;
+        public LimitedAccessDataStore(DirectDataStore d)
         {
             _d = d;
         }
@@ -21,8 +21,8 @@ namespace OpenXMLXLSXImporter.Indexers
 
         public Task<ICellIndex> GetCell(uint rowIndex, string cellIndex) => _d.GetCell(rowIndex, cellIndex);
 
-        public Task<LastColumn> GetLastColumn(uint rowIndex) => _d.GetLastColumn(rowIndex);
+        public LastColumn GetLastColumn(uint rowIndex) => _d.GetLastColumn(rowIndex);
 
-        public Task<LastRow> GetLastRow() => _d.GetLastRow();
+        public LastRow GetLastRow() => _d.GetLastRow();
     }
 }

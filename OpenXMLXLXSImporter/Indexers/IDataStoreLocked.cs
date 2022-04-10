@@ -8,10 +8,10 @@ using System.Threading.Tasks;
 
 namespace OpenXMLXLSXImporter.Indexers
 {
-    public interface IDataStore
+    public interface IDataStoreLocked
     {
         Task<ICellIndex> GetCell(uint rowIndex, string cellIndex);
-        Task<LastColumn> GetLastColumn(uint rowIndex);
-        Task<LastRow> GetLastRow();
+        LastColumn GetLastColumn(uint rowIndex);
+        LastRow GetLastRow();
     }
 }

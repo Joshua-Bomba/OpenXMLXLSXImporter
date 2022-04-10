@@ -33,7 +33,7 @@ namespace OpenXMLXLSXImporter.Builders
                 throw new ArgumentException("The End Row has to be greater then the Start Row");
             }
         }
-        protected override void EnqueCell(IDataStore indexer)
+        protected override void EnqueCell(IDataStoreLocked indexer)
         {
             for (uint i = _startRow;i <= _endRow;i++)
             {

@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace OpenXMLXLSXImporter.Indexers
 {
-    public class ConcurrentDataStore : IDataStore, IFutureUpdate
+    public class ConcurrentDataStore : IFutureUpdate
     {
         protected DirectDataStore _rowIndexer;
         private AsyncLock _accessorLock = new AsyncLock();
@@ -25,7 +25,7 @@ namespace OpenXMLXLSXImporter.Indexers
             {
                 using (await _accessorLock.LockAsync())
                 {
-                   return await _rowIndexer.GetLastColumn(rowIndex);
+                   return _rowIndexer.GetLastColumn(rowIndex);
                 }
             }
             return _rowIndexer[rowIndex].LastColumn;
@@ -37,7 +37,7 @@ namespace OpenXMLXLSXImporter.Indexers
             {
                 using (await _accessorLock.LockAsync())
                 {
-                    await _rowIndexer.GetLastRow();
+                    _rowIndexer.GetLastRow();
                 }
             }
             return _rowIndexer.LastRow;
@@ -83,7 +83,7 @@ namespace OpenXMLXLSXImporter.Indexers
                 {
                     foreach (ISpreadSheetInstruction instruction in instructions)
                     {
-                        instruction.EnqueCell(this);
+                        instruction.EnqueCell(limitedLife);
                     }
                 }
                 finally
@@ -97,7 +97,7 @@ namespace OpenXMLXLSXImporter.Indexers
         {
             using (await _accessorLock.LockAsync())
             {
-                await this._rowIndexer.SetCell(index);
+                this._rowIndexer.SetCell(index);
             }
         }
 
@@ -105,7 +105,7 @@ namespace OpenXMLXLSXImporter.Indexers
         {
             using (await _accessorLock.LockAsync())
             {
-                await this._rowIndexer.SetCells(cells);
+                this._rowIndexer.SetCells(cells);
             }
         }
 
