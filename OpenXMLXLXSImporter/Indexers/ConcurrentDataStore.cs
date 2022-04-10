@@ -1,6 +1,7 @@
 ﻿using Nito.AsyncEx;
 using OpenXMLXLSXImporter.Builders;
 using OpenXMLXLSXImporter.CellData;
+using OpenXMLXLSXImporter.FileAccess;
 using OpenXMLXLSXImporter.Processing;
 using OpenXMLXLSXImporter.Utils;
 using System;
@@ -11,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace OpenXMLXLSXImporter.Indexers
 {
-    public class ConcurrentDataStore : IFutureUpdate
+    public class ConcurrentDataStore : IFutureUpdate, IDeferredUpdater
     {
         protected DirectDataStore _rowIndexer;
         private AsyncLock _accessorLock = new AsyncLock();
@@ -92,12 +93,11 @@ namespace OpenXMLXLSXImporter.Indexers
                 }
             }
         }
-
-        public async Task AddDeferredCells(IEnumerable<DeferredCell> cells)
+        async Task IDeferredUpdater.AddDeferredCells(IXlsxSheetFile file, IEnumerable<DeferredCell> dc)
         {
             using (await _accessorLock.LockAsync())
             {
-                this._rowIndexer.AddDeferredCells(cells);
+                
             }
         }
 
@@ -109,5 +109,7 @@ namespace OpenXMLXLSXImporter.Indexers
                 this._rowIndexer.Set(cell);
             }
         });
+
+
     }
 }

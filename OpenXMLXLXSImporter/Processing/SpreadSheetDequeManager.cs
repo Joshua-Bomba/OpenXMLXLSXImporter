@@ -16,7 +16,7 @@ namespace OpenXMLXLSXImporter.Processing
 {
     public class SpreadSheetDequeManager : IChunckBlock<ICellProcessingTask>
     {
-        private ISpreadSheetInstructionManager _instructionManager;
+        private IDeferredUpdater _deferredUpdater;
 
         private ChunkableBlockingCollection<ICellProcessingTask> _queue;
 
@@ -29,9 +29,9 @@ namespace OpenXMLXLSXImporter.Processing
         private Queue<ICellProcessingTask> ss;
         private Dictionary<Cell, ICellProcessingTask> fufil;
 
-        public SpreadSheetDequeManager(ISpreadSheetInstructionManager instructionManager)
+        public SpreadSheetDequeManager(IDeferredUpdater deferredUpdater)
         {
-            _instructionManager = instructionManager;
+            _deferredUpdater = deferredUpdater;
             _filePromise = null;
         }
 
@@ -208,16 +208,16 @@ namespace OpenXMLXLSXImporter.Processing
 
         public async Task PostQueueProcessing()
         {
-            //We will add this deferredcell type to the IIndexers since we don't need them at the time
-            if(deferedCells != null&&deferedCells.Any())
-            {
-                await _instructionManager.AddDeferredCells(deferedCells.Select(x => new DeferredCell(desiredRowIndex.Value, x.Key, x.Value)));
-            }
         }
 
         public async Task PostLockProcessing()
         {
-            deferedCells = null;
+            //We will add this deferredcell type to the IIndexers since we don't need them at the time
+            if (deferedCells != null && deferedCells.Any())
+            {
+                await _deferredUpdater.AddDeferredCells(sheetAccess, deferedCells.Select(x => new DeferredCell(desiredRowIndex.Value, x.Key, x.Value)));
+                deferedCells = null;
+            }
             ss = null;
             //fufill any cells that were enqued during the processing of the last add
             foreach (KeyValuePair<Cell, ICellProcessingTask> kv in fufil)

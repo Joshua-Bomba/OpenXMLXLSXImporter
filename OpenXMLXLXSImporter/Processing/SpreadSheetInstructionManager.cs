@@ -25,7 +25,6 @@ namespace OpenXMLXLSXImporter.Processing
 
     public interface ISpreadSheetInstructionManager
     {
-        Task AddDeferredCells(IEnumerable<DeferredCell> deferredCells);
         Task ProcessInstruction(ISpreadSheetInstruction spreadSheetInstruction);
         IQueueAccess Queue { get; }//Did it like this so that way I can possbily replace IQueueAccess with another implementation
     }
@@ -52,7 +51,7 @@ namespace OpenXMLXLSXImporter.Processing
         {
             _instructionProcessor = Task.Run(async () =>
             {
-                dequeManager = new SpreadSheetDequeManager(this);
+                dequeManager = new SpreadSheetDequeManager(_dataStore);
                 _loadQueueManager = new ChunkableBlockingCollection<ICellProcessingTask>(dequeManager);
                 _queueInit.Set();
                 IXlsxSheetFilePromise g = await sheetFilePromise;
@@ -87,17 +86,6 @@ namespace OpenXMLXLSXImporter.Processing
         {
             spreadSheetInstruction.AttachSpreadSheetInstructionManager(this);
             await _dataStore.ProcessInstruction(spreadSheetInstruction);
-        }
-
-        public  async Task AddDeferredCells(IEnumerable<DeferredCell> deferredCells)
-        {
-            DeferredCell[] cells = deferredCells.ToArray();
-            for(int i =0;i < cells.Length;i++)
-            {
-                cells[i].InstructionManager = this;
-                cells[i].Updater = _dataStore;
-            }
-            await _dataStore.AddDeferredCells(cells);         
         }
 
         public void QueueCellProcessingTask(ICellProcessingTask t)
