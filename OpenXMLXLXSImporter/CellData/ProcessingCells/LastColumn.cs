@@ -45,10 +45,5 @@ namespace OpenXMLXLSXImporter.CellData
             _result = index;
             _mre.Set();
         }
-
-        public void Resolve(ICellData data)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

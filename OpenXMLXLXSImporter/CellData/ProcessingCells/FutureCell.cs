@@ -48,29 +48,16 @@ namespace OpenXMLXLSXImporter.CellData
 
         public void Resolve(IXlsxSheetFile file, Cell cellElement, ICellIndex index)
         {
-            ICellData data = null;
             try
             {
-                data = file.ProcessedCell(cellElement, index);
-            }
-            finally
-            {
-                Resolve(data);
-            }
-
-        }
-
-        public void Resolve(ICellData data)
-        {
-            try
-            {
-                _result = data;
+                _result = file.ProcessedCell(cellElement, index);
                 _updater?.Update(_result);
             }
             finally
             {
                 _mre.Set();
             }
+
         }
     }
 }
