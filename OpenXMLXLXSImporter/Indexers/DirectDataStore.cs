@@ -85,7 +85,7 @@ namespace OpenXMLXLSXImporter.Indexers
             Dictionary<DeferredCell, ICellProcessingTask> existing = new Dictionary<DeferredCell, ICellProcessingTask>();
             foreach (DeferredCell c in dc)
             {
-                ICellIndex i = this.GetCell(c.CellRowIndex, c.CellColumnIndex);
+                ICellIndex i = this.Get(c.CellRowIndex, c.CellColumnIndex);
                 if (i != null)
                 {
                     if (i is ICellProcessingTask task && !task.Processed)
