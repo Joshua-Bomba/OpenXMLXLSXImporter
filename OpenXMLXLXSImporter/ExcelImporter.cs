@@ -28,33 +28,20 @@ namespace OpenXMLXLSXImporter
     {
         private XlsxDocumentFile _streamSheetFile;
 
-        private Dictionary<string, SpreadSheetInstructionManager> _instructionBuilders;
-        private AsyncLock _sheetAccessorLock = new AsyncLock();
+        private ConcurrentDictionary<string, SpreadSheetInstructionManager> _instructionBuilders;
 
         public ExcelImporter(Stream stream)
         {
             _streamSheetFile = new XlsxDocumentFile(stream);
-            _instructionBuilders = new Dictionary<string, SpreadSheetInstructionManager>();
+            _instructionBuilders = new ConcurrentDictionary<string, SpreadSheetInstructionManager>();
         }
 
         public async Task<ISpreadSheetInstructionBuilder> GetSheetBuilder(string sheetName)
-        {
-            if(!_instructionBuilders.ContainsKey(sheetName))
-            {
-                using(await _sheetAccessorLock.LockAsync())
-                {
-                    if (!_instructionBuilders.ContainsKey(sheetName))
-                    {
-                        _instructionBuilders[sheetName] = new SpreadSheetInstructionManager(_streamSheetFile.LoadSpreadSheetData(sheetName));
-                    }
-                }
-            }
-            return new SpreadSheetInstructionBuilder(_instructionBuilders[sheetName]);
-        }
+            =>new SpreadSheetInstructionBuilder(_instructionBuilders.GetOrAdd(sheetName, x => new SpreadSheetInstructionManager(_streamSheetFile.LoadSpreadSheetData(x))));
 
         public void Dispose()
         {
-            Dictionary<string, SpreadSheetInstructionManager> end = _instructionBuilders;
+            ConcurrentDictionary<string, SpreadSheetInstructionManager> end = _instructionBuilders;
             _instructionBuilders = null;
             foreach (KeyValuePair<string, SpreadSheetInstructionManager> ssib in end)
             {

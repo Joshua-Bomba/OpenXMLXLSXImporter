@@ -4,6 +4,7 @@ using DocumentFormat.OpenXml.Spreadsheet;
 using OpenXMLXLSXImporter.CellData;
 using OpenXMLXLSXImporter.Processing;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -27,14 +28,14 @@ namespace OpenXMLXLSXImporter.FileAccess
         //The Task that Loads in the SpreadSheetDocumentData
         private Task _loadSpreadSheetData;
 
-        private Dictionary<string, IXlsxSheetFile> _loadedSheets;
+        private ConcurrentDictionary<string, IXlsxSheetFile> _loadedSheets;
         private Dictionary<string, Sheet> _sheetRef;
 
         public XlsxDocumentFile(Stream stream)
         {
             _stream = stream;
             _loadSpreadSheetData = LoadSpreadSheetDocuemntData();
-            _loadedSheets = new Dictionary<string, IXlsxSheetFile>();
+            _loadedSheets = new ConcurrentDictionary<string, IXlsxSheetFile>();
         }
 
         //async Task<IXlsxDocumentFile> IXlsxDocumentFilePromise.GetLoadedFile()
@@ -99,12 +100,7 @@ namespace OpenXMLXLSXImporter.FileAccess
             await _loadSpreadSheetData;
             if (_sheetRef.ContainsKey(sheet))
             {
-                if (!_loadedSheets.ContainsKey(sheet))
-                {
-                    //this is the first time we use this sheet
-                    _loadedSheets[sheet] = new XlsxSheetFile(this, sheet);
-                }
-                return _loadedSheets[sheet];
+                return _loadedSheets.GetOrAdd(sheet, x=> new XlsxSheetFile(this, sheet));
             }
             return null;
         }
