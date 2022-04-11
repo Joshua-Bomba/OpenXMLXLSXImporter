@@ -4,9 +4,9 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Timers;
 
-//await Test<SpreadSheetInstructionBuilderTest>(r => r.FullRangeCellTest());
+await Test<SpreadSheetInstructionBuilderTest>(r => r.FullRangeCellTest());
 await Test<ConcurrencyTests>(x => x.MultipleSheetsBundlerTest());
-//await Test<ConcurrencyTests>(x => x.MultipleSheetInterwined());
+await Test<ConcurrencyTests>(x => x.MultipleSheetInterwined());
 
 
 static async Task Test<TProp>(Action<TProp> testAction,bool sameDataSet = false) where TProp : BaseTest, new()

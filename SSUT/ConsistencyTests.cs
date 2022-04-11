@@ -14,8 +14,8 @@ namespace SSUT
     [TestFixture]
     public  class ConsistencyTests : BaseTest
     {
-        public const int LOOPS = 100000;
-        public const int THREADS = 1;
+        public const int LOOPS = 1000000;
+        public const int THREADS = 12;
 
 
         public static void TestConsistency(Action<int> a)
