@@ -85,7 +85,7 @@ namespace OpenXMLXLSXImporter.CellData
                     if (_deferredCellExecution == null)
                     {
                         _deferredCellExecution = new DeferredCellExecution(this,Updater);
-                        QueueAccess.QueueCellProcessingTask(_deferredCellExecution);
+                        await QueueAccess.QueueCellProcessingTask(_deferredCellExecution);
                     }
                 }
             }

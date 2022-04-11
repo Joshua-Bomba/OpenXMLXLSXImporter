@@ -2,6 +2,7 @@
 using Nito.AsyncEx;
 using OpenXMLXLSXImporter.FileAccess;
 using OpenXMLXLSXImporter.Indexers;
+using OpenXMLXLSXImporter.Processing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,13 +18,15 @@ namespace OpenXMLXLSXImporter.CellData
         private IFutureUpdate _updater;
         private AsyncManualResetEvent _mre;
         private Exception _fail;
-        public FutureCell(uint cellRowIndex, string cellColumnIndex, IFutureUpdate updater)
+        private Task _enqued;
+        public FutureCell(uint cellRowIndex, string cellColumnIndex, IFutureUpdate updater, IQueueAccess queueAccess)
         {
             _fail = null;
             CellRowIndex = cellRowIndex;
             CellColumnIndex = cellColumnIndex;
             _mre = new AsyncManualResetEvent(false);
             _updater = updater;
+            _enqued = queueAccess.QueueCellProcessingTask(this);
         }
         public string CellColumnIndex { get; set; }
 
@@ -38,6 +41,7 @@ namespace OpenXMLXLSXImporter.CellData
 
         public async Task<ICellData> GetData()
         {
+            await _enqued;
             await _mre.WaitAsync();
             if(_fail != null )
             {

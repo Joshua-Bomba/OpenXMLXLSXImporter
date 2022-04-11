@@ -20,7 +20,7 @@ namespace OpenXMLXLSXImporter.Processing
 {
     public interface IQueueAccess
     {
-        void QueueCellProcessingTask(ICellProcessingTask t);
+        Task QueueCellProcessingTask(ICellProcessingTask t);
     }
 
     public interface ISpreadSheetInstructionManager
@@ -94,15 +94,10 @@ namespace OpenXMLXLSXImporter.Processing
             await _dataStore.ProcessInstruction(spreadSheetInstruction);
         }
 
-        private async Task QueueCellProcessingTask(ICellProcessingTask t)
+        public async Task QueueCellProcessingTask(ICellProcessingTask t)
         {
             await _queueInit.WaitAsync();
             await dequeManager.QueueAsync(t);
-        }
-
-        void IQueueAccess.QueueCellProcessingTask(ICellProcessingTask t)
-        {
-            Task promise = QueueCellProcessingTask(t);
         }
     }
 }
