@@ -54,15 +54,9 @@ namespace OpenXMLXLSXImporter.CellData
         {
             if(!Processed)
             {
-                try
-                {
-                    _result = file.ProcessedCell(cellElement, index);
-                    _updater?.Update(_result);
-                }
-                finally
-                {
-                    _mre.Set();
-                }
+                _result = file.ProcessedCell(cellElement, index);
+                _updater?.Update(_result);
+                _mre.Set();
             }
         }
     }

@@ -146,7 +146,15 @@ namespace OpenXMLXLSXImporter.Processing
                 }
                 finally
                 {
-                    dequed.Resolve(sheetAccess, cell, index);
+                    try
+                    {
+                        dequed?.Resolve(sheetAccess, cell, index);
+                    }
+                    catch(Exception ex)
+                    {
+                        dequed?.Failure(ex);
+                    }
+                    
                 }
             }
         }
@@ -166,7 +174,15 @@ namespace OpenXMLXLSXImporter.Processing
                 Dictionary<DeferredCell, ICellProcessingTask> cells = await setDeferedCells;
                 foreach(KeyValuePair<DeferredCell,ICellProcessingTask> kv in cells)
                 {
-                    kv.Value.Resolve(sheetAccess, kv.Key.Cell, kv.Key);
+                    try
+                    {
+                        kv.Value.Resolve(sheetAccess, kv.Key.Cell, kv.Key);
+                    }
+                    catch(Exception ex)
+                    {
+                        kv.Value?.Failure(ex);
+                    }
+
                 }
                 deferedCells = null;
             }
