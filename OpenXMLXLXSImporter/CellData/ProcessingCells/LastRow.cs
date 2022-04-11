@@ -2,6 +2,7 @@
 using Nito.AsyncEx;
 using OpenXMLXLSXImporter.FileAccess;
 using OpenXMLXLSXImporter.Indexers;
+using OpenXMLXLSXImporter.Processing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,10 +16,12 @@ namespace OpenXMLXLSXImporter.CellData
         private ICellIndex _result;
         private AsyncManualResetEvent _mre;
         private Exception _fail;
-        public LastRow()
+        private Task _enqued;
+        public LastRow(IQueueAccess queueAccess)
         {
             _fail = null;
             _mre = new AsyncManualResetEvent(false);
+            _enqued = queueAccess.QueueCellProcessingTask(this);
         }
 
         public bool Processed => _mre.IsSet;
@@ -31,6 +34,7 @@ namespace OpenXMLXLSXImporter.CellData
 
         public async Task<ICellIndex> GetIndex()
         {
+            await _enqued;
             await _mre.WaitAsync();
             if(_fail != null)
             {
@@ -40,8 +44,11 @@ namespace OpenXMLXLSXImporter.CellData
         }
         public void Resolve(IXlsxSheetFile file, Cell cellElement, ICellIndex index)
         {
-            _result = index;
-            _mre.Set();
+            if(!Processed)
+            {
+                _result = index;
+                _mre.Set();
+            }
         }
     }
 }

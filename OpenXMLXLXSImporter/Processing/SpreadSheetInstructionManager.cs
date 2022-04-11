@@ -20,7 +20,7 @@ namespace OpenXMLXLSXImporter.Processing
 {
     public interface IQueueAccess
     {
-        void QueueCellProcessingTask(ICellProcessingTask t);
+        Task QueueCellProcessingTask(ICellProcessingTask t);
     }
 
     public interface ISpreadSheetInstructionManager
@@ -39,27 +39,43 @@ namespace OpenXMLXLSXImporter.Processing
         private Task _instructionProcessor;
         public IQueueAccess Queue => this;
 
-        public SpreadSheetInstructionManager(Task<IXlsxSheetFilePromise> sheetFilePromise)
+        public SpreadSheetInstructionManager(Task<IXlsxSheetFile> sheetFile)
         {
             _dataStore = new ConcurrentDataStore(this);
             _queueInit = new AsyncManualResetEvent(false);
-            ProcessSheet(sheetFilePromise);
+            ProcessSheet(sheetFile);
         }
 
-        private void ProcessSheet(Task<IXlsxSheetFilePromise> sheetFilePromise)
+        private void ProcessSheet(Task<IXlsxSheetFile> sheeteFile)
         {
             _instructionProcessor = Task.Run(async () =>
             {
-                dequeManager = new SpreadSheetDequeManager(_dataStore);
-                _queueInit.Set();
-                IXlsxSheetFilePromise g = await sheetFilePromise;
-                if(g != null)
+                try
                 {
-                    await dequeManager.ProcessRequests(g);
+                    dequeManager = new SpreadSheetDequeManager(_dataStore);
+                    _queueInit.Set();
+                    IXlsxSheetFile g = await sheeteFile;
+                    if (g != null)
+                    {
+
+                        await dequeManager.ProcessRequests(g);
+                    }
+                    else
+                    {
+                        throw new  Exception("Sheet Not Found Exception");
+                    }
+
                 }
-                else
+                catch (Exception ex)
                 {
-                    dequeManager.Terminate(new Exception("Sheet Not Found Exception"));
+                    if(dequeManager != null)
+                    {
+                        dequeManager.Terminate(ex);
+                    }
+                    else
+                    {
+                        _queueInit?.Set();
+                    }
                 }
             });
         }
@@ -86,15 +102,10 @@ namespace OpenXMLXLSXImporter.Processing
             await _dataStore.ProcessInstruction(spreadSheetInstruction);
         }
 
-        private async Task QueueCellProcessingTask(ICellProcessingTask t)
+        public async Task QueueCellProcessingTask(ICellProcessingTask t)
         {
             await _queueInit.WaitAsync();
             await dequeManager.QueueAsync(t);
-        }
-
-        void IQueueAccess.QueueCellProcessingTask(ICellProcessingTask t)
-        {
-            Task promise = QueueCellProcessingTask(t);
         }
     }
 }

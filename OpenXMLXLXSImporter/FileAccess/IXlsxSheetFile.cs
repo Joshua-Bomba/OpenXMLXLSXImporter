@@ -10,8 +10,8 @@ namespace OpenXMLXLSXImporter.FileAccess
 {
     public interface IXlsxSheetFile
     {
-        uint GetAllRows();
-        bool TryGetRow(uint desiredRowIndex, out IEnumerator<Cell> cellEnumerator);
+        Task<uint> GetAllRows();
+        Task<IEnumerator<Cell>> GetRow(uint desiredRowIndex);
         ICellData ProcessedCell(Cell cellElement, ICellIndex index);
     }
 }

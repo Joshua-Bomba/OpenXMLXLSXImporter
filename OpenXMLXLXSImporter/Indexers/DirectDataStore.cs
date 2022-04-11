@@ -48,12 +48,11 @@ namespace OpenXMLXLSXImporter.Indexers
             ICellIndex r = this.Get(rowIndex, cellIndex);
             if (r == null)
             {
-                FutureCell fc = new FutureCell(rowIndex, cellIndex,_futureUpdate);
+                FutureCell fc = new FutureCell(rowIndex, cellIndex,_futureUpdate, _queueAccess);
                 if (fc != null)
                 {
                     r = fc;
                     this.Set(fc);
-                    _queueAccess.QueueCellProcessingTask(fc);
                 }
             }
             return r;
@@ -67,8 +66,7 @@ namespace OpenXMLXLSXImporter.Indexers
             }
             if (this[rowIndex].LastColumn == null)
             {
-                this[rowIndex].LastColumn = new LastColumn(rowIndex);
-                this._queueAccess.QueueCellProcessingTask(this[rowIndex].LastColumn);
+                this[rowIndex].LastColumn = new LastColumn(rowIndex, this._queueAccess);
             }
             return this[rowIndex].LastColumn;
         }
@@ -77,8 +75,7 @@ namespace OpenXMLXLSXImporter.Indexers
         {
             if (this.LastRow == null)
             {
-                this.LastRow = new LastRow();
-                this._queueAccess.QueueCellProcessingTask(this.LastRow);
+                this.LastRow = new LastRow(this._queueAccess);
             }
             return this.LastRow;
         }
@@ -88,10 +85,10 @@ namespace OpenXMLXLSXImporter.Indexers
             Dictionary<DeferredCell, ICellProcessingTask> existing = new Dictionary<DeferredCell, ICellProcessingTask>();
             foreach (DeferredCell c in dc)
             {
-                ICellIndex i = this.GetCell(c.CellRowIndex, c.CellColumnIndex);
+                ICellIndex i = this.Get(c.CellRowIndex, c.CellColumnIndex);
                 if (i != null)
                 {
-                    if (i is ICellProcessingTask task && !task.Processed)
+                    if (i is ICellProcessingTask task)
                     {
                         existing.Add(c, task);
                     }

@@ -4,6 +4,7 @@ using DocumentFormat.OpenXml.Spreadsheet;
 using OpenXMLXLSXImporter.CellData;
 using OpenXMLXLSXImporter.Processing;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -12,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace OpenXMLXLSXImporter.FileAccess
 {
-    public class XlsxDocumentFile : IXlsxDocumentFilePromise, IXlsxDocumentFile, IDisposable
+    public class XlsxDocumentFile : IXlsxDocumentFile, IDisposable
     {
         private Stream _stream;
         //The Sheet
@@ -27,28 +28,46 @@ namespace OpenXMLXLSXImporter.FileAccess
         //The Task that Loads in the SpreadSheetDocumentData
         private Task _loadSpreadSheetData;
 
-        private Dictionary<string, IXlsxSheetFilePromise> _loadedSheets;
+        private ConcurrentDictionary<string, IXlsxSheetFile> _loadedSheets;
         private Dictionary<string, Sheet> _sheetRef;
 
         public XlsxDocumentFile(Stream stream)
         {
             _stream = stream;
             _loadSpreadSheetData = LoadSpreadSheetDocuemntData();
-            _loadedSheets = new Dictionary<string, IXlsxSheetFilePromise>();
+            _loadedSheets = new ConcurrentDictionary<string, IXlsxSheetFile>();
         }
 
-        async Task<IXlsxDocumentFile> IXlsxDocumentFilePromise.GetLoadedFile()
+        //async Task<IXlsxDocumentFile> IXlsxDocumentFilePromise.GetLoadedFile()
+        //{
+        //    await _loadSpreadSheetData;//Ensure this is loaded first
+        //    return this;
+        //}
+
+
+        async Task<CellFormat> IXlsxDocumentFile.GetCellFormat(int index)
         {
-            await _loadSpreadSheetData;//Ensure this is loaded first
-            return this;
+            await _loadSpreadSheetData;
+            return _cellFormats.ChildElements[index] as CellFormat;
+        } 
+
+        async IAsyncEnumerable<Row> IXlsxDocumentFile.GetRows(string sheetName)
+        {
+            await _loadSpreadSheetData;
+            Sheet sheet = _sheetRef[sheetName];
+            WorksheetPart part = (_workbookPart.GetPartById(sheet.Id) as WorksheetPart);
+            SheetData d =  part.Worksheet.Elements<SheetData>().First();
+            IEnumerator<Row> r = d.Elements<Row>().GetEnumerator();
+            while (r.MoveNext())
+            {
+                yield return r.Current;
+            }
         }
-
-        Sheet IXlsxDocumentFile.GetSheet(string sheetName) => _sheetRef[sheetName];
-
-        CellFormat IXlsxDocumentFile.GetCellFormat(int index) => _cellFormats.ChildElements[index] as CellFormat;
-
-        WorkbookPart IXlsxDocumentFile.WorkbookPart => _workbookPart;
-        OpenXmlElement IXlsxDocumentFile.GetSharedStringTableElement(int index) => _sharedStringTable.ElementAt(index);
+        async Task<OpenXmlElement> IXlsxDocumentFile.GetSharedStringTableElement(int index)
+        {
+            await _loadSpreadSheetData;
+            return _sharedStringTable.ElementAt(index);
+        } 
 
         /// <summary>
         /// Common Reusable Parts of the WorkSheet
@@ -76,17 +95,12 @@ namespace OpenXMLXLSXImporter.FileAccess
 
        
 
-        public async Task<IXlsxSheetFilePromise> LoadSpreadSheetData(string sheet)
+        public async Task<IXlsxSheetFile> LoadSpreadSheetData(string sheet)
         {
             await _loadSpreadSheetData;
             if (_sheetRef.ContainsKey(sheet))
             {
-                if (!_loadedSheets.ContainsKey(sheet))
-                {
-                    //this is the first time we use this sheet
-                    _loadedSheets[sheet] = new XlsxSheetFile(this, sheet);
-                }
-                return _loadedSheets[sheet];
+                return _loadedSheets.GetOrAdd(sheet, x=> new XlsxSheetFile(this, sheet));
             }
             return null;
         }
@@ -101,6 +115,5 @@ namespace OpenXMLXLSXImporter.FileAccess
             _loadSpreadSheetData.Wait();
             _spreadsheet.Dispose();
         }
-
     }
 }

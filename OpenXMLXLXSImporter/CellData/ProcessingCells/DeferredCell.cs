@@ -67,9 +67,12 @@ namespace OpenXMLXLSXImporter.CellData
 
             public void Resolve(IXlsxSheetFile file, Cell cellElement, ICellIndex index)
             {
-                _result = file.ProcessedCell(_deferredCell.Cell, _deferredCell);
-                _updater.Update(_result);
-                _mre.Set();
+                if(!Processed)
+                {
+                    _result = file.ProcessedCell(_deferredCell.Cell, _deferredCell);
+                    _updater.Update(_result);
+                    _mre.Set();
+                }
             }
         }
 
@@ -85,7 +88,7 @@ namespace OpenXMLXLSXImporter.CellData
                     if (_deferredCellExecution == null)
                     {
                         _deferredCellExecution = new DeferredCellExecution(this,Updater);
-                        QueueAccess.QueueCellProcessingTask(_deferredCellExecution);
+                        await QueueAccess.QueueCellProcessingTask(_deferredCellExecution);
                     }
                 }
             }

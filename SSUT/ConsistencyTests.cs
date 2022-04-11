@@ -14,8 +14,8 @@ namespace SSUT
     [TestFixture]
     public  class ConsistencyTests : BaseTest
     {
-        public const int LOOPS = 100000;
-        public const int THREADS = 4;
+        public const int LOOPS = 1000000;
+        public const int THREADS = 12;
 
 
         public static void TestConsistency(Action<int> a)
@@ -40,17 +40,16 @@ namespace SSUT
         }
 
 
-        public void LoopUsingSameDataSet(BaseTest context,Action r)
+        public void LoopUsingSameDataSet<TProp>(TProp context,Action<int,TProp> r) where TProp : BaseTest
         {
             context.importer = this.importer;
             TestConsistency((int i) =>
             {
-                r();
+                r(i,context);
             });
         }
 
-
-        public void LoopUsingNewDataSet<TProp>(Action<int,TProp> r) where TProp : BaseTest, new()
+        public static byte[] GetData()
         {
             byte[] data;
             using (MemoryStream baseStream = new MemoryStream())
@@ -61,6 +60,13 @@ namespace SSUT
                 }
                 data = baseStream.ToArray();
             }
+            return data;
+        }
+
+
+        public void LoopUsingNewDataSet<TProp>(Action<int,TProp> r) where TProp : BaseTest, new()
+        {
+            byte[] data = GetData();
             TestConsistency((int i) =>
             {
                 using (MemoryStream ms = new MemoryStream(data, false))
@@ -80,8 +86,8 @@ namespace SSUT
         [Test]
         public void FullRangeCellTestLoadTheSameDataAgain()
         {
-            SpreadSheetInstructionBuilderTest b = new SpreadSheetInstructionBuilderTest();
-            LoopUsingSameDataSet(b, b.FullRangeCellTest);
+            SpreadSheetInstructionBuilderTest s = new SpreadSheetInstructionBuilderTest();
+            LoopUsingSameDataSet(s, (i, x) => x.FullRangeCellTest());
         }
 
         [Category(SKIP_SETUP)]
