@@ -88,7 +88,7 @@ namespace OpenXMLXLSXImporter.Indexers
                 ICellIndex i = this.Get(c.CellRowIndex, c.CellColumnIndex);
                 if (i != null)
                 {
-                    if (i is ICellProcessingTask task && !task.Processed)
+                    if (i is ICellProcessingTask task)
                     {
                         existing.Add(c, task);
                     }

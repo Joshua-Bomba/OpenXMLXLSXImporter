@@ -44,8 +44,11 @@ namespace OpenXMLXLSXImporter.CellData
         }
         public void Resolve(IXlsxSheetFile file, Cell cellElement, ICellIndex index)
         {
-            _result = index;
-            _mre.Set();
+            if(!Processed)
+            {
+                _result = index;
+                _mre.Set();
+            }
         }
     }
 }

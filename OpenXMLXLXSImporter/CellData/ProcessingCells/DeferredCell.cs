@@ -67,9 +67,12 @@ namespace OpenXMLXLSXImporter.CellData
 
             public void Resolve(IXlsxSheetFile file, Cell cellElement, ICellIndex index)
             {
-                _result = file.ProcessedCell(_deferredCell.Cell, _deferredCell);
-                _updater.Update(_result);
-                _mre.Set();
+                if(!Processed)
+                {
+                    _result = file.ProcessedCell(_deferredCell.Cell, _deferredCell);
+                    _updater.Update(_result);
+                    _mre.Set();
+                }
             }
         }
 
