@@ -50,24 +50,32 @@ namespace OpenXMLXLSXImporter.Processing
         {
             _instructionProcessor = Task.Run(async () =>
             {
-                dequeManager = new SpreadSheetDequeManager(_dataStore);
-                _queueInit.Set();
-                IXlsxSheetFile g = await sheeteFile;
-                if(g != null)
+                try
                 {
-                    try
+                    dequeManager = new SpreadSheetDequeManager(_dataStore);
+                    _queueInit.Set();
+                    IXlsxSheetFile g = await sheeteFile;
+                    if (g != null)
                     {
+
                         await dequeManager.ProcessRequests(g);
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        dequeManager.Terminate(ex);
+                        throw new  Exception("Sheet Not Found Exception");
                     }
 
                 }
-                else
+                catch (Exception ex)
                 {
-                    dequeManager.Terminate(new Exception("Sheet Not Found Exception"));
+                    if(dequeManager != null)
+                    {
+                        dequeManager.Terminate(ex);
+                    }
+                    else
+                    {
+                        _queueInit?.Set();
+                    }
                 }
             });
         }
