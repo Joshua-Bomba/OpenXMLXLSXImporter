@@ -8,9 +8,11 @@ using System.Timers;
 await Test<ConcurrencyTests>(x => x.MultipleSheetsBundlerTest());
 //await Test<ConcurrencyTests>(x => x.MultipleSheetInterwined());
 
+
 static async Task Test<TProp>(Action<TProp> testAction,bool sameDataSet = false) where TProp : BaseTest, new()
 {
     ConsistencyTests cs = new ConsistencyTests();
+    ManualResetEventSlim mre = new ManualResetEventSlim(true);
 
     object l = new object();
 
@@ -37,6 +39,7 @@ static async Task Test<TProp>(Action<TProp> testAction,bool sameDataSet = false)
                         {
                             Console.WriteLine($"The Program Might Be Struck since {i} was null 10 seconds ago");
                         }
+                        mre.Reset();
                     }
                     else
                     {
@@ -45,6 +48,10 @@ static async Task Test<TProp>(Action<TProp> testAction,bool sameDataSet = false)
                             Console.WriteLine($"{i} out of {ConsistencyTests.LOOPS}");
                         }
                         lastElement = i;
+                        if(mre.IsSet)
+                        {
+                            mre.Set();
+                        }
                     }
                     break;
                 }
@@ -55,6 +62,7 @@ static async Task Test<TProp>(Action<TProp> testAction,bool sameDataSet = false)
 
     Action<int, TProp> act = (i, r) =>
     {
+        mre.Wait();
         var timer = new Stopwatch();
         timer.Start();
         string fail = null;
