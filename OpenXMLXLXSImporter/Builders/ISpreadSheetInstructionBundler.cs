@@ -19,10 +19,9 @@ namespace OpenXMLXLSXImporter.Builders
 
         ISpreadSheetInstruction LoadFullRowRange(string column, uint startRow = 1);
 
+        Task BundleRequeset();
 
-        Task BundleRequeset(IEnumerable<ISpreadSheetInstruction> sheetInstructions);
-
-        IAsyncEnumerable<ICellData> GetBundledResults(IEnumerable<ISpreadSheetInstruction> ins);
+        IAsyncEnumerable<ICellData> GetBundledResults();
 
     }
 }
