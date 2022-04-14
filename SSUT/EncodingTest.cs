@@ -18,6 +18,22 @@ namespace SSUT
                 indexs[i] = ExcelColumnHelper.GetColumnStringAsIndex(testColumns[i]);
             }
 
+
+            //Sequential test
+            if(indexs.Length > 0)
+            {
+                uint sequenceTest = indexs[0];
+                for (int i = 1; i < indexs.Length; i++)
+                {
+                    sequenceTest++;
+                    Assert.AreEqual(sequenceTest, indexs[i]);
+                }
+            }
+
+
+
+
+
             //Reconvert it back
             string[] unencoded = new string[indexs.Length];
 

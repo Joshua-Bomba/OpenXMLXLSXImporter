@@ -12,12 +12,13 @@ namespace OpenXMLXLSXImporter.Utils
         public static uint GetColumnStringAsIndex(string s)
         {
             char[] chars = s.ToArray();
+            uint log = (uint)(chars.Length - 1);
             uint[] charValuesAtZero = new uint[chars.Length];
             for (uint i = 0; i < chars.Length; i++)
             {
                 if (chars[i] < 128 && Char.IsLetter(chars[i]))
                 {
-                    charValuesAtZero[i] = (uint)(Char.ToUpperInvariant(chars[i]) - 65);
+                    charValuesAtZero[log - i] = (uint)(Char.ToUpperInvariant(chars[i]) - 65);
                 }
                 else
                 {
@@ -32,7 +33,6 @@ namespace OpenXMLXLSXImporter.Utils
                 sum += (uint)(charValuesAtZero[i] * Math.Floor(Math.Pow(BASE, i)));
             }
 
-            uint log = (uint)(charValuesAtZero.Length - 1);
             sum = sum + Normalize(log);
 
             return sum;
@@ -56,13 +56,16 @@ namespace OpenXMLXLSXImporter.Utils
 
             uint normalizedIndex = index - Normalize(log);
 
-            for (uint count = 0; normalizedIndex + digits > 0; digits--)
+            uint count = log;
+
+            while (normalizedIndex + digits > 0)
             {
                 uint digit = normalizedIndex % BASE;
                 char c = (char)(digit + 65);
-                results[count++] = c;
-                
+                results[count--] = c;
+
                 normalizedIndex = normalizedIndex / BASE;
+                digits--;
             }
             return new string(results);
             }
