@@ -108,7 +108,7 @@ namespace OpenXMLXLSXImporter.FileAccess
                 bool hasBeenProcessed = ProcessCustomCell(cellElement, out cellData);
                 if (!hasBeenProcessed)//if there is no custom cell then we will use add a simple CellDataContent
                 {
-                    cellData = new CellDataContent { Text = cellElement.CellValue.Text };
+                    cellData = new CellDataContent { Text = cellElement?.CellValue?.Text };
                 }
             }
             else

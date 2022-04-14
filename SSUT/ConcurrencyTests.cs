@@ -44,21 +44,16 @@ namespace SSUT
         {
             ISpreadSheetInstructionBuilder builder = importer.GetSheetBuilder(Global.SHEET1).GetAwaiter().GetResult();
             ISpreadSheetInstructionBuilder builder2 = importer.GetSheetBuilder(Global.SHEET2).GetAwaiter().GetResult();
-
-            ISpreadSheetInstruction[] bundle1 = new ISpreadSheetInstruction[]
-            {
-                builder.Bundler.LoadColumnRange(5, "B", "J"),
-                builder.Bundler.LoadColumnRange(6, "B", "J"),
-                builder.Bundler.LoadColumnRange(7, "B", "J")
-            };
-
-            ISpreadSheetInstruction[] bundle2 = new ISpreadSheetInstruction[]
-            {
-                builder2.Bundler.LoadRowRange("A",1,4),
-                builder2.Bundler.LoadRowRange("B",1,4)
-            };
-            string[] r1 = builder.Bundler.GetBundledResults(bundle1).ToArrayAsync().GetAwaiter().GetResult().Select(x => x.Content()).ToArray();
-            string[] r2 = builder2.Bundler.GetBundledResults(bundle2).ToArrayAsync().GetAwaiter().GetResult().Select(x => x.Content()).ToArray();
+            ISpreadSheetInstructionBundler bundler1 =  builder.GetBundler();
+            bundler1.LoadColumnRange(5, "B", "J");
+            bundler1.LoadColumnRange(6, "B", "J");
+            bundler1.LoadColumnRange(7, "B", "J");
+            ISpreadSheetInstructionBundler bundler2 = builder2.GetBundler();
+            bundler2.LoadRowRange("A", 1, 4);
+            bundler2.LoadRowRange("B", 1, 4);
+            
+            string[] r1 = bundler1.GetBundledResults().ToArrayAsync().GetAwaiter().GetResult().Select(x => x.Content()).ToArray();
+            string[] r2 = bundler2.GetBundledResults().ToArrayAsync().GetAwaiter().GetResult().Select(x => x.Content()).ToArray();
         }
 
         [Test]

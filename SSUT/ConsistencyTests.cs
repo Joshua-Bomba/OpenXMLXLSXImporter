@@ -82,7 +82,7 @@ namespace SSUT
         }
 
 
-
+        [Ignore("Long")]
         [Test]
         public void FullRangeCellTestLoadTheSameDataAgain()
         {
@@ -90,12 +90,14 @@ namespace SSUT
             LoopUsingSameDataSet(s, (i, x) => x.FullRangeCellTest());
         }
 
+        [Ignore("Long")]
         [Category(SKIP_SETUP)]
         [Test]
         public void FullRangeCellTestBurnInTest()
         {
             LoopUsingNewDataSet<SpreadSheetInstructionBuilderTest>((i,x) => x.FullRangeCellTest());
         }
+        [Ignore("Long")]
         [Category(SKIP_SETUP)]
         [Test]
         public void MultipleSheetsBundlerTestBurnInTest()

@@ -10,8 +10,8 @@ namespace OpenXMLXLSXImporter.Builders
     {
         ISpreadSheetInstructionRunner Runner { get; }
 
-        ISpreadSheetInstructionBundler Bundler { get; }
+        ISpreadSheetInstructionBundler GetBundler();
 
-        
+        Task BundleRequeset(IEnumerable<ISpreadSheetInstruction> sheetInstructions);
     }
 }

@@ -24,8 +24,9 @@ namespace SSUT
         public void LoadTitleCellTestUsingBundler()
         {
             ISpreadSheetInstructionBuilder builder = importer.GetSheetBuilder(Global.SHEET1).GetAwaiter().GetResult();
-            ISpreadSheetInstruction instruction = builder.Bundler.LoadSingleCell(1, "A");
-            builder.Bundler.BundleRequeset(new List<ISpreadSheetInstruction> { instruction }).GetAwaiter().GetResult();
+            ISpreadSheetInstructionBundler bundler = builder.GetBundler();
+            ISpreadSheetInstruction instruction = bundler.LoadSingleCell(1, "A");
+            bundler.BundleRequeset().GetAwaiter().GetResult();
             ICellData result = instruction.GetResults().FirstAsync().GetAwaiter().GetResult();
             Assert.IsTrue(result.Content() == "A Header");
         }
@@ -34,8 +35,9 @@ namespace SSUT
         public void LoadTitleCellTestUsingBundlerResults()
         {
             ISpreadSheetInstructionBuilder builder = importer.GetSheetBuilder(Global.SHEET1).GetAwaiter().GetResult();
-            ISpreadSheetInstruction instruction = builder.Bundler.LoadSingleCell(1, "A");
-            IAsyncEnumerable<ICellData> results = builder.Bundler.GetBundledResults(new List<ISpreadSheetInstruction> { instruction});
+            ISpreadSheetInstructionBundler bundler = builder.GetBundler();
+            bundler.LoadSingleCell(1, "A");
+            IAsyncEnumerable<ICellData> results = bundler.GetBundledResults();
             ICellData result = results.FirstAsync().GetAwaiter().GetResult();
             Assert.IsTrue(result.Content() == "A Header");
         }
@@ -44,12 +46,11 @@ namespace SSUT
         public void TwoCells()
         {
             ISpreadSheetInstructionBuilder builder = importer.GetSheetBuilder(Global.SHEET1).GetAwaiter().GetResult();
-            ISpreadSheetInstruction[] bundle = new ISpreadSheetInstruction[] {
-                builder.Bundler.LoadSingleCell(2, "B"),
-                builder.Bundler.LoadSingleCell(2, "A")
-            };
+            ISpreadSheetInstructionBundler bundler = builder.GetBundler();
+            bundler.LoadSingleCell(2, "B");
+            bundler.LoadSingleCell(2, "A");
 
-            ICellData c = builder.Bundler.GetBundledResults(bundle).FirstAsync().GetAwaiter().GetResult();
+            ICellData c = bundler.GetBundledResults().FirstAsync().GetAwaiter().GetResult();
              Assert.IsTrue(c.Content() == "Data in another cell");
         }
         

@@ -10,14 +10,68 @@ using Nito.AsyncEx;
 
 namespace OpenXMLXLSXImporter.Builders
 {
-    public class SpreadSheetInstructionBuilder : ISpreadSheetInstructionRunner, ISpreadSheetInstructionBundler, ISpreadSheetInstructionBuilder
+    public class SpreadSheetInstructionBuilder : ISpreadSheetInstructionRunner, ISpreadSheetInstructionBuilder
     {
+
+        private class SpreadSheetInstructionBundler : ISpreadSheetInstructionBundler
+        {
+            private List<ISpreadSheetInstruction> _instructions;
+            private SpreadSheetInstructionBuilder _ssib;
+            public SpreadSheetInstructionBundler(SpreadSheetInstructionBuilder ssib)
+            {
+                _ssib = ssib;
+                _instructions = new List<ISpreadSheetInstruction>();
+            }
+
+            async Task ISpreadSheetInstructionBundler.BundleRequeset()
+            {
+                await _ssib.BundleRequeset(_instructions);
+            }
+
+           async  IAsyncEnumerable<ICellData> ISpreadSheetInstructionBundler.GetBundledResults()
+            {
+                Task t = _ssib.ssim.ProcessInstructionBundle(_instructions);
+                IAsyncEnumerator<ICellData> enumerator = null;
+                await t;
+                foreach (ISpreadSheetInstruction instruction in _instructions)
+                {
+                    enumerator = instruction.GetResults().GetAsyncEnumerator();
+                    while (await enumerator.MoveNextAsync())
+                    {
+                        yield return enumerator.Current;
+                    }
+                }
+            }
+            private ISpreadSheetInstruction Add(ISpreadSheetInstruction i)
+            {
+                _instructions.Add(i);
+                return i;
+            }
+
+            ISpreadSheetInstruction ISpreadSheetInstructionBundler.LoadColumnRange(uint row, string startColumn, string endColumn)
+                => Add(_ssib.LoadColumnRange(row, startColumn, endColumn));
+
+            ISpreadSheetInstruction ISpreadSheetInstructionBundler.LoadFullColumnRange(uint row, string startColumn)
+                => Add(_ssib.LoadFullColumnRange(row, startColumn));
+
+            ISpreadSheetInstruction ISpreadSheetInstructionBundler.LoadFullRowRange(string column, uint startRow)
+                => Add(_ssib.LoadFullRowRange(column, startRow));
+
+            ISpreadSheetInstruction ISpreadSheetInstructionBundler.LoadRowRange(string column, uint startRow, uint endRow)
+                => Add(_ssib.LoadRowRange(column, startRow, endRow));
+
+            ISpreadSheetInstruction ISpreadSheetInstructionBundler.LoadSingleCell(uint row, string cell)
+                => Add(_ssib.LoadSingleCell(row, cell));
+        }
+
+
 
         private SpreadSheetInstructionManager ssim;
 
         public ISpreadSheetInstructionRunner Runner => this;
 
-        public ISpreadSheetInstructionBundler Bundler => this;
+        public ISpreadSheetInstructionBundler GetBundler()
+            => new SpreadSheetInstructionBundler(this);
 
         public SpreadSheetInstructionBuilder(SpreadSheetInstructionManager spreadSheetInstructionManager)
         {
@@ -42,23 +96,6 @@ namespace OpenXMLXLSXImporter.Builders
         public async Task BundleRequeset(IEnumerable<ISpreadSheetInstruction> sheetInstructions)
         {
             await ssim.ProcessInstructionBundle(sheetInstructions);
-        }
-
-        public async IAsyncEnumerable<ICellData> GetBundledResults(IEnumerable<ISpreadSheetInstruction> ins)
-        {
-            ISpreadSheetInstruction[] instructions = ins.ToArray();
-            Task t = ssim.ProcessInstructionBundle(instructions);
-            IDictionary<ISpreadSheetInstruction, IAsyncEnumerable<ICellData>> dic = new Dictionary<ISpreadSheetInstruction, IAsyncEnumerable<ICellData>>(instructions.Length);
-            IAsyncEnumerator<ICellData> enumerator = null;
-            await t;
-            foreach(ISpreadSheetInstruction instruction in instructions)
-            {
-                enumerator = instruction.GetResults().GetAsyncEnumerator();
-                while(await enumerator.MoveNextAsync())
-                {
-                    yield return enumerator.Current;
-                }
-            }
         }
 
         async IAsyncEnumerable<ICellData> ISpreadSheetInstructionRunner.LoadCustomInstruction(ISpreadSheetInstruction instruction)

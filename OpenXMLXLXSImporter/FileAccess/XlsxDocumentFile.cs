@@ -77,6 +77,8 @@ namespace OpenXMLXLSXImporter.FileAccess
         {
             return Task.Run(() =>
             {
+                //Replace this stuff with OpenXmlReader so it does not load everything in at once otherwise there is pretty much no point in how I designed this.
+                //...Not now maybe  later... My SpreadSheet is big but not super massive so it's fine for now
                 _spreadsheet = SpreadsheetDocument.Open(_stream, false, new OpenSettings { AutoSave = false });
                 _workbookPart = _spreadsheet.WorkbookPart;
 
