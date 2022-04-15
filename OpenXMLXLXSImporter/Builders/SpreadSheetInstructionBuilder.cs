@@ -42,29 +42,27 @@ namespace OpenXMLXLSXImporter.Builders
                     }
                 }
             }
-            private ISpreadSheetInstruction Add(ISpreadSheetInstruction i)
-            {
-                _instructions.Add(i);
-                return i;
-            }
 
             ISpreadSheetInstruction ISpreadSheetInstructionBundler.LoadColumnRange(uint row, string startColumn, string endColumn)
-                => Add(_ssib.LoadColumnRange(row, startColumn, endColumn));
+                => LoadCustomInstruction(_ssib.LoadColumnRange(row, startColumn, endColumn));
 
             ISpreadSheetInstruction ISpreadSheetInstructionBundler.LoadFullColumnRange(uint row, string startColumn)
-                => Add(_ssib.LoadFullColumnRange(row, startColumn));
+                => LoadCustomInstruction(_ssib.LoadFullColumnRange(row, startColumn));
 
             ISpreadSheetInstruction ISpreadSheetInstructionBundler.LoadFullRowRange(string column, uint startRow)
-                => Add(_ssib.LoadFullRowRange(column, startRow));
+                => LoadCustomInstruction(_ssib.LoadFullRowRange(column, startRow));
 
             ISpreadSheetInstruction ISpreadSheetInstructionBundler.LoadRowRange(string column, uint startRow, uint endRow)
-                => Add(_ssib.LoadRowRange(column, startRow, endRow));
+                => LoadCustomInstruction(_ssib.LoadRowRange(column, startRow, endRow));
 
             ISpreadSheetInstruction ISpreadSheetInstructionBundler.LoadSingleCell(uint row, string cell)
-                => Add(_ssib.LoadSingleCell(row, cell));
+                => LoadCustomInstruction(_ssib.LoadSingleCell(row, cell));
 
-            ISpreadSheetInstruction ISpreadSheetInstructionBundler.LoadCustomInstruction(ISpreadSheetInstruction instruction)
-                => Add(instruction);
+            public TProp LoadCustomInstruction<TProp>(TProp instruction) where TProp : ISpreadSheetInstruction
+            {
+                _instructions.Add(instruction);
+                return instruction;
+            }
         }
 
 
