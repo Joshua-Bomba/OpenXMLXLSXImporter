@@ -62,6 +62,9 @@ namespace OpenXMLXLSXImporter.Builders
 
             ISpreadSheetInstruction ISpreadSheetInstructionBundler.LoadSingleCell(uint row, string cell)
                 => Add(_ssib.LoadSingleCell(row, cell));
+
+            ISpreadSheetInstruction ISpreadSheetInstructionBundler.LoadCustomInstruction(ISpreadSheetInstruction instruction)
+                => Add(instruction);
         }
 
 

@@ -9,6 +9,8 @@ namespace OpenXMLXLSXImporter.Builders
 {
     public interface ISpreadSheetInstructionBundler
     {
+        ISpreadSheetInstruction LoadCustomInstruction(ISpreadSheetInstruction instruction);
+
         ISpreadSheetInstruction LoadSingleCell(uint row, string cell);
 
         ISpreadSheetInstruction LoadColumnRange(uint row, string startColumn, string endColumn);
