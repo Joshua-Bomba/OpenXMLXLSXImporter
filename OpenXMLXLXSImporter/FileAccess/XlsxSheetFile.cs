@@ -103,12 +103,12 @@ namespace OpenXMLXLSXImporter.FileAccess
         ICellData IXlsxSheetFile.ProcessedCell(Cell cellElement, ICellIndex index)
         {
             ICellData cellData;
-            if(cellElement != null)
+            if(cellElement != null&&cellElement.CellValue != null)
             {
                 bool hasBeenProcessed = ProcessCustomCell(cellElement, out cellData);
                 if (!hasBeenProcessed)//if there is no custom cell then we will use add a simple CellDataContent
                 {
-                    cellData = new CellDataContent { Text = cellElement?.CellValue?.Text };
+                    cellData = new CellDataContent { Text = cellElement.CellValue.Text };
                 }
             }
             else
