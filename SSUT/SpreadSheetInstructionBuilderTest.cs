@@ -73,6 +73,21 @@ namespace SSUT
             ValueTask<ICellData[]> rowRange = builder.Runner.LoadFullRowRange("G").ToArrayAsync();
             Global.CheckResultsAsync(columnRange, rowRange).GetAwaiter().GetResult();
         }
+        [Test]
+        public void EmptyCellTest()
+        {
+            ISpreadSheetInstructionBuilder builder = importer.GetSheetBuilder(Global.SHEET1).GetAwaiter().GetResult();
+            ISpreadSheetInstructionBundler bundler = builder.GetBundler();
+            bundler.LoadColumnRange(3, "A", "Z");
+            bundler.LoadRowRange("A", 5, 15);
+            bundler.LoadFullRowRange("K");
+            bundler.LoadFullRowRange("L");
+            bundler.LoadFullRowRange("M");
+            bundler.LoadFullRowRange("N");
+
+            ICellData[] result = bundler.GetBundledResults().ToArrayAsync().GetAwaiter().GetResult();
+            Assert.IsFalse(result.Any(x=> x is not EmptyCell));
+        }
 
     }
 }
