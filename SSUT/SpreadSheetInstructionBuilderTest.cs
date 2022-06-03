@@ -76,7 +76,14 @@ namespace SSUT
         [Test]
         public void ColorCellTest()
         {
-
+            ISpreadSheetInstructionBuilder builder = importer.GetSheetBuilder(Global.SHEET1).GetAwaiter().GetResult();
+            ICellData d = builder.Runner.LoadSingleCell(2, "C").GetAwaiter().GetResult();
+            if(d is BaseCellData bcd)
+            {
+                Assert.AreEqual("#0070C0", bcd.BackgroundColor);
+                Assert.AreEqual("#5B9BD5", bcd.ForegroundColor);
+                
+            }
         }
 
     }
