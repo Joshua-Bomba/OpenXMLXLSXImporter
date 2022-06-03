@@ -123,6 +123,31 @@ namespace OpenXMLXLSXImporter.FileAccess
         }
 
 
+        private static string ProcessColorType(ColorType c)
+        {
+            if(c!= null)
+            {
+                if(c.Indexed != null)
+                {
+
+                }
+                else
+                {
+                    return c.Rgb?.ToString();
+                }
+            }
+            return null;
+
+        }
+
+        private static void GetColors(Fill? fill, ref string? backgroundColor, ref string? foregroundColor)
+        {
+            PatternFill? patternFill = fill?.PatternFill;
+            foregroundColor = ProcessColorType(patternFill?.ForegroundColor);
+            backgroundColor = ProcessColorType(patternFill?.BackgroundColor);
+        }
+
+
         /// <summary>
         /// This is for custom Cell Types like dates Cell with relations like text etc
         /// </summary>
@@ -135,13 +160,12 @@ namespace OpenXMLXLSXImporter.FileAccess
             string? foregroundColor = null;
             if (c.StyleIndex != null)
             {
+                
                 int index = int.Parse(c.StyleIndex.InnerText);
                 
                 CellFormat cellFormat = _fileAccess.GetCellFormat(index).GetAwaiter().GetResult();
                 Fill? fill = _fileAccess.GetCellFill(cellFormat).GetAwaiter().GetResult();
-                PatternFill? patternFill = fill?.PatternFill;
-                backgroundColor = patternFill?.BackgroundColor?.Rgb?.ToString();
-                foregroundColor  = patternFill?.ForegroundColor?.Rgb?.ToString();
+                GetColors(fill, ref backgroundColor, ref foregroundColor);
                 if (cellFormat != null)
                 {
 
