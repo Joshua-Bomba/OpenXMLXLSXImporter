@@ -45,6 +45,18 @@ namespace OpenXMLXLSXImporter.FileAccess
         //}
 
 
+        public async Task<Fill> GetCellFill(CellFormat cellFormat)
+        {
+            await _loadSpreadSheetData;
+            if(cellFormat.FillId.HasValue)
+            {
+                return (Fill)_styleSheet.Fills.ChildElements[(int)cellFormat.FillId.Value];
+            }
+            return null;
+            throw new NotImplementedException();
+        }
+
+
         async Task<CellFormat> IXlsxDocumentFile.GetCellFormat(int index)
         {
             await _loadSpreadSheetData;

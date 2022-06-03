@@ -105,11 +105,7 @@ namespace OpenXMLXLSXImporter.FileAccess
             ICellData cellData;
             if(cellElement != null&&cellElement.CellValue != null)
             {
-                bool hasBeenProcessed = ProcessCustomCell(cellElement, out cellData);
-                if (!hasBeenProcessed)//if there is no custom cell then we will use add a simple CellDataContent
-                {
-                    cellData = new CellDataContent { Text = cellElement.CellValue.Text };
-                }
+                cellData = ProcessCell(cellElement);
             }
             else
             {
@@ -133,25 +129,30 @@ namespace OpenXMLXLSXImporter.FileAccess
         /// <param name="c"></param>
         /// <param name="cellData"></param>
         /// <returns></returns>
-        private bool ProcessCustomCell(Cell c, out ICellData cellData)
+        private ICellData ProcessCell(Cell c)
         {
+            string? backgroundColor = null;
+            string? foregroundColor = null;
             if (c.StyleIndex != null)
             {
                 int index = int.Parse(c.StyleIndex.InnerText);
                 
                 CellFormat cellFormat = _fileAccess.GetCellFormat(index).GetAwaiter().GetResult();
+                Fill? fill = _fileAccess.GetCellFill(cellFormat).GetAwaiter().GetResult();
+                PatternFill? patternFill = fill?.PatternFill;
+                backgroundColor = patternFill?.BackgroundColor?.Rgb?.ToString();
+                foregroundColor  = patternFill?.ForegroundColor?.Rgb?.ToString();
                 if (cellFormat != null)
                 {
+
                     if (ExcelStaticData.DATE_FROMAT_DICTIONARY.ContainsKey(cellFormat.NumberFormatId))
                     {
                         if (!string.IsNullOrEmpty(c.CellValue.Text))
                         {
                             if (double.TryParse(c.CellValue.Text, out double cellDouble))
                             {
-
                                 DateTime theDate = DateTime.FromOADate(cellDouble);
-                                cellData = new CellDataDate { Date = theDate, DateFormat = ExcelStaticData.DATE_FROMAT_DICTIONARY[cellFormat.NumberFormatId] };
-                                return true;
+                                return new CellDataDate { Date = theDate, DateFormat = ExcelStaticData.DATE_FROMAT_DICTIONARY[cellFormat.NumberFormatId], BackgroundColor = backgroundColor, ForegroundColor = foregroundColor };
                             }
                         }
                     }
@@ -162,11 +163,9 @@ namespace OpenXMLXLSXImporter.FileAccess
             {
                 int index = int.Parse(c.CellValue.InnerText);
                 OpenXmlElement sharedStringElement = _fileAccess.GetSharedStringTableElement(index).GetAwaiter().GetResult();
-                cellData = new CellDataRelation(index, sharedStringElement);
-                return true;
+                return new CellDataRelation(index, sharedStringElement) { BackgroundColor = backgroundColor, ForegroundColor = foregroundColor };
             }
-            cellData = null;
-            return false;
+            return new CellDataContent { Text = c.CellValue.Text, BackgroundColor = backgroundColor, ForegroundColor = foregroundColor };
         }
 
         public static string GetColumnIndexByColumnReference(StringValue columnReference)

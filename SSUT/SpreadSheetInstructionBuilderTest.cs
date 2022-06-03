@@ -73,6 +73,11 @@ namespace SSUT
             ValueTask<ICellData[]> rowRange = builder.Runner.LoadFullRowRange("G").ToArrayAsync();
             Global.CheckResultsAsync(columnRange, rowRange).GetAwaiter().GetResult();
         }
+        [Test]
+        public void ColorCellTest()
+        {
+
+        }
 
     }
 }
