@@ -48,9 +48,12 @@ namespace OpenXMLXLSXImporter.CellParsing
 
         protected virtual async Task ProcessCellColor()
         {
-            fill = await _fileAccess.GetCellFill(cellFormat);
-            patternFill = fill?.PatternFill;
-            resultCell.BackgroundColor = patternFill?.ForegroundColor?.Rgb?.ToString();
+            if(cellFormat != null)
+            {
+                fill = await _fileAccess.GetCellFill(cellFormat);
+                patternFill = fill?.PatternFill;
+                resultCell.BackgroundColor = patternFill?.ForegroundColor?.Rgb?.ToString();
+            }
         }
 
         protected virtual void CheckAndProcessCellIfDataDate()
