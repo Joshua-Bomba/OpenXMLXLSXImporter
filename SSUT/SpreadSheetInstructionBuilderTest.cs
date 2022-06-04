@@ -80,8 +80,8 @@ namespace SSUT
             ICellData d = builder.Runner.LoadSingleCell(2, "C").GetAwaiter().GetResult();
             if(d is BaseCellData bcd)
             {
-                Assert.AreEqual("#0070C0", bcd.BackgroundColor);
-                Assert.AreEqual("#5B9BD5", bcd.ForegroundColor);
+                Assert.AreEqual("FF0070C0", bcd.BackgroundColor);
+                Assert.AreEqual("FF5B9BD5", bcd.ForegroundColor);
                 
             }
         }

@@ -53,7 +53,6 @@ namespace OpenXMLXLSXImporter.FileAccess
                 return (Fill)_styleSheet.Fills.ChildElements[(int)cellFormat.FillId.Value];
             }
             return null;
-            throw new NotImplementedException();
         }
 
 
