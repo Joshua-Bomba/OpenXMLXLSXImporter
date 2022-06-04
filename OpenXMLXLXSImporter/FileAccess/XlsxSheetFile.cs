@@ -2,6 +2,7 @@
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using OpenXMLXLSXImporter.CellData;
+using OpenXMLXLSXImporter.CellData.CellParsing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,14 +25,18 @@ namespace OpenXMLXLSXImporter.FileAccess
         private uint _rowIndex;
 
         private IDictionary<uint, IEnumerator<Cell>> _rows;
+        private ICellParser _parser;
 
-        public XlsxSheetFile(IXlsxDocumentFile fileAccess, string sheetName)
+        public XlsxSheetFile(IXlsxDocumentFile fileAccess, string sheetName, ICellParser parser)
         {
             _fileAccess = fileAccess;
             _sheetName = sheetName;
             _rowsLoadedIn = false;
+            _parser = parser;
+            _parser.AttachFileAccess(fileAccess);
             _rows = new Dictionary<uint, IEnumerator<Cell>>();
             _rowEnumerator = _fileAccess.GetRows(_sheetName).GetAsyncEnumerator();
+
         }
 
         async Task<IEnumerator<Cell>> IXlsxSheetFile.GetRow(uint desiredRowIndex)
@@ -100,97 +105,7 @@ namespace OpenXMLXLSXImporter.FileAccess
             return _rowIndex;
         }
 
-        ICellData IXlsxSheetFile.ProcessedCell(Cell cellElement, ICellIndex index)
-        {
-            ICellData cellData;
-            if(cellElement != null&&cellElement.CellValue != null)
-            {
-                cellData = ProcessCell(cellElement);
-            }
-            else
-            {
-                cellData = new EmptyCell();
-            }
-
-            if (cellData != null && index != null)
-            {
-                //use the same value from the promise
-                cellData.CellColumnIndex = index.CellColumnIndex;
-                cellData.CellRowIndex = index.CellRowIndex;
-            }
-
-            return cellData;
-        }
-
-
-        private static string ProcessColorType(ColorType c)
-        {
-            if(c!= null)
-            {
-                if(c.Indexed != null)
-                {
-
-                }
-                else
-                {
-                    return c.Rgb?.ToString();
-                }
-            }
-            return null;
-
-        }
-
-        private static void GetColors(Fill? fill, ref string? backgroundColor, ref string? foregroundColor)
-        {
-            PatternFill? patternFill = fill?.PatternFill;
-            foregroundColor = ProcessColorType(patternFill?.ForegroundColor);
-            backgroundColor = ProcessColorType(patternFill?.BackgroundColor);
-        }
-
-
-        /// <summary>
-        /// This is for custom Cell Types like dates Cell with relations like text etc
-        /// </summary>
-        /// <param name="c"></param>
-        /// <param name="cellData"></param>
-        /// <returns></returns>
-        private ICellData ProcessCell(Cell c)
-        {
-            string? backgroundColor = null;
-            string? foregroundColor = null;
-            if (c.StyleIndex != null)
-            {
-                
-                int index = int.Parse(c.StyleIndex.InnerText);
-                
-                CellFormat cellFormat = _fileAccess.GetCellFormat(index).GetAwaiter().GetResult();
-                Fill? fill = _fileAccess.GetCellFill(cellFormat).GetAwaiter().GetResult();
-                GetColors(fill, ref backgroundColor, ref foregroundColor);
-                if (cellFormat != null)
-                {
-
-                    if (ExcelStaticData.DATE_FROMAT_DICTIONARY.ContainsKey(cellFormat.NumberFormatId))
-                    {
-                        if (!string.IsNullOrEmpty(c.CellValue.Text))
-                        {
-                            if (double.TryParse(c.CellValue.Text, out double cellDouble))
-                            {
-                                DateTime theDate = DateTime.FromOADate(cellDouble);
-                                return new CellDataDate { Date = theDate, DateFormat = ExcelStaticData.DATE_FROMAT_DICTIONARY[cellFormat.NumberFormatId], BackgroundColor = backgroundColor, ForegroundColor = foregroundColor };
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (c.DataType?.Value != null && c.DataType?.Value == CellValues.SharedString)
-            {
-                int index = int.Parse(c.CellValue.InnerText);
-                OpenXmlElement sharedStringElement = _fileAccess.GetSharedStringTableElement(index).GetAwaiter().GetResult();
-                return new CellDataRelation(index, sharedStringElement) { BackgroundColor = backgroundColor, ForegroundColor = foregroundColor };
-            }
-            return new CellDataContent { Text = c.CellValue.Text, BackgroundColor = backgroundColor, ForegroundColor = foregroundColor };
-        }
+        ICellData IXlsxSheetFile.ProcessedCell(Cell cellElement, ICellIndex index) => _parser.ProcessCell(cellElement, index);
 
         public static string GetColumnIndexByColumnReference(StringValue columnReference)
         {
