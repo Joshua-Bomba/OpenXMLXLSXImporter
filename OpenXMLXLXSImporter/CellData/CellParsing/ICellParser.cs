@@ -11,6 +11,6 @@ namespace OpenXMLXLSXImporter.CellData.CellParsing
     public interface ICellParser
     {
         void AttachFileAccess(IXlsxDocumentFile file);
-        ICellData ProcessCell(Cell cellElement);
+        Task<ICellData> ProcessCell(Cell cellElement);
     }
 }

@@ -36,18 +36,18 @@ namespace OpenXMLXLSXImporter.CellData.CellParsing
             resultCell = null;
         }
 
-        protected virtual void ProcessCellFormating()
+        protected virtual async Task ProcessCellFormating()
         {
             if (cell.StyleIndex != null)
             {
                 int index = int.Parse(cell.StyleIndex.InnerText);
-                cellFormat = _fileAccess.GetCellFormat(index).GetAwaiter().GetResult();
+                cellFormat = await _fileAccess.GetCellFormat(index);
             }
         }
 
-        protected virtual void ProcessCellColor()
+        protected virtual async Task ProcessCellColor()
         {
-            fill = _fileAccess.GetCellFill(cellFormat).GetAwaiter().GetResult();
+            fill = await _fileAccess.GetCellFill(cellFormat);
             patternFill = fill?.PatternFill;
             resultCell.BackgroundColor = patternFill?.ForegroundColor?.Rgb?.ToString();
         }
@@ -70,36 +70,36 @@ namespace OpenXMLXLSXImporter.CellData.CellParsing
             }
         }
 
-        protected virtual void CheckAndProcessCellIfSharedString()
+        protected virtual async Task CheckAndProcessCellIfSharedString()
         {
             if (cell.DataType?.Value != null && cell.DataType?.Value == CellValues.SharedString)
             {
                 int index = int.Parse(cell.CellValue.InnerText);
-                OpenXmlElement sharedStringElement = _fileAccess.GetSharedStringTableElement(index).GetAwaiter().GetResult();
+                OpenXmlElement sharedStringElement = await _fileAccess.GetSharedStringTableElement(index);
                 resultCell =  new CellDataRelation(index, sharedStringElement);
             }
         }
 
         protected virtual void CreateGeneralContentCell()
         {
-            resultCell = new CellDataContent { Text = cell.CellValue.Text,  };
+            resultCell = new CellDataContent { Text = cell.CellValue.Text  };
         }
 
-        public ICellData ProcessCell(Cell c)
+        public async Task<ICellData> ProcessCell(Cell c)
         {
             ResetProps();
             cell = c;
-            ProcessCellFormating();
+            await ProcessCellFormating();
             CheckAndProcessCellIfDataDate();
             if(resultCell == null)
             {
-                CheckAndProcessCellIfSharedString();
+                await CheckAndProcessCellIfSharedString();
                 if (resultCell == null)
                 {
                     CreateGeneralContentCell();
                 }
             }
-            ProcessCellColor();
+            await ProcessCellColor();
 
             return resultCell;
         }

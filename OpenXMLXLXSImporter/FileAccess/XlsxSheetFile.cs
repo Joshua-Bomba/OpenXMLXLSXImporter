@@ -110,7 +110,7 @@ namespace OpenXMLXLSXImporter.FileAccess
             ICellData cellData;
             if (cellElement != null && cellElement.CellValue != null)
             {
-                cellData = _parser.ProcessCell(cellElement);
+                cellData = _parser.ProcessCell(cellElement).GetAwaiter().GetResult();
             }
             else
             {
