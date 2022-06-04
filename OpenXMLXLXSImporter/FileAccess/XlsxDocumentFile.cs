@@ -109,7 +109,7 @@ namespace OpenXMLXLSXImporter.FileAccess
 
        
 
-        public async Task<IXlsxSheetFile> LoadSpreadSheetData(string sheet, ICellParser parser)
+        public async Task<IXlsxSheetFile> LoadSpreadSheetData(string sheet, ICellParserFactory parser)
         {
             await _loadSpreadSheetData;
             if (_sheetRef.ContainsKey(sheet))

@@ -25,15 +25,15 @@ namespace OpenXMLXLSXImporter.FileAccess
         private uint _rowIndex;
 
         private IDictionary<uint, IEnumerator<Cell>> _rows;
-        private ICellParser _parser;
+        private ICellParserFactory _parserFactory;
 
-        public XlsxSheetFile(IXlsxDocumentFile fileAccess, string sheetName, ICellParser parser)
+        public XlsxSheetFile(IXlsxDocumentFile fileAccess, string sheetName, ICellParserFactory parserFactory)
         {
             _fileAccess = fileAccess;
             _sheetName = sheetName;
             _rowsLoadedIn = false;
-            _parser = parser;
-            _parser.AttachFileAccess(fileAccess);
+            _parserFactory = parserFactory;
+            _parserFactory.AttachFileAccess(fileAccess);
             _rows = new Dictionary<uint, IEnumerator<Cell>>();
             _rowEnumerator = _fileAccess.GetRows(_sheetName).GetAsyncEnumerator();
 
@@ -110,7 +110,8 @@ namespace OpenXMLXLSXImporter.FileAccess
             ICellData cellData;
             if (cellElement != null && cellElement.CellValue != null)
             {
-                cellData = await _parser.ProcessCell(cellElement);
+                ICellParser parser = _parserFactory.CreateNewCellParse();
+                cellData = await parser.ProcessCell(cellElement);
             }
             else
             {

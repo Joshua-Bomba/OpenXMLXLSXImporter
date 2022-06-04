@@ -21,20 +21,9 @@ namespace OpenXMLXLSXImporter.CellParsing
 
         protected BaseCellData resultCell;
 
-        public DefaultCellParser()
+        public DefaultCellParser(IXlsxDocumentFile file)
         {
-            _fileAccess = null;
-        }
-
-        void ICellParser.AttachFileAccess(IXlsxDocumentFile file) => _fileAccess = file;
-
-        protected virtual void ResetProps()
-        {
-            cell = null;
-            cellFormat = null;
-            fill = null;
-            patternFill = null;
-            resultCell = null;
+            _fileAccess = file;
         }
 
         protected virtual async Task ProcessCellFormating()
@@ -91,7 +80,6 @@ namespace OpenXMLXLSXImporter.CellParsing
 
         public async Task<ICellData> ProcessCell(Cell c)
         {
-            ResetProps();
             cell = c;
             await ProcessCellFormating();
             CheckAndProcessCellIfDataDate();

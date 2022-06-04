@@ -30,15 +30,15 @@ namespace OpenXMLXLSXImporter
         private XlsxDocumentFile _streamSheetFile;
 
         private ConcurrentDictionary<string, SpreadSheetInstructionManager> _instructionBuilders;
-        private ICellParser _cellParser;
-        public ExcelImporter(Stream stream, ICellParser parser)
+        private ICellParserFactory _cellParser;
+        public ExcelImporter(Stream stream, ICellParserFactory parser)
         {
             _cellParser = parser;
             _streamSheetFile = new XlsxDocumentFile(stream);
             _instructionBuilders = new ConcurrentDictionary<string, SpreadSheetInstructionManager>();
         }
 
-        public ExcelImporter(Stream stream) : this(stream, new DefaultCellParser()) { }
+        public ExcelImporter(Stream stream) : this(stream, new CellParserFactory()) { }
 
 
         public async Task<ISpreadSheetInstructionBuilder> GetSheetBuilder(string sheetName)
