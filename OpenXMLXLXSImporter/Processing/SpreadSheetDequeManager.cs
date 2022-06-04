@@ -148,7 +148,7 @@ namespace OpenXMLXLSXImporter.Processing
                 {
                     try
                     {
-                        dequed?.Resolve(sheetAccess, cell, index);
+                        await dequed?.Resolve(sheetAccess, cell, index);
                     }
                     catch(Exception ex)
                     {
@@ -176,7 +176,7 @@ namespace OpenXMLXLSXImporter.Processing
                 {
                     try
                     {
-                        kv.Value.Resolve(sheetAccess, kv.Key.Cell, kv.Key);
+                        await kv.Value.Resolve(sheetAccess, kv.Key.Cell, kv.Key);
                     }
                     catch(Exception ex)
                     {

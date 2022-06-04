@@ -105,12 +105,12 @@ namespace OpenXMLXLSXImporter.FileAccess
             return _rowIndex;
         }
 
-        ICellData IXlsxSheetFile.ProcessedCell(Cell cellElement, ICellIndex index)
+        async Task<ICellData> IXlsxSheetFile.ProcessedCell(Cell cellElement, ICellIndex index)
         {
             ICellData cellData;
             if (cellElement != null && cellElement.CellValue != null)
             {
-                cellData = _parser.ProcessCell(cellElement).GetAwaiter().GetResult();
+                cellData = await _parser.ProcessCell(cellElement);
             }
             else
             {

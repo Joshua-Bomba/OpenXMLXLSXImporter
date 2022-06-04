@@ -50,11 +50,11 @@ namespace OpenXMLXLSXImporter.CellData
             return _result;
         }
 
-        public void Resolve(IXlsxSheetFile file, Cell cellElement, ICellIndex index)
+        public async Task Resolve(IXlsxSheetFile file, Cell cellElement, ICellIndex index)
         {
             if(!Processed)
             {
-                _result = file.ProcessedCell(cellElement, index);
+                _result = await file.ProcessedCell(cellElement, index);
                 _updater?.Update(_result);
                 _mre.Set();
             }

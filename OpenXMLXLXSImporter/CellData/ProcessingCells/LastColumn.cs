@@ -44,7 +44,7 @@ namespace OpenXMLXLSXImporter.CellData
             return _result;
         }
 
-        public void Resolve(IXlsxSheetFile file, Cell cellElement, ICellIndex index)
+        public async Task Resolve(IXlsxSheetFile file, Cell cellElement, ICellIndex index)
         {
             if(!Processed)
             {
