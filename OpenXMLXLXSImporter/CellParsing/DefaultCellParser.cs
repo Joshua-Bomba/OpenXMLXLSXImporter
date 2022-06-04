@@ -52,7 +52,7 @@ namespace OpenXMLXLSXImporter.CellParsing
             {
                 fill = await _fileAccess.GetCellFill(cellFormat);
                 patternFill = fill?.PatternFill;
-                resultCell.BackgroundColor = patternFill?.ForegroundColor?.Rgb?.ToString();
+                resultCell.BackgroundColor = patternFill?.ForegroundColor?.Rgb?.ToString();//So the PatternFills Foreground is the background color
             }
         }
 
