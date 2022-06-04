@@ -33,6 +33,7 @@ namespace OpenXMLXLSXImporter
         private ICellParser _cellParser;
         public ExcelImporter(Stream stream, ICellParser parser)
         {
+            _cellParser = parser;
             _streamSheetFile = new XlsxDocumentFile(stream);
             _instructionBuilders = new ConcurrentDictionary<string, SpreadSheetInstructionManager>();
         }
