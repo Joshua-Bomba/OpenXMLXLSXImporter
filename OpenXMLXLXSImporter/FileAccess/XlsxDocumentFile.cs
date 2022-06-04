@@ -2,6 +2,7 @@
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using OpenXMLXLSXImporter.CellData;
+using OpenXMLXLSXImporter.CellData.CellParsing;
 using OpenXMLXLSXImporter.Processing;
 using System;
 using System.Collections.Concurrent;
@@ -108,12 +109,12 @@ namespace OpenXMLXLSXImporter.FileAccess
 
        
 
-        public async Task<IXlsxSheetFile> LoadSpreadSheetData(string sheet)
+        public async Task<IXlsxSheetFile> LoadSpreadSheetData(string sheet, ICellParser parser)
         {
             await _loadSpreadSheetData;
             if (_sheetRef.ContainsKey(sheet))
             {
-                return _loadedSheets.GetOrAdd(sheet, x=> new XlsxSheetFile(this, sheet));
+                return _loadedSheets.GetOrAdd(sheet, x=> new XlsxSheetFile(this, sheet, parser));
             }
             return null;
         }

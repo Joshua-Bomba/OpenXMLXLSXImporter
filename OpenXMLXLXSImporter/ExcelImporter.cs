@@ -12,6 +12,7 @@ using DocumentFormat.OpenXml.Spreadsheet;
 using Nito.AsyncEx;
 using OpenXMLXLSXImporter.Builders;
 using OpenXMLXLSXImporter.CellData;
+using OpenXMLXLSXImporter.CellData.CellParsing;
 using OpenXMLXLSXImporter.FileAccess;
 using OpenXMLXLSXImporter.Processing;
 
@@ -29,15 +30,18 @@ namespace OpenXMLXLSXImporter
         private XlsxDocumentFile _streamSheetFile;
 
         private ConcurrentDictionary<string, SpreadSheetInstructionManager> _instructionBuilders;
-
-        public ExcelImporter(Stream stream)
+        private ICellParser _cellParser;
+        public ExcelImporter(Stream stream, ICellParser parser)
         {
             _streamSheetFile = new XlsxDocumentFile(stream);
             _instructionBuilders = new ConcurrentDictionary<string, SpreadSheetInstructionManager>();
         }
 
+        public ExcelImporter(Stream stream) : this(stream, new DefaultCellParser()) { }
+
+
         public async Task<ISpreadSheetInstructionBuilder> GetSheetBuilder(string sheetName)
-            =>new SpreadSheetInstructionBuilder(_instructionBuilders.GetOrAdd(sheetName, x => new SpreadSheetInstructionManager(_streamSheetFile.LoadSpreadSheetData(x))));
+            =>new SpreadSheetInstructionBuilder(_instructionBuilders.GetOrAdd(sheetName, x => new SpreadSheetInstructionManager(_streamSheetFile.LoadSpreadSheetData(x, _cellParser))));
 
         public void Dispose()
         {
