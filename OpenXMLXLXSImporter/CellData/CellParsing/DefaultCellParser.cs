@@ -11,55 +11,97 @@ namespace OpenXMLXLSXImporter.CellData.CellParsing
 {
     public class DefaultCellParser : ICellParser
     {
-        private IXlsxDocumentFile _fileAccess;
+        protected IXlsxDocumentFile _fileAccess;
+
+        protected Cell cell;
+        protected CellFormat cellFormat;
+        protected Fill? fill;
+        protected PatternFill? patternFill;
+
+        protected BaseCellData resultCell;
+
         public DefaultCellParser()
         {
             _fileAccess = null;
         }
 
-        public void AttachFileAccess(IXlsxDocumentFile file)
+        void ICellParser.AttachFileAccess(IXlsxDocumentFile file) => _fileAccess = file;
+
+        protected virtual void ResetProps()
         {
-            _fileAccess = file;
+            cell = null;
+            cellFormat = null;
+            fill = null;
+            patternFill = null;
+            resultCell = null;
         }
 
-        public ICellData ProcessCell(Cell c)
+        protected virtual void ProcessCellFormating()
         {
-            string? backgroundColor = null;
-            string? foregroundColor = null;
-            if (c.StyleIndex != null)
+            if (cell.StyleIndex != null)
             {
+                int index = int.Parse(cell.StyleIndex.InnerText);
+                cellFormat = _fileAccess.GetCellFormat(index).GetAwaiter().GetResult();
+            }
+        }
 
-                int index = int.Parse(c.StyleIndex.InnerText);
+        protected virtual void ProcessCellColor()
+        {
+            fill = _fileAccess.GetCellFill(cellFormat).GetAwaiter().GetResult();
+            patternFill = fill?.PatternFill;
+            resultCell.BackgroundColor = patternFill?.ForegroundColor?.Rgb?.ToString();
+        }
 
-                CellFormat cellFormat = _fileAccess.GetCellFormat(index).GetAwaiter().GetResult();
-                Fill? fill = _fileAccess.GetCellFill(cellFormat).GetAwaiter().GetResult();
-                PatternFill? patternFill = fill?.PatternFill;
-                backgroundColor = patternFill?.ForegroundColor?.Rgb?.ToString();
-
-                if (cellFormat != null)
+        protected virtual void CheckAndProcessCellIfDataDate()
+        {
+            if (cellFormat != null)
+            {
+                if (ExcelStaticData.DATE_FROMAT_DICTIONARY.ContainsKey(cellFormat.NumberFormatId))
                 {
-
-                    if (ExcelStaticData.DATE_FROMAT_DICTIONARY.ContainsKey(cellFormat.NumberFormatId))
+                    if (!string.IsNullOrEmpty(cell.CellValue.Text))
                     {
-                        if (!string.IsNullOrEmpty(c.CellValue.Text))
+                        if (double.TryParse(cell.CellValue.Text, out double cellDouble))
                         {
-                            if (double.TryParse(c.CellValue.Text, out double cellDouble))
-                            {
-                                DateTime theDate = DateTime.FromOADate(cellDouble);
-                                return new CellDataDate { Date = theDate, DateFormat = ExcelStaticData.DATE_FROMAT_DICTIONARY[cellFormat.NumberFormatId], BackgroundColor = backgroundColor, ForegroundColor = foregroundColor };
-                            }
+                            DateTime theDate = DateTime.FromOADate(cellDouble);
+                            resultCell = new CellDataDate { Date = theDate, DateFormat = ExcelStaticData.DATE_FROMAT_DICTIONARY[cellFormat.NumberFormatId] };
                         }
                     }
                 }
             }
+        }
 
-            if (c.DataType?.Value != null && c.DataType?.Value == CellValues.SharedString)
+        protected virtual void CheckAndProcessCellIfSharedString()
+        {
+            if (cell.DataType?.Value != null && cell.DataType?.Value == CellValues.SharedString)
             {
-                int index = int.Parse(c.CellValue.InnerText);
+                int index = int.Parse(cell.CellValue.InnerText);
                 OpenXmlElement sharedStringElement = _fileAccess.GetSharedStringTableElement(index).GetAwaiter().GetResult();
-                return new CellDataRelation(index, sharedStringElement) { BackgroundColor = backgroundColor, ForegroundColor = foregroundColor };
+                resultCell =  new CellDataRelation(index, sharedStringElement);
             }
-            return new CellDataContent { Text = c.CellValue.Text, BackgroundColor = backgroundColor, ForegroundColor = foregroundColor };
+        }
+
+        protected virtual void CreateGeneralContentCell()
+        {
+            resultCell = new CellDataContent { Text = cell.CellValue.Text,  };
+        }
+
+        public ICellData ProcessCell(Cell c)
+        {
+            ResetProps();
+            cell = c;
+            ProcessCellFormating();
+            CheckAndProcessCellIfDataDate();
+            if(resultCell == null)
+            {
+                CheckAndProcessCellIfSharedString();
+                if (resultCell == null)
+                {
+                    CreateGeneralContentCell();
+                }
+            }
+            ProcessCellColor();
+
+            return resultCell;
         }
 
     }
