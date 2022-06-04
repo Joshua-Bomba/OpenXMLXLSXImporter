@@ -12,7 +12,7 @@ using DocumentFormat.OpenXml.Spreadsheet;
 using Nito.AsyncEx;
 using OpenXMLXLSXImporter.Builders;
 using OpenXMLXLSXImporter.CellData;
-using OpenXMLXLSXImporter.CellData.CellParsing;
+using OpenXMLXLSXImporter.CellParsing;
 using OpenXMLXLSXImporter.FileAccess;
 using OpenXMLXLSXImporter.Processing;
 

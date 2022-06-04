@@ -2,7 +2,7 @@
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using OpenXMLXLSXImporter.CellData;
-using OpenXMLXLSXImporter.CellData.CellParsing;
+using OpenXMLXLSXImporter.CellParsing;
 using OpenXMLXLSXImporter.Processing;
 using System;
 using System.Collections.Concurrent;
