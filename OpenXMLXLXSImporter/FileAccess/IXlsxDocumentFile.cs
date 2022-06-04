@@ -15,6 +15,8 @@ namespace OpenXMLXLSXImporter.FileAccess
 
         Task<CellFormat> GetCellFormat(int index);
 
+        Task<Fill> GetCellFill(CellFormat cellFormat);
+
         Task<OpenXmlElement> GetSharedStringTableElement(int index);
     }
 }

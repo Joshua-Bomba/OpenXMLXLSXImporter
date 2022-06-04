@@ -12,6 +12,6 @@ namespace OpenXMLXLSXImporter.FileAccess
     {
         Task<uint> GetAllRows();
         Task<IEnumerator<Cell>> GetRow(uint desiredRowIndex);
-        ICellData ProcessedCell(Cell cellElement, ICellIndex index);
+        Task<ICellData> ProcessedCell(Cell cellElement, ICellIndex index);
     }
 }

@@ -2,6 +2,7 @@
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using OpenXMLXLSXImporter.CellData;
+using OpenXMLXLSXImporter.CellParsing;
 using OpenXMLXLSXImporter.Processing;
 using System;
 using System.Collections.Concurrent;
@@ -43,6 +44,17 @@ namespace OpenXMLXLSXImporter.FileAccess
         //    await _loadSpreadSheetData;//Ensure this is loaded first
         //    return this;
         //}
+
+
+        public async Task<Fill> GetCellFill(CellFormat cellFormat)
+        {
+            await _loadSpreadSheetData;
+            if(cellFormat.FillId.HasValue)
+            {
+                return (Fill)_styleSheet.Fills.ChildElements[(int)cellFormat.FillId.Value];
+            }
+            return null;
+        }
 
 
         async Task<CellFormat> IXlsxDocumentFile.GetCellFormat(int index)
@@ -97,12 +109,12 @@ namespace OpenXMLXLSXImporter.FileAccess
 
        
 
-        public async Task<IXlsxSheetFile> LoadSpreadSheetData(string sheet)
+        public async Task<IXlsxSheetFile> LoadSpreadSheetData(string sheet, ICellParserFactory parser)
         {
             await _loadSpreadSheetData;
             if (_sheetRef.ContainsKey(sheet))
             {
-                return _loadedSheets.GetOrAdd(sheet, x=> new XlsxSheetFile(this, sheet));
+                return _loadedSheets.GetOrAdd(sheet, x=> new XlsxSheetFile(this, sheet, parser));
             }
             return null;
         }

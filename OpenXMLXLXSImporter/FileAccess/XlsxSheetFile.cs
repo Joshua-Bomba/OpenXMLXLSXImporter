@@ -2,6 +2,7 @@
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using OpenXMLXLSXImporter.CellData;
+using OpenXMLXLSXImporter.CellParsing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,14 +25,18 @@ namespace OpenXMLXLSXImporter.FileAccess
         private uint _rowIndex;
 
         private IDictionary<uint, IEnumerator<Cell>> _rows;
+        private ICellParserFactory _parserFactory;
 
-        public XlsxSheetFile(IXlsxDocumentFile fileAccess, string sheetName)
+        public XlsxSheetFile(IXlsxDocumentFile fileAccess, string sheetName, ICellParserFactory parserFactory)
         {
             _fileAccess = fileAccess;
             _sheetName = sheetName;
             _rowsLoadedIn = false;
+            _parserFactory = parserFactory;
+            _parserFactory.AttachFileAccess(fileAccess);
             _rows = new Dictionary<uint, IEnumerator<Cell>>();
             _rowEnumerator = _fileAccess.GetRows(_sheetName).GetAsyncEnumerator();
+
         }
 
         async Task<IEnumerator<Cell>> IXlsxSheetFile.GetRow(uint desiredRowIndex)
@@ -100,16 +105,13 @@ namespace OpenXMLXLSXImporter.FileAccess
             return _rowIndex;
         }
 
-        ICellData IXlsxSheetFile.ProcessedCell(Cell cellElement, ICellIndex index)
+        async Task<ICellData> IXlsxSheetFile.ProcessedCell(Cell cellElement, ICellIndex index)
         {
             ICellData cellData;
-            if(cellElement != null&&cellElement.CellValue != null)
+            if (cellElement != null && cellElement.CellValue != null)
             {
-                bool hasBeenProcessed = ProcessCustomCell(cellElement, out cellData);
-                if (!hasBeenProcessed)//if there is no custom cell then we will use add a simple CellDataContent
-                {
-                    cellData = new CellDataContent { Text = cellElement.CellValue.Text };
-                }
+                ICellParser parser = _parserFactory.CreateNewCellParse();
+                cellData = await parser.ProcessCell(cellElement);
             }
             else
             {
@@ -122,52 +124,9 @@ namespace OpenXMLXLSXImporter.FileAccess
                 cellData.CellColumnIndex = index.CellColumnIndex;
                 cellData.CellRowIndex = index.CellRowIndex;
             }
-
             return cellData;
         }
-
-
-        /// <summary>
-        /// This is for custom Cell Types like dates Cell with relations like text etc
-        /// </summary>
-        /// <param name="c"></param>
-        /// <param name="cellData"></param>
-        /// <returns></returns>
-        private bool ProcessCustomCell(Cell c, out ICellData cellData)
-        {
-            if (c.StyleIndex != null)
-            {
-                int index = int.Parse(c.StyleIndex.InnerText);
-                
-                CellFormat cellFormat = _fileAccess.GetCellFormat(index).GetAwaiter().GetResult();
-                if (cellFormat != null)
-                {
-                    if (ExcelStaticData.DATE_FROMAT_DICTIONARY.ContainsKey(cellFormat.NumberFormatId))
-                    {
-                        if (!string.IsNullOrEmpty(c.CellValue.Text))
-                        {
-                            if (double.TryParse(c.CellValue.Text, out double cellDouble))
-                            {
-
-                                DateTime theDate = DateTime.FromOADate(cellDouble);
-                                cellData = new CellDataDate { Date = theDate, DateFormat = ExcelStaticData.DATE_FROMAT_DICTIONARY[cellFormat.NumberFormatId] };
-                                return true;
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (c.DataType?.Value != null && c.DataType?.Value == CellValues.SharedString)
-            {
-                int index = int.Parse(c.CellValue.InnerText);
-                OpenXmlElement sharedStringElement = _fileAccess.GetSharedStringTableElement(index).GetAwaiter().GetResult();
-                cellData = new CellDataRelation(index, sharedStringElement);
-                return true;
-            }
-            cellData = null;
-            return false;
-        }
+            
 
         public static string GetColumnIndexByColumnReference(StringValue columnReference)
         {
