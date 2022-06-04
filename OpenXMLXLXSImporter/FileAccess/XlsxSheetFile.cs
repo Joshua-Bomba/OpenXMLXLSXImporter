@@ -105,7 +105,27 @@ namespace OpenXMLXLSXImporter.FileAccess
             return _rowIndex;
         }
 
-        ICellData IXlsxSheetFile.ProcessedCell(Cell cellElement, ICellIndex index) => _parser.ProcessCell(cellElement, index);
+        ICellData IXlsxSheetFile.ProcessedCell(Cell cellElement, ICellIndex index)
+        {
+            ICellData cellData;
+            if (cellElement != null && cellElement.CellValue != null)
+            {
+                cellData = _parser.ProcessCell(cellElement);
+            }
+            else
+            {
+                cellData = new EmptyCell();
+            }
+
+            if (cellData != null && index != null)
+            {
+                //use the same value from the promise
+                cellData.CellColumnIndex = index.CellColumnIndex;
+                cellData.CellRowIndex = index.CellRowIndex;
+            }
+            return cellData;
+        }
+            
 
         public static string GetColumnIndexByColumnReference(StringValue columnReference)
         {

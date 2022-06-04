@@ -22,35 +22,7 @@ namespace OpenXMLXLSXImporter.CellData.CellParsing
             _fileAccess = file;
         }
 
-        public ICellData ProcessCell(Cell cellElement, ICellIndex index)
-        {
-            ICellData cellData;
-            if (cellElement != null && cellElement.CellValue != null)
-            {
-                cellData = ProcessCell(cellElement);
-            }
-            else
-            {
-                cellData = new EmptyCell();
-            }
-
-            if (cellData != null && index != null)
-            {
-                //use the same value from the promise
-                cellData.CellColumnIndex = index.CellColumnIndex;
-                cellData.CellRowIndex = index.CellRowIndex;
-            }
-
-            return cellData;
-        }
-
-        /// <summary>
-        /// This is for custom Cell Types like dates Cell with relations like text etc
-        /// </summary>
-        /// <param name="c"></param>
-        /// <param name="cellData"></param>
-        /// <returns></returns>
-        private ICellData ProcessCell(Cell c)
+        public ICellData ProcessCell(Cell c)
         {
             string? backgroundColor = null;
             string? foregroundColor = null;
@@ -89,5 +61,6 @@ namespace OpenXMLXLSXImporter.CellData.CellParsing
             }
             return new CellDataContent { Text = c.CellValue.Text, BackgroundColor = backgroundColor, ForegroundColor = foregroundColor };
         }
+
     }
 }
