@@ -76,6 +76,14 @@ namespace OpenXMLXLSXImporter.CellParsing
             }
         }
 
+        protected virtual void AttachReferenceCell()
+        {
+            if(cell.CellFormula != null)
+            {
+                resultCell.CellFormula = cell.CellFormula.Text;
+            }
+        }
+
         protected virtual void CheckAndProcessCellIfDataDate()
         {
             if (cellFormat != null)
@@ -123,6 +131,7 @@ namespace OpenXMLXLSXImporter.CellParsing
                 }
             }
             await ProcessCellColor();
+            AttachReferenceCell();
 
             return resultCell;
         }

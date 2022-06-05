@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace OpenXMLXLSXImporter.CellData
 {
-    public  class FutureIndex : ICellIndex
+    public  class CellIndex : ICellIndex
     {
         public string CellColumnIndex { get; set; }
         public uint CellRowIndex { get; set; }

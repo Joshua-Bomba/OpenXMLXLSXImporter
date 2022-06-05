@@ -128,9 +128,8 @@ namespace OpenXMLXLSXImporter.FileAccess
         }
             
 
-        public static string GetColumnIndexByColumnReference(StringValue columnReference)
+        public static string GetColumnIndexByColumnReference(string v)
         {
-            string v = columnReference.Value;
             for (int i = v.Length - 1; i >= 0; i--)
             {
                 char c = v[i];

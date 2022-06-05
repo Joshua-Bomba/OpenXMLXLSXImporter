@@ -87,7 +87,7 @@ namespace OpenXMLXLSXImporter.Processing
                     }
                     else if (dequed is LastRow m)
                     {
-                        index = new FutureIndex { CellRowIndex = await sheetAccess.GetAllRows() };
+                        index = new CellIndex { CellRowIndex = await sheetAccess.GetAllRows() };
                         continue;
                     }
                     else if (dequed is LastColumn mc)
@@ -115,7 +115,7 @@ namespace OpenXMLXLSXImporter.Processing
                             if (cellEnumerator.MoveNext())
                             {
                                 cell = cellEnumerator.Current;
-                                currentIndex = XlsxSheetFile.GetColumnIndexByColumnReference(cell.CellReference);
+                                currentIndex = XlsxSheetFile.GetColumnIndexByColumnReference(cell.CellReference.Value);
                                 if (currentIndex != desiredColumnIndex)
                                 {
                                     if (deferedCells == null)
@@ -128,7 +128,7 @@ namespace OpenXMLXLSXImporter.Processing
                             {
                                 if (index == null)
                                 {
-                                    index = new FutureIndex { CellColumnIndex = currentIndex, CellRowIndex = desiredRowIndex.Value };
+                                    index = new CellIndex { CellColumnIndex = currentIndex, CellRowIndex = desiredRowIndex.Value };
                                 }
                                 currentIndex = null;
                                 cellsLoadedIn = true;
