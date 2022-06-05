@@ -44,7 +44,15 @@ namespace OpenXMLXLSXImporter.CellParsing
                 {
                     if (fill.PatternFill.ForegroundColor.Rgb != null)
                     {
-                        resultCell.BackgroundColor = fill.PatternFill.ForegroundColor.Rgb.Value;
+                        string colour = fill.PatternFill.ForegroundColor.Rgb.Value;
+                        if(colour.Length >= 6)
+                        {
+                            resultCell.BackgroundColor = colour[^6..];
+                        }
+                        else
+                        {
+                            resultCell.BackgroundColor = colour;
+                        }
                     }
                     else if (fill.PatternFill.ForegroundColor.Theme != null)
                     {
