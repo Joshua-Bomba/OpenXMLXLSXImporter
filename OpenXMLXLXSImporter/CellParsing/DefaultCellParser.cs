@@ -78,7 +78,7 @@ namespace OpenXMLXLSXImporter.CellParsing
 
         protected virtual void AttachReferenceCell()
         {
-            if(cell.CellFormula != null)
+            if(cell.CellFormula != null&&!string.IsNullOrWhiteSpace(cell.CellFormula.Text))
             {
                 resultCell.CellFormula = cell.CellFormula.Text;
             }
