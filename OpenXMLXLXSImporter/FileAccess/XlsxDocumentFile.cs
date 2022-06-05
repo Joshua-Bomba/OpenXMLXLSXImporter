@@ -24,6 +24,9 @@ namespace OpenXMLXLSXImporter.FileAccess
         private SharedStringTablePart _sharedStringTablePart;
         private SharedStringTable _sharedStringTable;
         private WorkbookStylesPart _workBookStyleParts;
+        private ThemePart _themePart;
+        private DocumentFormat.OpenXml.Drawing.Theme _theme;
+
         private Stylesheet _styleSheet;
         private CellFormats _cellFormats;
         //The Task that Loads in the SpreadSheetDocumentData
@@ -54,6 +57,11 @@ namespace OpenXMLXLSXImporter.FileAccess
                 return (Fill)_styleSheet.Fills.ChildElements[(int)cellFormat.FillId.Value];
             }
             return null;
+        }
+
+        public async Task<DocumentFormat.OpenXml.Drawing.Color2Type> GetColorByThemeIndex(uint index)
+        {
+            return (DocumentFormat.OpenXml.Drawing.Color2Type)_theme.ThemeElements.ColorScheme.ElementAt((int)index);
         }
 
 
@@ -93,6 +101,8 @@ namespace OpenXMLXLSXImporter.FileAccess
                 //...Not now maybe  later... My SpreadSheet is big but not super massive so it's fine for now
                 _spreadsheet = SpreadsheetDocument.Open(_stream, false, new OpenSettings { AutoSave = false });
                 _workbookPart = _spreadsheet.WorkbookPart;
+                _themePart = _workbookPart.ThemePart;
+                _theme = _themePart.Theme;
 
                 _sharedStringTablePart = _workbookPart.GetPartsOfType<SharedStringTablePart>().First();
                 _sharedStringTable = _sharedStringTablePart.SharedStringTable;
@@ -129,5 +139,7 @@ namespace OpenXMLXLSXImporter.FileAccess
             _loadSpreadSheetData.Wait();
             _spreadsheet.Dispose();
         }
+
+
     }
 }

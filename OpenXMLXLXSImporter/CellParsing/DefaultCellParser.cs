@@ -40,8 +40,47 @@ namespace OpenXMLXLSXImporter.CellParsing
             if(cellFormat != null)
             {
                 fill = await _fileAccess.GetCellFill(cellFormat);
-                patternFill = fill?.PatternFill;
-                resultCell.BackgroundColor = patternFill?.ForegroundColor?.Rgb?.ToString();//So the PatternFills Foreground is the background color
+                if (fill.PatternFill.ForegroundColor != null)
+                {
+                    if (fill.PatternFill.ForegroundColor.Rgb != null)
+                    {
+                        string colour = fill.PatternFill.ForegroundColor.Rgb.Value;
+                        if(colour.Length >= 6)
+                        {
+                            resultCell.BackgroundColor = colour[^6..];
+                        }
+                        else
+                        {
+                            resultCell.BackgroundColor = colour;
+                        }
+                    }
+                    else if (fill.PatternFill.ForegroundColor.Theme != null)
+                    {
+                        var color = await _fileAccess.GetColorByThemeIndex(fill.PatternFill.ForegroundColor.Theme.Value);
+                        if(color.RgbColorModelHex != null)
+                        {
+                            resultCell.BackgroundColor = color.RgbColorModelHex.Val;
+                        }
+                        else if (color.SystemColor != null)
+                        {
+                            resultCell.BackgroundColor = color.SystemColor.LastColor.Value;
+                        }
+                        else
+                        {
+                            throw new NotImplementedException();
+                        }
+
+                        
+                    }
+                }
+            }
+        }
+
+        protected virtual void AttachReferenceCell()
+        {
+            if(cell.CellFormula != null&&!string.IsNullOrWhiteSpace(cell.CellFormula.Text))
+            {
+                resultCell.CellFormula = cell.CellFormula.Text;
             }
         }
 
@@ -92,6 +131,7 @@ namespace OpenXMLXLSXImporter.CellParsing
                 }
             }
             await ProcessCellColor();
+            AttachReferenceCell();
 
             return resultCell;
         }

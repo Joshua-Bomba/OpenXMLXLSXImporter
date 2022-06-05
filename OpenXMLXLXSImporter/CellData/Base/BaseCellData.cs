@@ -20,6 +20,8 @@ namespace OpenXMLXLSXImporter.CellData
 
         public string BackgroundColor { get; set; }
 
+        public string CellFormula { get; set; }
+
         public abstract string Content();
     }
 
