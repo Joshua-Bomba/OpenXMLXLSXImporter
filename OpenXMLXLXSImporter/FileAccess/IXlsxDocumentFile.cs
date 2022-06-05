@@ -17,6 +17,8 @@ namespace OpenXMLXLSXImporter.FileAccess
 
         Task<Fill> GetCellFill(CellFormat cellFormat);
 
+        Task<DocumentFormat.OpenXml.Drawing.Color2Type> GetColorByThemeIndex(uint index);
+
         Task<OpenXmlElement> GetSharedStringTableElement(int index);
     }
 }

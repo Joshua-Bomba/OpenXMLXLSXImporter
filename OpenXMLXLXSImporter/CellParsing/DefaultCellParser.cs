@@ -40,8 +40,31 @@ namespace OpenXMLXLSXImporter.CellParsing
             if(cellFormat != null)
             {
                 fill = await _fileAccess.GetCellFill(cellFormat);
-                patternFill = fill?.PatternFill;
-                resultCell.BackgroundColor = patternFill?.ForegroundColor?.Rgb?.ToString();//So the PatternFills Foreground is the background color
+                if (fill.PatternFill.ForegroundColor != null)
+                {
+                    if (fill.PatternFill.ForegroundColor.Rgb != null)
+                    {
+                        resultCell.BackgroundColor = fill.PatternFill.ForegroundColor.Rgb.Value;
+                    }
+                    else if (fill.PatternFill.ForegroundColor.Theme != null)
+                    {
+                        var color = await _fileAccess.GetColorByThemeIndex(fill.PatternFill.ForegroundColor.Theme.Value);
+                        if(color.RgbColorModelHex != null)
+                        {
+                            resultCell.BackgroundColor = color.RgbColorModelHex.Val;
+                        }
+                        else if (color.SystemColor != null)
+                        {
+                            resultCell.BackgroundColor = color.SystemColor.LastColor.Value;
+                        }
+                        else
+                        {
+                            throw new NotImplementedException();
+                        }
+
+                        
+                    }
+                }
             }
         }
 
