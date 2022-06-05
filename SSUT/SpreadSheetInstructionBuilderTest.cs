@@ -78,11 +78,15 @@ namespace SSUT
         {
             ISpreadSheetInstructionBuilder builder = importer.GetSheetBuilder(Global.SHEET1).GetAwaiter().GetResult();
             ICellData d = builder.Runner.LoadSingleCell(2, "C").GetAwaiter().GetResult();
+            ICellData themedColorTest = builder.Runner.LoadSingleCell(2, "D").GetAwaiter().GetResult();
             if(d is BaseCellData bcd)
             {
-                Assert.AreEqual("FF0070C0", bcd.BackgroundColor);
+                Assert.AreEqual("0070C0", bcd.BackgroundColor);
                 //Assert.AreEqual("FF5B9BD5", bcd.ForegroundColor);//I don't really care about the foreground color at this time
-                
+            }
+            if(themedColorTest is BaseCellData themedColorB)
+            {
+                Assert.AreEqual("ED7D31", themedColorB.BackgroundColor);
             }
         }
 
